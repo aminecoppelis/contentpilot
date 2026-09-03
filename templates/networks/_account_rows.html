@@ -1,0 +1,61 @@
+{% for a in accounts %}
+<tr id="network-{{ a.id }}">
+  <td><b data-name>{{ a.display_name or a.platform_account_name or a.provider_label }}</b>
+    <div class="mini">{{ a.id }}</div>
+    {% if a.token_expired %}<div class="mini tokenWarn" title="Jeton Instagram expiré">Jeton expiré · reconnecter Instagram</div>
+    {% elif a.token_temporary %}<div class="mini tokenWarn" title="Jeton Instagram temporaire actif">Jeton temporaire actif · publication disponible jusqu'au {{ a.token_expires_label }}</div>{% endif %}
+    {% if a.is_legacy_instagram %}<div class="mini capabilityBad">Ancienne connexion Instagram via Facebook · non proposée à la publication</div>{% endif %}
+  </td>
+  <td><span class="badge providerBadge {{ a.provider }}">
+    {% if a.provider in ['facebook', 'instagram', 'buffer'] %}<img class="providerBadgeLogo" src="/static/img/{{ a.provider }}.svg" alt="" width="17" height="17" aria-hidden="true">{% endif %}
+    <span>{{ a.provider_label }}</span>
+  </span></td>
+  <td>{{ a.account_label or '-' }}</td>
+  <td>{{ a.external_parent_id or '-' }}</td>
+  <td><span class="status {{ 'on' if a.is_active else 'off' }}" data-status>{{ 'Actif' if a.is_active else 'Désactivé' }}</span></td>
+  <td>
+    {% if a.is_buffer %}
+    <div class="quotaCell {{ 'isLoading' if a.is_active else 'isDisabled' }}"
+         data-quota-account-id="{{ a.id }}" data-provider="buffer" data-active="{{ '1' if a.is_active else '0' }}">
+      <div class="quotaMain">
+        <span class="quotaBalance" aria-hidden="true"></span>
+        <span class="quotaValue">{{ 'Calcul…' if a.is_active else 'Désactivé' }}</span>
+        <button type="button" class="quotaRefresh" data-network-action="quota-refresh" data-id="{{ a.id }}"
+                title="Actualiser les compteurs Buffer" aria-label="Actualiser les compteurs Buffer">↻</button>
+      </div>
+      <div class="quotaDetail">{{ 'Lecture du quota en cours' if a.is_active else 'Connexion inactive' }}</div>
+      <div class="quotaQueue">{{ 'File d’attente : calcul…' if a.is_active else 'File d’attente indisponible' }}</div>
+    </div>
+    {% else %}
+    <div class="quotaCell isUnavailable" data-quota-account-id="{{ a.id }}"
+         data-provider="{{ a.provider }}" data-active="{{ '1' if a.is_active else '0' }}">
+      <span class="mini">Non disponible</span>
+    </div>
+    {% endif %}
+  </td>
+  <td>{{ a.updated_label }}</td>
+  <td><div class="actions networkActions networkKebabCell"><div class="networkKebabWrap">
+    <button type="button" class="networkKebabBtn" aria-haspopup="menu" aria-expanded="false" title="Actions"
+            onclick='toggleNetworkKebab({{ a.id|tojson }},this,event)'>⋮</button>
+    <div class="networkKebabMenu" id="network-menu-{{ a.id }}" role="menu">
+      {% if a.provider == 'buffer' and a.is_owner_workspace %}
+        <button type="button" role="menuitem" data-buffer-edit="1" data-id="{{ a.id }}"
+                data-name="{{ a.display_name or '' }}" data-channel="{{ a.external_account_id or '' }}"
+                onclick="window.openBufferModalFromButton(this);return false">Modifier</button>
+      {% elif a.reconnect_url %}
+        <a role="menuitem" href="{{ a.reconnect_url }}">Reconnecter</a>
+      {% elif a.is_owner_workspace %}
+        <button type="button" role="menuitem" onclick='window.openEditNetworkModal({{ a.id|tojson }},{{ (a.display_name or a.external_username or a.provider)|tojson }});return false'>Modifier</button>
+      {% endif %}
+      <button type="button" role="menuitem" onclick='toggleNetwork({{ a.id|tojson }},this)'>{{ 'Désactiver' if a.is_active else 'Activer' }}</button>
+      {% if not a.is_owner_workspace %}
+        <button type="button" role="menuitem" onclick='removeNetworkFromWorkspace({{ a.id|tojson }},this)'>Retirer de ce workspace</button>
+      {% endif %}
+      {% if a.is_owner_workspace %}
+        <button type="button" role="menuitem" onclick='openShareNetworkModal({{ a.id|tojson }},{{ (a.display_name or a.external_username or a.provider)|tojson }})'>Partager</button>
+        <button type="button" role="menuitem" class="danger" onclick='deleteNetwork({{ a.id|tojson }},this)'>Supprimer</button>
+      {% endif %}
+    </div>
+  </div></div></td>
+</tr>
+{% endfor %}

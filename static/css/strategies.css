@@ -1,0 +1,155 @@
+/* Page "Stratégies de croissance" — port des classes du workflow original. */
+/* Cadre repris de .header (layout.css) — aucune redéfinition ici. */
+
+.strategiesTableWrap table{min-width:1040px}
+.strategyTitleCell b{display:block;font-size:14px}
+.strategyTitleCell small{display:block;color:var(--muted);font-size:12px;margin-top:4px;line-height:1.4}
+.statusPill{display:inline-flex;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.03em;background:#f1f5f9;color:#475569}
+.statusPill.active{background:#dcfce7;color:#166534}
+.statusPill.draft{background:#e0e7ff;color:#3730a3}
+.statusPill.archived{background:#f1f5f9;color:#64748b}
+.strategyProgressCell{min-width:130px}
+.strategyProgressCell span{font-size:12px;font-weight:850;color:#475569}
+.progressLine{margin-top:6px;height:6px;border-radius:999px;background:#e2e8f0;overflow:hidden}
+.progressLine span{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2))}
+.strategyTableActions{display:flex;gap:8px;flex-wrap:wrap}
+.btn.tiny{padding:7px 11px;font-size:12px}
+.btn.secondary{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}
+.btn.danger{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.52);backdrop-filter:blur(6px);display:none;
+  align-items:center;justify-content:center;padding:20px;z-index:10000;overflow:auto}
+.modal.isOpen{display:flex}
+body.modalOpen{overflow:hidden}
+.modalCard{width:min(640px,100%);background:#fff;border-radius:26px;padding:28px;
+  box-shadow:0 30px 90px rgba(15,23,42,.3);max-height:90vh;overflow:auto}
+.modalHead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+.modalHead h2{margin:0;font-size:23px;letter-spacing:-.03em}
+.modalHead p{margin:6px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+.closeBtn{border:1px solid var(--line);background:#fff;width:38px;height:38px;border-radius:12px;
+  font-size:21px;cursor:pointer;color:#475569;flex:0 0 auto}
+.strategyForm .field{margin-bottom:16px}
+.strategyForm label{display:block;font-weight:900;font-size:13px;color:#334155;margin-bottom:7px}
+.strategyForm select,.strategyForm textarea,.strategyForm input{width:100%;border:1px solid #cbd5e1;
+  border-radius:14px;padding:12px 13px;font:inherit;font-size:14px}
+.strategyForm textarea{min-height:130px;resize:vertical}
+.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.formGrid{grid-template-columns:1fr}}
+.hint{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.45}
+.strategyInstructionsHeader{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.strategyInlineAiBtn{padding:7px 12px;font-size:12px}
+.formActions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.accountWarning{border:1px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:14px;
+  padding:12px 14px;font-size:13px;line-height:1.5;margin-bottom:18px}
+
+.calendarTaskModal{position:fixed;inset:0;background:rgba(15,23,42,.52);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;padding:20px;z-index:10050}
+.calendarTaskModal.isOpen{display:flex}
+.calendarTaskModalBox{width:min(460px,100%);background:#fff;border-radius:22px;padding:24px;
+  box-shadow:0 30px 90px rgba(15,23,42,.3)}
+.calendarTaskModalBox h2{margin:0 0 8px;font-size:20px}
+.calendarTaskModalBox p{margin:0 0 16px;color:var(--muted);font-size:13px;line-height:1.5}
+.calendarTaskFields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.calendarTaskFields label{display:block;font-weight:900;font-size:12px;color:#334155}
+.calendarTaskFields input{width:100%;margin-top:6px;border:1px solid #cbd5e1;border-radius:12px;
+  padding:10px 12px;font:inherit}
+.calendarTaskModalActions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.loader{display:none;padding:14px;text-align:center;color:var(--muted);font-size:13px}
+.loader.show{display:block}
+.emptyInline{color:var(--muted);font-size:13px}
+.metric{margin-bottom:10px}
+.metric span{display:block;font-size:12px;font-weight:800;color:#475569}
+.metric b{font-size:15px}
+.metric i{display:block;height:6px;border-radius:999px;background:#e2e8f0;margin-top:5px;overflow:hidden}
+.metric i em{display:block;height:100%;background:linear-gradient(90deg,var(--primary),var(--primary2))}
+
+/* Détail stratégie — parité n8n : Synthèse / Actions / Calendrier. */
+.strategyWorkspace{display:grid;gap:18px}
+.strategyWorkspaceHeader{background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 14px 38px rgba(15,23,42,.06)}
+.strategyDetailToolbar{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.strategyDetailTabs{display:flex;align-items:center;gap:6px;flex:1;justify-content:center}
+.strategyViewBtn{appearance:none;border:1px solid #dbe3ee;background:#f8fafc;color:#475569;border-radius:11px;min-height:36px;padding:7px 12px;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
+.strategyViewBtn:hover,.strategyViewBtn.active{background:#eef2ff;border-color:#a5b4fc;color:#3730a3}
+.strategyViewBtn .tabCount{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;margin-left:5px;padding:0 5px;border-radius:999px;background:#fff;border:1px solid #dbe3ee;font-size:10px}
+.strategyDetailActions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-left:auto}
+.strategyDetailIntro{padding:24px 26px}
+.strategyDetailIntro h1{margin:8px 0 8px;font-size:30px;line-height:1.12;letter-spacing:-.035em;color:#0f172a}
+.strategyDetailIntro p{margin:0;max-width:980px;color:var(--muted);line-height:1.6}
+.strategyDetailMeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:#64748b;font-size:12px;font-weight:800}
+.strategyDetailMeta>span:not(.statusPill){padding:4px 8px;border:1px solid #e2e8f0;border-radius:999px;background:#f8fafc}
+.strategyTabPanel{display:none}
+.strategyTabPanel.active{display:block}
+.strategySummaryGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.strategyCard{background:#fff;border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 10px 28px rgba(15,23,42,.045);min-width:0}
+.strategyCardWide{grid-column:1/-1}
+.strategyCardLabel{text-transform:uppercase;letter-spacing:.08em;color:#6366f1;font-size:10px;font-weight:950;margin-bottom:8px}
+.strategyCard h2{margin:0 0 10px;font-size:18px;color:#0f172a;letter-spacing:-.02em}
+.strategyCard p{margin:7px 0;color:#475569;line-height:1.55;font-size:13px}
+.strategyMuted{color:#64748b!important}
+.strategyMetaChips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.strategyMetaChips span{display:inline-flex;padding:6px 9px;border-radius:999px;background:#f8fafc;border:1px solid #e2e8f0;color:#475569;font-size:11px;font-weight:800}
+.strategyCleanList{margin:8px 0 0;padding-left:20px;color:#475569;line-height:1.55;font-size:13px}
+.strategyCleanList li+li{margin-top:6px}
+.strategyListBlock{font-size:13px;color:#475569}
+.strategyListBlock ul{margin:7px 0 0;padding-left:20px}
+.diagnosticGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.diagnosticItem{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:12px;display:grid;gap:6px;min-width:0}
+.diagnosticItem span{font-size:11px;font-weight:800;color:#64748b}
+.diagnosticItem b{font-size:16px;color:#0f172a;overflow-wrap:anywhere}
+.diagnosticItem.diagnosticText{grid-column:span 2}
+.diagnosticItem.diagnosticText b{font-size:12px;line-height:1.45;font-weight:700}
+.strategyActionsList{display:grid;gap:12px}
+.strategyActionCard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:0 8px 22px rgba(15,23,42,.04)}
+.strategyActionCard h2{margin:7px 0 0;font-size:17px;color:#0f172a}
+.strategyActionMeta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;color:#64748b;font-size:11px;font-weight:850}
+.strategyActionMeta>span:not(.statusPill):not(.priorityPill){padding:4px 7px;border-radius:999px;background:#f8fafc;border:1px solid #e2e8f0}
+.priorityPill{display:inline-flex;border-radius:999px;padding:4px 8px;font-size:10px;text-transform:uppercase;font-weight:950;background:#f1f5f9;color:#475569}
+.priorityPill.high{background:#fff1f2;color:#be123c}.priorityPill.low{background:#ecfeff;color:#0e7490}
+.strategyActionDescription{margin-top:13px;white-space:pre-line;color:#475569;font-size:13px;line-height:1.6}
+.strategyActionKpi{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:#475569}
+.strategyActionKpi b{color:#0f172a}
+.strategyCalendarList{display:grid;gap:10px}
+.strategyCalendarItem{background:#fff;border:1px solid var(--line);border-radius:17px;padding:15px 17px;display:grid;grid-template-columns:190px minmax(0,1fr) auto;align-items:center;gap:15px;box-shadow:0 7px 20px rgba(15,23,42,.04)}
+.strategyCalendarDate{display:grid;gap:7px}.strategyCalendarDate b{font-size:13px;color:#0f172a}.strategyCalendarDate .statusPill{width:max-content}
+.strategyCalendarContent h3{margin:0 0 4px;font-size:14px;color:#0f172a}.strategyCalendarContent p{margin:0;color:#64748b;font-size:12px}
+.strategyCalendarError{color:#b91c1c!important;margin-top:6px!important}
+.strategyEmptyState{background:#fff;border:1px dashed #cbd5e1;border-radius:18px;padding:28px;text-align:center;color:#64748b;font-size:13px}
+.statusPill.scheduled{background:#e0f2fe;color:#075985}.statusPill.generating,.statusPill.processing{background:#fef3c7;color:#92400e}.statusPill.generated,.statusPill.done,.statusPill.completed{background:#dcfce7;color:#166534}.statusPill.failed,.statusPill.cancelled{background:#fee2e2;color:#991b1b}
+@media(max-width:900px){.strategyDetailTabs{order:3;flex-basis:100%;justify-content:flex-start;overflow-x:auto}.strategyDetailActions{margin-left:0}.diagnosticGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.strategyCalendarItem{grid-template-columns:1fr auto}.strategyCalendarContent{grid-column:1/-1;grid-row:2}.strategySummaryGrid{grid-template-columns:1fr}.strategyCardWide{grid-column:auto}}
+@media(max-width:560px){.strategyDetailIntro{padding:20px}.strategyDetailIntro h1{font-size:24px}.diagnosticGrid{grid-template-columns:1fr}.diagnosticItem.diagnosticText{grid-column:auto}.strategyCalendarItem{grid-template-columns:1fr}.strategyCalendarItem>.btn{width:100%}}
+
+/* STRATEGY_REAL_CALENDAR_RESTORE_2026_09_02 */
+.realCalendarPanel{background:#fff;border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 12px 34px rgba(15,23,42,.06)}
+.calendarSummary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.calendarSummary>div{background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px;padding:11px 13px;display:grid;gap:3px}
+.calendarSummary small{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#94a3b8;font-weight:900}.calendarSummary b{font-size:20px;color:#0f172a}
+.calendarLegend{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 14px;color:#64748b;font-size:11px;font-weight:800}
+.calendarLegend span{display:inline-flex;align-items:center;gap:6px}.calendarLegend i{width:9px;height:9px;border-radius:999px;background:#6366f1}.calendarLegend .checkpoint i{background:#f59e0b}.calendarLegend .generated i{background:#10b981}.calendarLegend .overdue i{background:#ef4444}
+.realCalendarToolbar{display:grid;grid-template-columns:minmax(190px,1fr) auto auto;align-items:center;gap:12px;padding:12px 0 14px;border-top:1px solid #eef2f7}
+.realCalendarTitle{display:grid;gap:3px}.realCalendarTitle b{font-size:18px;color:#0f172a;text-transform:capitalize}.realCalendarTitle small{color:#64748b;font-size:11px;font-weight:700}
+.realCalendarControls,.realCalendarModes{display:flex;gap:6px;flex-wrap:wrap}.calendarModeBtn{border:1px solid #dbe3ee;background:#fff;color:#475569;border-radius:10px;padding:8px 10px;font:inherit;font-size:11px;font-weight:850;cursor:pointer}.calendarModeBtn.active,.calendarModeBtn:hover{background:#eef2ff;border-color:#a5b4fc;color:#3730a3}
+.realCalendarBody{min-height:320px;overflow:auto}
+.calendarWeekHeader{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:#f8fafc;border:1px solid #e2e8f0;border-bottom:0;border-radius:14px 14px 0 0;overflow:hidden}.calendarWeekHeader span{padding:9px;text-align:center;font-size:10px;font-weight:900;color:#64748b;text-transform:uppercase}
+.calendarMonthGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-left:1px solid #e2e8f0;border-top:1px solid #e2e8f0}.calendarMonthCell{appearance:none;min-height:125px;border:0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;background:#fff;padding:8px;text-align:left;cursor:pointer;overflow:hidden}.calendarMonthCell:hover{background:#f8fafc}.calendarMonthCell.outside{background:#f8fafc;color:#94a3b8}.calendarMonthCell.today{box-shadow:inset 0 0 0 2px #818cf8}.calendarCellDate{display:inline-flex;width:25px;height:25px;align-items:center;justify-content:center;border-radius:999px;font-size:11px;font-weight:900}.calendarMonthCell.today .calendarCellDate{background:#4f46e5;color:#fff}.calendarCellEvents{display:grid;gap:4px;margin-top:5px}.calendarCellEvents em{font-size:9px;color:#64748b;font-style:normal;font-weight:800}
+.calendarEventChip{min-width:0;border-radius:8px;padding:4px 6px;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;display:grid;gap:1px;overflow:hidden}.calendarEventChip b{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.calendarEventChip small{font-size:8px;opacity:.8}.calendarEventChip.generated{background:#ecfdf5;border-color:#bbf7d0;color:#166534}.calendarEventChip.overdue{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+.calendarDayView{border:1px solid #e2e8f0;border-radius:14px;overflow:hidden}.calendarHourRow{display:grid;grid-template-columns:72px minmax(0,1fr);border-bottom:1px solid #e2e8f0;min-height:72px}.calendarHourRow:last-child{border-bottom:0}.calendarHourLabel{padding:11px 9px;background:#f8fafc;border-right:1px solid #e2e8f0;color:#64748b;font-size:10px;font-weight:900}.calendarHourEvents{padding:7px;display:grid;gap:7px}.calendarNoEvent{font-size:10px;color:#cbd5e1;align-self:center}
+.calendarEventDetail{border:1px solid #dbe3ee;border-left:4px solid #6366f1;border-radius:12px;padding:10px 11px;background:#fff;box-shadow:0 4px 12px rgba(15,23,42,.04)}.calendarEventDetail.checkpoint{border-left-color:#f59e0b}.calendarEventDetail.generated{border-left-color:#10b981;background:#f7fffb}.calendarEventDetail.overdue{border-left-color:#ef4444;background:#fffafa}.calendarEventTop{display:flex;align-items:center;gap:8px;justify-content:space-between}.calendarEventTime{font-size:10px;font-weight:900;color:#475569}.calendarEventDetail h3{margin:6px 0 4px;font-size:12px}.calendarMetaLine{margin:3px 0;font-size:10px;color:#64748b;display:flex;gap:5px}.calendarMetaLine small{font-weight:800}.calendarEventActions{margin-top:8px;display:flex;justify-content:flex-end}.calendarOverdueNote{margin:6px 0 0;color:#b91c1c;font-size:10px;font-weight:750}
+.calendarWeekView{min-width:720px}.calendarWeekHeaderGrid{display:grid;grid-template-columns:72px minmax(0,1fr)}.calendarWeekCorner{background:#f8fafc;border:1px solid #e2e8f0;border-right:0;border-radius:14px 0 0 0}.calendarWeekDaysGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}.workweek .calendarWeekDaysGrid{grid-template-columns:repeat(5,minmax(0,1fr))}.calendarWeekDayHead{appearance:none;border:1px solid #e2e8f0;border-right:0;background:#f8fafc;padding:7px;display:grid;gap:2px;text-align:center;cursor:pointer}.calendarWeekDayHead:last-child{border-right:1px solid #e2e8f0;border-radius:0 14px 0 0}.calendarWeekDayHead.today{background:#eef2ff}.calendarWeekDayHead b{font-size:9px;text-transform:uppercase;color:#64748b}.calendarWeekDayHead span{font-size:14px;font-weight:900}.calendarWeekDayHead em{font-size:8px;font-style:normal;color:#4f46e5}.calendarWeekHourRow{display:grid;grid-template-columns:72px minmax(0,1fr);min-height:58px}.calendarWeekHourLabel{background:#f8fafc;border:1px solid #e2e8f0;border-top:0;padding:8px;color:#64748b;font-size:9px;font-weight:900}.calendarWeekHourCells{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}.workweek .calendarWeekHourCells{grid-template-columns:repeat(5,minmax(0,1fr))}.calendarWeekHourCell{appearance:none;border:0;border-right:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;background:#fff;padding:4px;cursor:pointer;min-width:0;text-align:left}.calendarWeekHourCell:hover{background:#f8fafc}.calendarWeekList{margin-top:14px;display:grid;gap:8px}.calendarWeekList h4{margin:0 0 3px;font-size:13px}
+.calendarScheduleView{display:grid;gap:16px}.calendarScheduleDay{display:grid;gap:8px}.calendarScheduleDay h4{margin:0;padding:8px 10px;border-radius:10px;background:#f8fafc;color:#334155;font-size:12px;text-transform:capitalize}.calendarScheduleDay .calendarEventDetail{margin-left:8px}
+@media(max-width:980px){.realCalendarToolbar{grid-template-columns:1fr}.calendarSummary{grid-template-columns:repeat(2,minmax(0,1fr))}.realCalendarModes{overflow-x:auto;flex-wrap:nowrap}.calendarMonthCell{min-height:105px}.calendarEventChip b{max-width:90px}}
+@media(max-width:620px){.calendarSummary{grid-template-columns:1fr 1fr}.calendarMonthGrid,.calendarWeekHeader{min-width:700px}.calendarMonthView{overflow:auto}.realCalendarPanel{padding:12px}.calendarHourRow{grid-template-columns:54px minmax(0,1fr)}}
+
+/* Parité n8n V90 — sélection et planification des actions */
+.actionBulkToolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px;padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:18px}
+.actionBulkToolbar>div:first-child{display:flex;align-items:center;gap:10px}.actionBulkToolbar small{color:var(--muted)}
+.actionBulkButtons{display:flex;gap:8px;flex-wrap:wrap}
+.strategyActionCard.actionRow{position:relative;display:grid;grid-template-columns:0 minmax(0,1fr);gap:0;transition:grid-template-columns .18s ease,border-color .18s ease}
+.strategyActionsList.bulkMode .strategyActionCard.actionRow{grid-template-columns:34px minmax(0,1fr);gap:10px}
+.actionBulkSelect{width:0;overflow:hidden;display:flex;align-items:flex-start;justify-content:center;padding-top:3px;opacity:0;pointer-events:none;transition:opacity .18s ease,width .18s ease}
+.strategyActionsList.bulkMode .actionBulkSelect{width:34px;opacity:1;pointer-events:auto}
+.actionBulkSelect input{width:18px;height:18px;margin:0;cursor:pointer}.actionBulkSelect input:disabled{cursor:not-allowed;opacity:.45}
+.strategyActionMain{min-width:0}.actionStructuredLine{display:grid;gap:3px;margin-top:10px;padding:10px 12px;background:#f8fafc;border:1px solid var(--line);border-radius:12px}.actionStructuredLine small{color:var(--muted);font-weight:800}.actionStructuredLine b{font-size:13px;color:#1e293b}
+.actionCalendarLine{margin-top:10px;padding:9px 11px;border-radius:12px;background:#eef2ff;color:#3730a3;font-size:13px}.audiencePublishLine{background:#f8fafc;color:#334155}
+.actionControls{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.actionRun.isSaving{opacity:.65;cursor:wait}
+@media(max-width:720px){.actionBulkToolbar{align-items:stretch}.actionBulkButtons{display:grid;grid-template-columns:1fr}.actionBulkButtons .btn{width:100%}}

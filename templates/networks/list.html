@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Mes réseaux · Post Generator{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/networks.css">{% endblock %}
+{% block content %}
+<section class="hero">
+  <div>
+    <div class="eyebrow">Connexions</div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <h1 style="margin:0">Mes réseaux</h1>
+      <span data-total class="countPill" title="Nombre total de lignes"
+            aria-label="Nombre total de lignes : {{ total }}">{{ total }}</span>
+    </div>
+  </div>
+  <div class="channelConnectors">
+    {% if auth_user.is_super_admin %}
+    <a class="channelCard" href="/app/networks/meta/config">
+      <span class="channelIcon metaChannelIcon" aria-label="Meta">
+        <img src="/static/img/meta.svg" alt="" width="30" height="24" aria-hidden="true">
+      </span>
+      <span><b>Configurer Meta</b><small>App ID, secrets et permissions OAuth.</small></span>
+    </a>
+    {% endif %}
+    <a class="channelCard facebookCard" href="/app/networks/facebook/connect">
+      <span class="channelIcon facebookChannelIcon" aria-label="Facebook">
+        <img src="/static/img/facebook.svg" alt="" width="30" height="30" aria-hidden="true">
+      </span>
+      <span><b>Connecter Facebook via Meta</b><small>Facebook Login : Pages Facebook uniquement.</small></span>
+    </a>
+    <a class="channelCard instagramCard" href="/app/networks/instagram/connect">
+      <span class="channelIcon instagramChannelIcon" aria-label="Instagram">
+        <img src="/static/img/instagram.svg" alt="" width="30" height="30" aria-hidden="true">
+      </span>
+      <span><b>Connecter Instagram directement</b><small>Instagram Login : Pages Instagram uniquement.</small></span>
+    </a>
+    <button type="button" class="channelCard bufferCard" onclick="window.openBufferModal();return false">
+      <span class="channelIcon bufferChannelIcon" aria-label="Buffer">
+        <img src="/static/img/buffer.svg" alt="" width="30" height="30" aria-hidden="true">
+      </span>
+      <span><b>Ajouter Buffer</b><small>Enregistrer une clé API Buffer et connecter le canal de votre choix.</small></span>
+    </button>
+  </div>
+</section>
+
+{% if notice %}<div class="notice {{ notice_type }}">{{ notice }}</div>{% endif %}
+
+<div class="tableWrap">
+  <table>
+    <thead><tr>
+      <th>Nom</th><th>Réseau</th><th>Compte</th><th>Organisation / Page liée</th>
+      <th>Statut</th><th>Publications restantes</th><th>Modifié</th><th>Actions</th>
+    </tr></thead>
+    <tbody id="networkRows">
+    {% include "networks/_account_rows.html" %}
+    {% if not accounts %}<tr id="emptyNetworks"><td colspan="8">Aucun compte connecté.</td></tr>{% endif %}
+    </tbody>
+  </table>
+</div>
+<div id="networkLoader" class="loader" style="display:{{ 'block' if has_more else 'none' }}">Fais défiler pour charger plus de comptes.</div>
+<div id="networkSentinel" style="height:1px"></div>
+
+<div class="shareModalOverlay" id="editNetworkModal" aria-hidden="true">
+  <div class="shareModal" role="dialog" aria-modal="true" aria-labelledby="editNetworkTitle">
+    <h2 id="editNetworkTitle">Modifier le compte réseau</h2>
+    <p>Renomme l'affichage de cette connexion dans ce workspace.</p>
+    <label for="editNetworkDisplayName">Nom affiché</label>
+    <input id="editNetworkDisplayName" type="text" maxlength="120">
+    <div class="shareModalActions">
+      <button type="button" class="bufferCancel" id="cancelEditNetworkBtn">Annuler</button>
+      <button type="button" class="bufferSave" id="confirmEditNetworkBtn">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="shareModalOverlay" id="shareNetworkModal" aria-hidden="true">
+  <div class="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareNetworkTitle">
+    <h2 id="shareNetworkTitle">Partager le compte réseau</h2>
+    <p id="shareNetworkSubtitle">Choisis le workspace qui pourra utiliser cette connexion.</p>
+    <label for="shareNetworkWorkspaceSelect">Workspace cible</label>
+    <select id="shareNetworkWorkspaceSelect"></select>
+    <div class="shareModalActions">
+      <button type="button" class="bufferCancel" id="cancelShareNetworkBtn">Annuler</button>
+      <button type="button" class="bufferSave" id="confirmShareNetworkBtn">Partager</button>
+    </div>
+  </div>
+</div>
+
+<div id="bufferModal" class="bufferModalOverlay" role="dialog" aria-modal="true">
+  <div class="bufferModal">
+    <div class="bufferModalTop">
+      <div>
+        <h2>Ajouter un accès Buffer</h2>
+        <p class="muted">La clé API sera testée puis chiffrée en base. Elle ne sera jamais renvoyée au navigateur.</p>
+      </div>
+      <button type="button" class="bufferModalClose" onclick="window.closeBufferModal();return false">×</button>
+    </div>
+    <form id="bufferForm" class="bufferForm" onsubmit="return window.saveBufferAccount(event)">
+      <input type="hidden" id="bufferAccountId" name="account_id">
+      <label>Nom interne<input id="bufferDisplayName" name="display_name" required maxlength="120"
+             placeholder="Ex : LinkedIn société Coppelis"></label>
+      <label>Clé API Buffer<input id="bufferApiKey" name="api_key" type="password" required
+             autocomplete="new-password" placeholder="Clé créée dans Buffer > Settings > API"></label>
+      <label>Channel ID Buffer<input id="bufferChannelId" name="channel_id" required maxlength="250"
+             placeholder="Identifiant du canal Buffer"></label>
+      <div class="bufferHelp">Le Channel ID identifie exactement un canal Buffer (LinkedIn, Instagram ou Facebook).
+        Le service est vérifié par l'API Buffer avant l'enregistrement.</div>
+      <div id="bufferFormStatus" class="bufferStatus"></div>
+      <div class="bufferActions">
+        <button type="button" class="bufferCancel" onclick="window.closeBufferModal();return false">Annuler</button>
+        <button id="bufferSaveBtn" type="submit" class="bufferSave">Tester et enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div id="networkToast" class="toast"></div>
+{% endblock %}
+{% block scripts %}
+<script>window.__shareTargets = {{ share_targets | tojson }}; window.__networkPaging = {{ {"has_more":has_more,"cursor_at":next_cursor_at,"cursor_id":next_cursor_id}|tojson }};</script>
+<script src="/static/js/networks.js"></script>
+{% endblock %}

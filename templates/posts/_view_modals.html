@@ -1,0 +1,297 @@
+{# Modales de la page de consultation — port du markup du workflow original. #}
+
+<div id="actionModal" class="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <div class="modalTop">
+      <div><h2 id="modalTitle">Action</h2><p id="modalDescription"></p></div>
+      <button type="button" class="modalClose" onclick="closeActionModal()">×</button>
+    </div>
+    <div class="modalBody">
+      <div id="modalIdea" class="modalIdea"></div>
+      <div id="modalInstructionWrap">
+        <label for="modalInstructions"><b id="modalInstructionsLabel">Instructions optionnelles</b></label>
+        <textarea id="modalInstructions"
+          placeholder="Ex : angle plus concret, ton plus expert, cible PME, post plus court, exemple avant/après..."></textarea>
+      </div>
+      <div id="modalStatus" class="modalStatus"></div>
+      <div class="modalActions">
+        <button type="button" class="modalCancel" onclick="closeActionModal()">Annuler</button>
+        <button type="button" id="modalConfirm" class="modalConfirm" onclick="confirmActionModal()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modalOverlay" id="generateMoreModal" role="dialog" aria-modal="true" aria-labelledby="generateMoreTitle">
+  <div class="modal generateMoreModalBox">
+    <div class="modalTop">
+      <div><h2 id="generateMoreTitle">Générer plus d'idées</h2>
+        <p>Les nouvelles idées seront ajoutées à la suite de cette demande, sans supprimer les idées existantes.</p></div>
+      <button class="modalClose" type="button"
+        onclick="document.getElementById('generateMoreModal').classList.remove('isVisible')">×</button>
+    </div>
+    <form class="generateMoreForm" onsubmit="event.preventDefault();window.submitGenerateMoreIdeas(event,this);return false;">
+      <input type="hidden" name="request_id" value="{{ request_id }}">
+      <label for="generateMoreCount">Nombre d'idées à ajouter</label>
+      <input id="generateMoreCount" class="generateMoreQty" type="number" name="post_count" min="1" max="8" value="3" required>
+      <div class="generateMoreHelp">Entre 1 et 8. Le workflow réutilise le même sujet, les mêmes contraintes,
+        la langue, les formats et les inspirations existantes.</div>
+      <div id="generateMoreStatus" class="generateMoreStatus"></div>
+      <div class="modalActions">
+        <button type="button" class="modalCancel"
+          onclick="document.getElementById('generateMoreModal').classList.remove('isVisible')">Annuler</button>
+        <button type="submit" class="modalConfirm">Générer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modalOverlay" id="mediaModal" role="dialog" aria-modal="true" aria-labelledby="mediaModalTitle">
+  <div class="modal mediaModalBox" id="mediaModalBox">
+    <div class="modalTop">
+      <div><h2 id="mediaModalTitle">Générer un média</h2>
+        <p id="mediaModalDescription">Création d’un nouveau média : pour une vidéo, écris une instruction simple, un scénario complet, utilise l’aide facultative, ou laisse le champ vide pour partir du post.</p></div>
+      <button type="button" class="modalClose" onclick="window.closeMediaModal()">×</button>
+    </div>
+    <div class="modalBody mediaModalBody">
+      <div class="mediaTypeSwitchWrap" id="modalMediaType">
+        <div class="mediaTypeSwitch">
+          <label class="mediaTypeOption active"><input type="radio" name="media_type" value="image" checked>Image</label>
+          <label class="mediaTypeOption"><input type="radio" name="media_type" value="video">Vidéo</label>
+        </div>
+      </div>
+
+      <div id="mediaModalIdea" class="modalIdea"></div>
+
+      <div id="mediaInspirationField" class="field mediaInspirationField">
+        <div class="mediaInspirationRow">
+          <button type="button" class="mediaDownload" id="mediaInspirationBtn" onclick="window.chooseMediaInspiration()">Importer inspiration</button>
+          <span>Image uniquement. Sert de référence IA, ne remplace pas le média du post.</span>
+        </div>
+        <input type="file" id="mediaInspirationFile" accept="image/*" hidden>
+        <div id="mediaInspirationStatus" class="mediaFieldHelp">Aucune inspiration importée. Clique sur « Importer inspiration » pour ajouter une image de référence à envoyer à l’IA.</div>
+      </div>
+
+      <div class="field" id="imageModelField">
+        <label for="imageModel"><b>Modèle image</b></label>
+        <select id="imageModel" class="mediaSelect">
+          <option value="openai/gpt-5-image-mini" selected>GPT-5 Image Mini</option>
+          <option value="x-ai/grok-imagine-image-quality">Grok Imagine Image Quality</option>
+        </select>
+        <div class="mediaFieldHelp">Choisis le modèle utilisé pour générer ou modifier l’image.</div>
+      </div>
+
+      <div class="field" id="mediaQualityField">
+        <label for="mediaQuality"><b>Qualité</b></label>
+        <select id="mediaQuality" class="mediaSelect">
+          <option value="standard" selected>Standard (1K)</option>
+          <option value="haute">Haute (1K HQ)</option>
+        </select>
+        <div id="mediaQualityHelp" class="mediaFieldHelp">GPT-5 Image Mini : Standard = 1K ; Haute = 1K HQ.</div>
+      </div>
+
+      <div class="field" id="imageStyleField">
+        <label><b>Style de l’image <span class="requiredStar">*</span></b></label>
+        <div id="imageStyleSelect" class="miniMultiSelect"></div>
+        <div class="mediaFieldHelp">Choisis au moins un style. Aucun style n’est sélectionné automatiquement. Tu peux aussi ajouter un style personnalisé avec Entrée.</div>
+      </div>
+
+      <div class="field" id="imageAspectField">
+        <label><b>Format</b></label>
+        <select id="imageAspect" hidden>
+          <option value="1:1">1:1</option><option value="4:5" selected>4:5</option><option value="16:9">16:9</option>
+        </select>
+        <details class="aspectPicker" data-aspect-select="imageAspect">
+          <summary><span class="aspectShape" data-aspect-current-shape></span><span class="aspectSummaryText"><b data-aspect-current-label>4:5</b><small data-aspect-current-description>Fil LinkedIn / Instagram · recommandé pour les images</small></span><span class="aspectChevron">⌃</span></summary>
+          <div class="aspectOptions">
+            <button type="button" data-aspect-value="4:5"><b>4:5</b><small>Fil LinkedIn / Instagram</small></button>
+            <button type="button" data-aspect-value="1:1"><b>1:1</b><small>Carré polyvalent</small></button>
+            <button type="button" data-aspect-value="16:9"><b>16:9</b><small>Paysage / couverture</small></button>
+          </div>
+        </details>
+        <div class="mediaFieldHelp">Le format choisi est transmis tel quel au modèle image.</div>
+      </div>
+
+      <div class="field promptField" id="mediaInstructionsField">
+        <div class="labelRow"><label for="mediaInstructions"><b>Instructions image optionnelles</b></label>
+          <button type="button" id="mediaGeneratePromptBtn" class="promptBtn" onclick="window.generateMediaInstructionsWithAI()">Générer avec l’IA</button></div>
+        <textarea id="mediaInstructions" maxlength="1200" data-char-limit="1200" placeholder="Ex : améliorer le cadrage, conserver le style mais plus premium, changer la couleur ou proposer une autre composition..."></textarea>
+      </div>
+
+      <div id="videoOptions" style="display:none">
+        <div class="field" id="videoStyleField">
+          <label><b>Style de vidéo <span class="requiredStar">*</span></b></label>
+          <div id="videoStyleSelect" class="miniMultiSelect"></div>
+          <div class="mediaFieldHelp">Choisis au moins un style. Aucun style n’est sélectionné automatiquement. Tu peux aussi ajouter un style personnalisé avec Entrée.</div>
+        </div>
+        <div class="mediaTwoCols">
+          <div class="field">
+            <label for="videoDuration"><b>Durée</b></label>
+            <select id="videoDuration" class="mediaSelect">
+              <option value="4">4 secondes</option><option value="6" selected>6 secondes</option><option value="8">8 secondes</option>
+              <option value="10">10 secondes</option><option value="12">12 secondes</option><option value="15">15 secondes</option>
+            </select>
+          </div>
+          <div class="field" id="videoAspectField">
+            <label><b>Format</b></label>
+            <select id="videoAspect" hidden><option value="9:16" selected>9:16</option><option value="16:9">16:9</option></select>
+            <details class="aspectPicker" data-aspect-select="videoAspect">
+              <summary><span class="aspectShape" data-aspect-current-shape></span><span class="aspectSummaryText"><b data-aspect-current-label>9:16</b><small data-aspect-current-description>Reel / Story · recommandé pour les vidéos verticales</small></span><span class="aspectChevron">⌃</span></summary>
+              <div class="aspectOptions"><button type="button" data-aspect-value="9:16"><b>9:16</b><small>Reel / Story</small></button><button type="button" data-aspect-value="16:9"><b>16:9</b><small>Vidéo horizontale</small></button></div>
+            </details>
+          </div>
+        </div>
+        <div class="field" id="videoFirstFrameField">
+          <label for="videoFirstFrameSource"><b>Première frame vidéo</b></label>
+          <select id="videoFirstFrameSource" class="mediaSelect">
+            <option value="none">Aucune image d’ancrage</option>
+            <option value="selected_image">Utiliser une image du carrousel</option>
+            <option value="upload">Importer une image dédiée</option>
+            <option value="generate_image">Générer une image</option>
+          </select>
+          <div id="videoFirstFrameCarouselPickerWrap" style="display:none;margin-top:10px">
+            <label for="videoFirstFrameCarouselImage"><b>Image du carrousel à utiliser</b></label>
+            <select id="videoFirstFrameCarouselImage" class="mediaSelect"></select>
+          </div>
+          <div class="mediaFieldHelp">Choisis une image du carrousel, importe une image dédiée, ou génère une image de première frame avec ses propres paramètres. Elle sera utilisée pour stabiliser le décor, le sujet et le style de la vidéo.</div>
+          <button type="button" class="mediaDownload" id="videoFirstFrameUploadBtn" style="display:none;margin-top:8px" onclick="window.importVideoFirstFrame()">Importer première frame</button>
+          <div id="videoFirstFrameGenerateOptions" class="firstFrameGenerateOptions" style="display:none">
+            <div class="firstFrameOptionsTitle">Paramètres de l’image de première frame</div>
+            <div class="mediaTwoCols">
+              <div class="field" id="videoFirstFrameModelField">
+                <label for="videoFirstFrameModel"><b>Modèle image</b></label>
+                <select id="videoFirstFrameModel" class="mediaSelect">
+                  <option value="openai/gpt-5-image-mini" selected>GPT-5 Image Mini</option>
+                  <option value="x-ai/grok-imagine-image-quality">Grok Imagine Image Quality</option>
+                </select>
+                <div class="mediaFieldHelp">Modèle utilisé uniquement pour générer la première frame.</div>
+              </div>
+              <div class="field" id="videoFirstFrameQualityField">
+                <label for="videoFirstFrameQuality"><b>Qualité</b></label>
+                <select id="videoFirstFrameQuality" class="mediaSelect"><option value="standard" selected>Standard (1K)</option><option value="haute">Haute (1K HQ)</option></select>
+                <div id="videoFirstFrameQualityHelp" class="mediaFieldHelp">GPT-5 Image Mini : Standard = 1K ; Haute = 1K HQ.</div>
+              </div>
+            </div>
+            <div class="field" id="videoFirstFrameStyleField">
+              <label><b>Style de l’image de première frame <span class="requiredStar">*</span></b></label>
+              <div id="videoFirstFrameStyleSelect" class="miniMultiSelect"></div>
+              <div class="mediaFieldHelp">Choisis au moins un style. Aucun style n’est sélectionné automatiquement.</div>
+            </div>
+            <div class="field" id="videoFirstFrameInstructionsField">
+              <label for="videoFirstFrameInstructions"><b>Instructions image optionnelles</b></label>
+              <textarea id="videoFirstFrameInstructions" maxlength="1200" data-char-limit="1200" placeholder="Ex : conserver un décor de bureau moderne, cadrer le sujet au centre, utiliser une lumière naturelle..."></textarea>
+              <div class="mediaFieldHelp">Ces instructions concernent uniquement l’image de première frame, pas le scénario ni la vidéo.</div>
+            </div>
+            <button type="button" class="mediaBtn" id="videoFirstFrameGenerateBtn" onclick="window.generateVideoFirstFrameImage()">Générer la première frame</button>
+          </div>
+          <div id="videoFirstFramePreview" class="firstFramePreview"></div>
+          <div id="videoFirstFrameStatus" class="mediaFieldHelp">Aucune première frame active.</div>
+        </div>
+        <div class="field promptField" id="modalVideoScenario">
+          <div class="labelRow"><label for="modalVideoScenarioText"><b>Instructions de la vidéo</b></label>
+            <button type="button" id="modalRegenerateScenarioBtn" class="promptBtn" onclick="window.generateMediaInstructionsWithAI()">Générer avec l’IA</button></div>
+          <textarea id="modalVideoScenarioText" maxlength="3500" data-char-limit="3500" class="copyBox" placeholder="Écris une demande simple, un scénario complet, ou laisse vide pour créer la vidéo directement à partir du post."></textarea>
+        </div>
+      </div>
+
+      <div id="mediaModalStatus" class="modalStatus"></div>
+      <div class="modalActions mediaModalActions">
+        <button type="button" class="modalCancel" id="mediaModalCancel" onclick="window.closeMediaModal()">Annuler</button>
+        <button type="button" class="modalConfirm mediaBtn" id="mediaModalConfirm" onclick="window.confirmMediaModal()">Générer l’image</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modalOverlay" id="publishModal" role="dialog" aria-modal="true" aria-labelledby="publishModalTitle">
+  <div class="modal">
+    <div class="modalTop">
+      <div><h2 id="publishModalTitle">Publier le sujet</h2>
+        <p id="publishModalDescription">Choisis les comptes à utiliser, le type de publication et le moment d'envoi.</p></div>
+      <button class="modalClose" type="button" onclick="window.closePublishModal()">×</button>
+    </div>
+    <div class="modalBody">
+      <div id="publishModalIdea" class="modalIdea"></div>
+
+      <div class="field publishRequiredField" id="publishAccountSelectorsWrap">
+        <label><b>Comptes à utiliser<span class="publishRequiredMark">*</span></b></label>
+        <div id="publishAccountSelectors" class="publishAccountMultiSelect">
+          <div class="publishAccountEmpty">Chargement des comptes disponibles…</div>
+        </div>
+        <div id="publishAccountsError" class="publishFieldError">Choisis au moins un compte à utiliser.</div>
+        <div style="margin-top:8px;color:#64748b;font-size:13px;line-height:1.45">
+          Les types proposés s’adaptent au média sélectionné : LinkedIn Buffer = Post ;
+          Instagram Buffer = image → Post/Story, vidéo → Post/Reel/Story ; Instagram direct =
+          image → Post/Story, vidéo → Reel/Story. Les comptes se gèrent dans
+          <a href="/app/networks" target="_blank" rel="noopener">Mes réseaux</a>.
+        </div>
+      </div>
+
+      <div class="field publishRequiredField" id="publishContentTypeWrap" style="display:none;margin-top:14px">
+        <label><b>Type de publication<span class="publishRequiredMark">*</span></b></label>
+        <div id="publishContentTypes" class="publishChoices"></div>
+        <div id="publishContentTypesError" class="publishFieldError">Choisis au moins un type de publication.</div>
+        <div id="publishContentTypeHint" style="margin-top:8px;color:#64748b;font-size:13px;line-height:1.45">
+          Le type est maintenant déterminé par le compte sélectionné.</div>
+      </div>
+
+      <div class="field publishRequiredField" id="publishModeWrap" style="margin-top:14px">
+        <label for="publishMode"><b>Moment de publication<span class="publishRequiredMark">*</span></b></label>
+        <select id="publishMode" required style="width:100%;margin-top:8px;border:1px solid #cbd5e1;border-radius:16px;padding:12px;font:inherit;background:white">
+          <option value="" selected disabled>Choisir le moment de publication</option>
+          <option value="now">Maintenant</option>
+          <option value="scheduled">Programmer</option>
+        </select>
+        <div id="publishModeError" class="publishFieldError">Choisis le moment de publication.</div>
+      </div>
+
+      <div class="field publishRequiredField" id="publishDateWrap" style="display:none;margin-top:14px">
+        <label for="publishDateTime"><b>Date et heure<span class="publishRequiredMark">*</span></b></label>
+        <input id="publishDateTime" type="datetime-local" style="width:100%;margin-top:8px;border:1px solid #cbd5e1;border-radius:16px;padding:12px;font:inherit;background:white">
+        <div id="publishDateError" class="publishFieldError">Choisis une date et une heure futures.</div>
+        <div style="margin-top:8px;color:#64748b;font-size:13px;line-height:1.45">Heure locale de ton compte : <b>{{ auth_user.timezone }}</b>. Elle sera stockée en UTC puis réaffichée dans ce fuseau.</div>
+      </div>
+
+      <div class="field" id="publishMediaWrap" style="margin-top:14px">
+        <label><b>Média qui sera publié<span class="publishRequiredMark" id="publishMediaRequiredMark" style="display:none">*</span></b></label>
+        <div id="publishMediaPreview" style="margin-top:8px"></div>
+        <div id="publishMediaRequirement" style="margin-top:10px;border-radius:14px;padding:11px 12px;font-size:13px;font-weight:800;line-height:1.4"></div>
+        <div id="publishMediaError" class="publishFieldError">Sélectionne un média avant de publier.</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
+          <button type="button" id="publishChooseMediaBtn" class="mediaDownload" style="display:none"
+                  onclick="window.focusMediaSelectionFromPublish()">Choisir un média</button>
+          <label id="publishWithoutMediaWrap" style="display:none;align-items:flex-start;gap:9px;border:1px solid #fcd34d;background:#fffbeb;color:#92400e;border-radius:14px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer">
+            <input id="publishWithoutMedia" type="checkbox" style="margin-top:2px"
+                   onchange="window.updatePublishMediaRequirement()"> Publier volontairement sans média</label>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:14px">
+        <label for="publishPostPreview"><b>Sujet qui sera publié</b></label>
+        <textarea id="publishPostPreview" class="copyBox" readonly style="min-height:180px;margin-top:8px"></textarea>
+      </div>
+
+      <div id="publishModalStatus" class="modalStatus"></div>
+      <div class="modalActions">
+        <button type="button" class="modalCancel" onclick="window.closePublishModal()">Annuler</button>
+        <button type="button" class="modalConfirm ok" id="publishModalConfirm" onclick="window.confirmPublishModal()">Publier</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="mediaLoader" class="mediaLoader" aria-live="polite" aria-busy="true">
+  <div class="mediaLoaderCard">
+    <div class="loaderSpin"></div>
+    <p class="loaderTitle" id="mediaLoaderTitle">Génération du média</p>
+    <p class="loaderText" id="mediaLoaderText">L'IA prépare un média adapté au post sélectionné.</p>
+    <ol class="loaderSteps" id="mediaLoaderSteps">
+      <li>1. Analyse du post et du format</li>
+      <li>2. Construction du prompt média</li>
+      <li>3. Génération du média</li>
+      <li>4. Affichage dans la carte</li>
+    </ol>
+  </div>
+</div>
+
+<div id="toastContainer" class="toastContainer" aria-live="polite" aria-atomic="true"></div>

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Accueil · Post Generator{% endblock %}
+{% block extra_style %}
+<style>
+  .hero.dashboardHero{background:#fff;border:1px solid var(--line);border-radius:24px;padding:26px;
+    min-height:150px;display:flex;flex-direction:column;justify-content:center;
+    box-shadow:0 18px 50px rgba(15,23,42,.06)}
+  .hero h1{margin:0 0 10px;font-size:34px;line-height:1.05;letter-spacing:-.04em}
+  .hero p.muted{margin:0;color:var(--muted);font-size:14px;line-height:1.55;max-width:720px}
+  .kpiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}
+  .kpiCard{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;
+    min-height:126px;box-shadow:0 10px 28px rgba(15,23,42,.04)}
+  .kpiCard small{display:block;color:#53657f;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.07em}
+  .kpiCard b{display:block;font-size:34px;margin-top:10px;letter-spacing:-.04em}
+  .kpiCard span{display:block;color:var(--muted);font-size:13px;margin-top:5px;line-height:1.35}
+  .dashMain{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px;
+    box-shadow:0 12px 34px rgba(15,23,42,.045)}
+  .panel h2{font-size:18px;letter-spacing:-.025em;margin:0 0 14px}
+  .panelTitleRow{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .panelTitleRow h2{margin:0}
+  .dashRetryBtn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;
+    font-size:12px;font-weight:800;color:#334155;cursor:pointer}
+  .dashRetryBtn:hover{border-color:var(--primary);color:var(--primary)}
+  .nextActionsList{display:grid;gap:10px}
+  .nextCard{border:1px solid #dbeafe;background:#f8fbff;border-radius:18px;padding:16px}
+  .nextCardItem{display:flex;align-items:center;gap:12px;min-height:82px}
+  .nextActionLink{text-decoration:none;color:inherit;cursor:pointer;transition:.16s ease}
+  .nextActionLink:hover{transform:translateY(-1px);border-color:#a5b4fc;background:#f5f7ff;
+    box-shadow:0 9px 24px rgba(79,70,229,.09)}
+  .nextActionRank{flex:0 0 34px;width:34px;height:34px;border-radius:999px;display:inline-flex;
+    align-items:center;justify-content:center;background:#eef2ff;border:1px solid #c7d2fe;
+    color:#4338ca;font-size:12px;font-weight:950}
+  .nextActionText{min-width:0;display:flex;flex-direction:column;gap:5px;flex:1}
+  .nextActionArrow{flex:0 0 auto;color:#6366f1;font-size:26px;font-weight:700;line-height:1}
+  .nextCard b{display:block;font-size:17px;line-height:1.35}
+  .nextCard small{display:block;color:var(--muted);font-size:13px;margin-top:8px;line-height:1.45}
+  .recentList,.todoList{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+  .recentList li,.todoList li{border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:13px}
+  .emptyState{color:var(--muted);font-size:13px;padding:14px 0}
+  .dashboardToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#111827;color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:700;
+    opacity:0;pointer-events:none;transition:.2s ease}
+  .dashboardToast.isVisible{opacity:1;transform:translateX(-50%) translateY(0)}
+  .dashboardToast.isError{background:#991b1b}
+</style>
+{% endblock %}
+{% block content %}
+<section class="hero dashboardHero commonPageHero">
+  <div class="eyebrow">Vue d’ensemble</div>
+  <h1>Accueil</h1>
+  <p class="muted">Vue essentielle du workspace actif : comptes, stratégies, actions planifiées et publications.</p>
+</section>
+
+<section class="kpiGrid" aria-label="KPI essentiels">
+  <article class="kpiCard"><small>Comptes connectés</small><b>{{ connected_accounts }}</b>
+    <span>{{ "Compte(s) actif(s)" if connected_accounts else "Aucun compte" }}</span></article>
+  <article class="kpiCard"><small>Stratégies actives</small><b>{{ active_strategies }}</b>
+    <span>{{ "Stratégie(s) en cours" if active_strategies else "Aucune stratégie" }}</span></article>
+  <article class="kpiCard"><small>Actions planifiées</small><b>{{ planned_actions }}</b>
+    <span>{{ "Action(s) programmée(s)" if planned_actions else "Aucune action" }}</span></article>
+  <article class="kpiCard"><small>Posts publiés</small><b>{{ published_posts }}</b>
+    <span>{{ (failed_items ~ " alerte(s)") if failed_items else "Aucune alerte" }}</span></article>
+</section>
+
+<section class="dashMain">
+  <article class="panel">
+    <div class="panelTitleRow"><h2>Prochaines actions</h2>
+      <button type="button" class="dashRetryBtn" id="retryOverdueBtn">Nettoyer et relancer</button></div>
+    <div class="nextActionsList">
+      {% for a in next_actions %}
+        <a class="nextCard nextActionLink" href="{{ a.url }}">
+          <div class="nextCardItem">
+            <span class="nextActionRank">{{ loop.index }}</span>
+            <span class="nextActionText"><b>{{ a.title }}</b><small>{{ a.meta }}</small></span>
+            <span class="nextActionArrow">›</span>
+          </div>
+        </a>
+      {% else %}
+        <div class="emptyState">Aucune action planifiée pour le moment.</div>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel">
+    <h2>Activité récente</h2>
+    <ul class="recentList">
+      {% for item in recent_activity %}<li>{{ item.title }} — <span class="status-badge">{{ item.status }}</span></li>
+      {% else %}<li class="emptyState">Aucune activité récente.</li>{% endfor %}
+    </ul>
+  </article>
+
+  {% if todos %}
+  <article class="panel">
+    <h2>À faire</h2>
+    <ul class="todoList">
+      {% for t in todos %}<li>{{ t }}</li>{% endfor %}
+    </ul>
+  </article>
+  {% endif %}
+</section>
+
+<div class="dashboardToast" id="dashboardToast" role="status" aria-live="polite"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+/* Port exact du bouton "Nettoyer et relancer" (RETRY_OVERDUE_DASHBOARD_SCRIPT) */
+(function(){
+  'use strict';
+  var retryButton = document.getElementById('retryOverdueBtn');
+  var toast = document.getElementById('dashboardToast');
+  var toastTimer = null;
+  function showDashToast(message, isError){
+    if(!toast)return;
+    toast.textContent = String(message || '');
+    toast.classList.toggle('isError', Boolean(isError));
+    toast.classList.add('isVisible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){toast.classList.remove('isVisible');}, 4200);
+  }
+  async function retryOverdueActions(){
+    if(!retryButton)return;
+    var previousText = retryButton.textContent;
+    retryButton.disabled = true;
+    retryButton.textContent = 'Nettoyage…';
+    try{
+      var response = await fetch('/app/strategies/overdue/retry', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        credentials:'same-origin', body:JSON.stringify({source:'dashboard'})
+      });
+      var data = await response.json().catch(function(){return {};});
+      if(!response.ok || data.success === false){
+        throw new Error(data.message || 'Relance impossible.');
+      }
+      showDashToast(data.message || 'Vérification terminée.');
+      if(Number(data.queued_count || 0) > 0){
+        setTimeout(function(){window.location.reload();}, 1400);
+      }
+    }catch(error){
+      showDashToast(error.message || 'Relance impossible.', true);
+    }finally{
+      retryButton.disabled = false;
+      retryButton.textContent = previousText || 'Nettoyer et relancer';
+    }
+  }
+  if(retryButton){
+    retryButton.addEventListener('click', function(event){
+      event.preventDefault();
+      retryOverdueActions();
+    });
+  }
+})();
+</script>
+{% endblock %}

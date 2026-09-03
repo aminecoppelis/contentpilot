@@ -1,0 +1,15 @@
+{% from "partials/network_badges.html" import history_publication_badges, published_network_logo %}
+{% for r in rows %}
+<tr>
+  <td class="publishedBulkCell"><input class="publishedRowCheck" type="checkbox" value="{{ r.publication_id }}" aria-label="Sélectionner cette publication"></td>
+  <td><b>{{ r.idea_title or '' }}</b><div class="mini">{{ r.publication_id }}</div></td>
+  <td>{{ published_network_logo(r.platform, r.platform_label, r.publication_type or '') }}</td>
+  <td><span class="status {{ r.status }}">{{ r.status_label }}</span></td>
+  <td>{{ r.last_modified }}</td>
+  <td>{% if r.created_by_name %}<span class="personCell" title="{{ r.created_by_name }}"><span class="personAvatar">{{ r.created_by_initials }}</span></span>{% else %}<span class="personEmpty">-</span>{% endif %}</td>
+  <td>{% if r.published_by_name %}<span class="personCell" title="{{ r.published_by_name }}"><span class="personAvatar">{{ r.published_by_initials }}</span></span>{% else %}<span class="personEmpty">-</span>{% endif %}</td>
+  <td>{{ r.scheduled_label or '—' }}</td>
+  <td>{{ r.published_label or '—' }}</td>
+  <td>{% if r.error_message %}<button type="button" class="publishedErrorDetailsBtn" data-error-title="{{ r.idea_title or 'Publication' }}" data-error-status="{{ r.status_label }}" data-publication-id="{{ r.publication_id }}" data-error-message="{{ r.error_message }}">Voir l'erreur</button>{% else %}<span class="publishedNoError">—</span>{% endif %}</td>
+</tr>
+{% endfor %}

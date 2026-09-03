@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}{{ selected.title or 'Stratégie' }} · Post Generator{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css">{% endblock %}
+{% block content %}
+<section class="strategyWorkspace" data-strategy-id="{{ selected.id }}">
+  <div class="strategyWorkspaceHeader">
+    <div class="strategyDetailToolbar">
+      <a class="btn secondary tiny strategyToolbarBtn" href="/app/strategies">← Retour aux stratégies</a>
+      <div class="strategyDetailTabs" role="tablist" aria-label="Sections de la stratégie">
+        <button type="button" class="strategyViewBtn active" data-strategy-tab="summary" aria-selected="true">Synthèse</button>
+        <button type="button" class="strategyViewBtn" data-strategy-tab="actions" aria-selected="false">Actions <span class="tabCount">{{ actions|length }}</span></button>
+        <button type="button" class="strategyViewBtn" data-strategy-tab="calendar" aria-selected="false">Calendrier <span class="tabCount">{{ calendar|length }}</span></button>
+      </div>
+      <div class="strategyDetailActions">
+        {% if selected.status != 'active' %}
+          <button type="button" class="btn primary tiny strategyStatusBtn" data-strategy-action="validate">Activer</button>
+        {% endif %}
+        {% if selected.status != 'archived' %}
+          <button type="button" class="btn secondary tiny strategyStatusBtn" data-strategy-action="archive">Archiver</button>
+        {% endif %}
+        <button type="button" class="btn danger tiny strategyDetailDeleteBtn"
+                data-strategy-id="{{ selected.id }}" data-strategy-title="{{ selected.title or 'Stratégie' }}">Supprimer</button>
+      </div>
+    </div>
+
+    <div class="strategyDetailIntro">
+      <div class="strategyDetailMeta">
+        <span class="statusPill {{ selected.status }}">{{ selected.status_label }}</span>
+        <span>{{ selected.platform_label }}</span>
+        <span>{{ selected.account_label }}</span>
+        <span>Version {{ selected.current_version or 1 }}</span>
+        {% if selected.analyzed_label %}<span>Analysée {{ selected.analyzed_label }}</span>{% endif %}
+      </div>
+      <h1>{{ selected.title or 'Stratégie' }}</h1>
+      <p>{{ selected.executive_summary or 'Stratégie générée à partir du réseau et du contexte disponibles.' }}</p>
+    </div>
+  </div>
+
+  <section class="strategyTabPanel active" data-strategy-panel="summary">
+    <div class="strategySummaryGrid">
+      <article class="strategyCard strategyCardWide">
+        <div class="strategyCardLabel">Objectif</div>
+        <h2>{{ selected.objective.goal or selected.objective_label or 'Objectif de croissance' }}</h2>
+        {% if selected.objective.target %}<p><b>Cible :</b> {{ selected.objective.target }}</p>{% endif %}
+        {% if selected.objective.feasibility %}<p>{{ selected.objective.feasibility }}</p>{% endif %}
+        {% if selected.objective.conditions %}<p class="strategyMuted">{{ selected.objective.conditions }}</p>{% endif %}
+        <div class="strategyMetaChips">
+          {% if selected.duration_days %}<span>{{ selected.duration_days }} jours</span>{% endif %}
+          {% if selected.objective.feasibility_code %}<span>Faisabilité : {{ selected.objective.feasibility_code }}</span>{% endif %}
+        </div>
+      </article>
+
+      <article class="strategyCard">
+        <div class="strategyCardLabel">Cible principale</div>
+        <h2>{{ selected.target_analysis.primary_target or 'Non renseignée' }}</h2>
+        {% if selected.target_analysis.secondary_target %}<p><b>Secondaire :</b> {{ selected.target_analysis.secondary_target }}</p>{% endif %}
+        {% if selected.target_analysis.pain_points %}
+          <div class="strategyListBlock"><b>Problématiques</b>
+            <ul>{% for item in selected.target_analysis.pain_points %}<li>{{ item }}</li>{% endfor %}</ul>
+          </div>
+        {% endif %}
+      </article>
+
+      <article class="strategyCard">
+        <div class="strategyCardLabel">Positionnement</div>
+        {% if selected.positioning is mapping %}
+          {% for key, value in selected.positioning.items() %}
+            {% if value is not mapping and value is not iterable or value is string %}<p><b>{{ key|replace('_',' ')|title }} :</b> {{ value }}</p>{% endif %}
+          {% endfor %}
+        {% elif selected.positioning %}<p>{{ selected.positioning }}</p>
+        {% else %}<p class="strategyMuted">Non disponible.</p>{% endif %}
+      </article>
+
+      <article class="strategyCard strategyCardWide">
+        <div class="strategyCardLabel">Diagnostic</div>
+        {% if selected.diagnostic %}
+          <div class="diagnosticGrid">
+          {% for key, value in selected.diagnostic.items() %}
+            {% if value is number %}
+              <div class="diagnosticItem"><span>{{ key|replace('_',' ')|title }}</span><b>{{ value }}{% if value <= 10 %} / 10{% endif %}</b></div>
+            {% elif value is string %}
+              <div class="diagnosticItem diagnosticText"><span>{{ key|replace('_',' ')|title }}</span><b>{{ value }}</b></div>
+            {% endif %}
+          {% endfor %}
+          </div>
+        {% else %}<p class="strategyMuted">Le diagnostic n'est pas disponible.</p>{% endif %}
+      </article>
+
+      <article class="strategyCard">
+        <div class="strategyCardLabel">Piliers de contenu</div>
+        {% if selected.content_pillars %}<ul class="strategyCleanList">
+          {% for item in selected.content_pillars %}
+            <li>{% if item is mapping %}{{ item.name or item.title or item.label or item.description or item }}{% else %}{{ item }}{% endif %}</li>
+          {% endfor %}
+        </ul>{% else %}<p class="strategyMuted">Non disponible.</p>{% endif %}
+      </article>
+
+      <article class="strategyCard">
+        <div class="strategyCardLabel">Formats recommandés</div>
+        {% if selected.recommended_formats %}<div class="strategyMetaChips">
+          {% for item in selected.recommended_formats %}<span>{% if item is mapping %}{{ item.name or item.format or item.label or item }}{% else %}{{ item }}{% endif %}</span>{% endfor %}
+        </div>{% else %}<p class="strategyMuted">Non disponible.</p>{% endif %}
+      </article>
+
+      {% if selected.success_conditions %}
+      <article class="strategyCard strategyCardWide">
+        <div class="strategyCardLabel">Conditions de réussite</div>
+        <ul class="strategyCleanList">{% for item in selected.success_conditions %}<li>{{ item }}</li>{% endfor %}</ul>
+      </article>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="strategyTabPanel" data-strategy-panel="actions" hidden>
+    {% if actions %}
+    <div class="actionBulkToolbar aiAutoPlanningToolbar">
+      <div><b>Planification IA</b><small id="bulkActionCount"></small></div>
+      <div class="actionBulkButtons">
+        <button type="button" class="btn secondary tiny" id="toggleBulkMode">Sélectionner plusieurs</button>
+        <button type="button" class="btn secondary tiny" id="selectAllActions" disabled>Tout sélectionner</button>
+        <button type="button" class="btn primary tiny" id="bulkLaunchActions" disabled>Planifier automatiquement la sélection</button>
+        <button type="button" class="btn danger tiny" id="clearPendingCalendarTasks" data-clearable-count="{{ clearable_calendar_count or 0 }}" {% if not clearable_calendar_count %}disabled{% endif %}>Effacer les tâches non générées{% if clearable_calendar_count %} ({{ clearable_calendar_count }}){% endif %}</button>
+      </div>
+    </div>
+    <div class="strategyActionsList" id="actionsList">
+      {% for action in actions %}
+      <article class="strategyActionCard actionRow {{ action.status or 'pending' }}" data-action-id="{{ action.id }}">
+        <label class="actionBulkSelect" title="Sélectionner pour planification groupée">
+          <input type="checkbox" class="actionBulkBox" data-action-id="{{ action.id }}" {% if not action.can_plan %}disabled{% endif %}>
+        </label>
+        <div class="strategyActionMain">
+          <div class="strategyActionHead">
+            <div>
+              <div class="strategyActionMeta">
+                <span>Jour {{ action.due_day or 1 }}</span>
+                <span>{{ action.category or 'growth' }}</span>
+                <span class="priorityPill {{ action.priority or 'medium' }}">{{ action.priority or 'medium' }}</span>
+                <span class="statusPill {{ action.status or 'pending' }}">{{ action.status or 'pending' }}</span>
+              </div>
+              <h2>{{ action.title or 'Action' }}</h2>
+            </div>
+          </div>
+          {% if action.description %}<div class="strategyActionDescription">{{ action.description }}</div>{% endif %}
+          {% if action.deliverable %}<div class="actionStructuredLine"><small>Livrable</small><b>{{ action.deliverable }}</b></div>{% endif %}
+          {% if action.content_format %}<div class="actionStructuredLine"><small>Format</small><b>{{ action.content_format }}</b></div>{% endif %}
+          {% if action.kpi %}
+            <div class="strategyActionKpi">
+              <b>KPI</b>
+              {% if action.kpi.name %}<span>{{ action.kpi.name }}</span>{% endif %}
+              {% if action.kpi.target %}<span>→ {{ action.kpi.target }}</span>{% endif %}
+            </div>
+          {% endif %}
+          {% if action.media_prefill %}
+            <div class="strategyMetaChips">
+              {% if action.media_prefill.media_type %}<span>Média : {{ action.media_prefill.media_type }}</span>{% endif %}
+              {% if action.media_prefill.aspect_ratio %}<span>{{ action.media_prefill.aspect_ratio }}</span>{% endif %}
+            </div>
+          {% endif %}
+          {% if action.has_active_plan %}
+            <div class="actionCalendarLine">{{ 'Génération prévue' if action.plan_generation_required else 'Exécution prévue' }} : <b>{{ action.planned_label }}</b></div>
+            {% if action.recommended_publish_for and action.plan_generation_required %}<div class="actionCalendarLine audiencePublishLine">Publication recommandée : <b>{{ action.recommended_publish_for }}</b></div>{% endif %}
+          {% endif %}
+          <div class="actionControls">
+            <button type="button" class="btn primary tiny actionRun" data-action-id="{{ action.id }}" data-planning-state="{{ action.plan_status }}" {% if not action.can_plan %}disabled title="Cette action est déjà planifiée."{% endif %}>{{ 'Déjà générée' if action.plan_status == 'generated' else ('Génération en cours' if action.plan_status == 'generating' else ('Déjà planifiée' if action.has_active_plan else 'Planifier automatiquement')) }}</button>
+            <button type="button" class="btn secondary tiny actionComplete" data-action-id="{{ action.id }}" data-next-status="{{ 'pending' if action.status == 'done' else 'done' }}">{{ 'Réouvrir' if action.status == 'done' else 'Marquer terminé' }}</button>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}<div class="strategyEmptyState">Aucune action enregistrée pour cette stratégie.</div>{% endif %}
+  </section>
+
+  <section class="strategyTabPanel" data-strategy-panel="calendar" hidden>
+    <div class="realCalendarPanel" id="strategyCalendarPanel" data-strategy-id="{{ selected.id }}">
+      <script type="application/json" id="strategyCalendarItemsJson">{{ calendar_view_items|tojson }}</script>
+      <div class="calendarSummary">
+        <div><small>Total</small><b id="strategyCalTotal">{{ calendar|length }}</b></div>
+        <div><small>Vue courante</small><b id="strategyCalVisible">{{ calendar|length }}</b></div>
+        <div><small>À venir</small><b id="strategyCalUpcoming">0</b></div>
+        <div><small>Terminés</small><b id="strategyCalCompleted">0</b></div>
+      </div>
+      <div class="calendarLegend" aria-label="Légende du calendrier">
+        <span class="action"><i></i>Action IA</span>
+        <span class="checkpoint"><i></i>Contrôle automatique</span>
+        <span class="generated"><i></i>Contenu généré / terminé</span>
+        <span class="overdue"><i></i>Créneau dépassé</span>
+      </div>
+      <div class="realCalendarToolbar">
+        <div class="realCalendarTitle">
+          <b id="strategyCalTitle">Calendrier</b>
+          <small id="strategyCalVisibleLabel">{{ calendar|length }} élément(s) visible(s)</small>
+        </div>
+        <div class="realCalendarControls">
+          <button type="button" class="btn secondary tiny" data-cal-nav="prev">Précédent</button>
+          <button type="button" class="btn secondary tiny" data-cal-nav="today">Aujourd’hui</button>
+          <button type="button" class="btn secondary tiny" data-cal-nav="next">Suivant</button>
+        </div>
+        <div class="realCalendarModes" role="tablist" aria-label="Vue calendrier">
+          <button type="button" class="calendarModeBtn" data-cal-mode="month">Mois</button>
+          <button type="button" class="calendarModeBtn" data-cal-mode="week">Semaine</button>
+          <button type="button" class="calendarModeBtn" data-cal-mode="workweek">Semaine travail</button>
+          <button type="button" class="calendarModeBtn" data-cal-mode="day">Jour</button>
+          <button type="button" class="calendarModeBtn" data-cal-mode="schedule">Planning</button>
+        </div>
+      </div>
+      <div id="strategyCalendarBody" class="realCalendarBody">
+        <div class="strategyEmptyState">Chargement du calendrier…</div>
+      </div>
+    </div>
+  </section>
+
+<div class="calendarTaskModal" id="calendarTaskModal" aria-hidden="true">
+  <div class="calendarTaskModalBox" role="dialog" aria-modal="true" aria-labelledby="calendarTaskModalTitle">
+    <h2 id="calendarTaskModalTitle">Modifier la tâche</h2>
+    <p>Modifie la date et l'heure de génération. La tâche sera reprise automatiquement à ce créneau.</p>
+    <div class="calendarTaskFields">
+      <label>Date<input type="date" id="calendarTaskDate" required></label>
+      <label>Heure<input type="time" id="calendarTaskTime" step="60" required></label>
+    </div>
+    <p class="calendarTimezoneHint">Fuseau horaire : <b>{{ auth_user.timezone }}</b></p>
+    <div class="calendarTaskModalActions">
+      <button type="button" class="btn secondary" id="calendarTaskCancelBtn">Annuler</button>
+      <button type="button" class="btn primary" id="calendarTaskSaveBtn">Enregistrer</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/strategies.js"></script>{% endblock %}

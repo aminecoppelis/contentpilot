@@ -1,0 +1,27 @@
+{# Port du renderStatusFilter() partagé : multi-sélection avec application automatique. #}
+<div class="filterPanel" id="{{ panel_id }}" data-base-path="{{ base_path }}">
+  <div class="filterField">
+    <div class="select2Like">
+      <button type="button" class="select2Button" data-select2-button
+              onclick="return window.toggleStatusDropdown('{{ panel_id }}')">
+        <span class="select2Chips" data-selected-labels>
+          {% if all_selected %}<span class="select2Placeholder">Tous</span>
+          {% else %}{% for opt in options if opt.value != 'all' and opt.value in selected %}
+            <span class="select2Chip">{{ opt.label }}</span>{% endfor %}{% endif %}
+        </span>
+        <span class="select2Arrow">▾</span>
+      </button>
+      <div class="select2Menu" data-select2-menu>
+        {% for opt in options %}
+          <label class="select2Option">
+            <input data-status-option type="checkbox" value="{{ opt.value }}" data-label="{{ opt.label }}"
+              {% if (all_selected and opt.value == 'all') or (not all_selected and opt.value in selected) %}checked{% endif %}
+              onchange="window.syncStatusSelect('{{ panel_id }}', this); window.applyStatusFilter('{{ panel_id }}')">
+            <span>{{ opt.label }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="filterHelp">Le filtre s'applique automatiquement.</div>
+  </div>
+</div>

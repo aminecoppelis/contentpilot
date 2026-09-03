@@ -1,0 +1,92 @@
+/* Page "Mes réseaux" — port des classes du workflow original. */
+/* Même cadre que .header (layout.css) ; seule la disposition interne
+   diffère : titre à gauche, connecteurs à droite. */
+.hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.channelConnectors{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:12px;min-width:min(560px,100%)}
+@media(max-width:1100px){.channelConnectors{grid-template-columns:repeat(2,minmax(180px,1fr))}}
+@media(max-width:640px){.channelConnectors{grid-template-columns:1fr}}
+.channelCard{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);
+  border-radius:18px;padding:14px;text-decoration:none;color:inherit;cursor:pointer;font:inherit;
+  text-align:left;transition:.16s ease;box-shadow:0 8px 22px rgba(15,23,42,.05)}
+.channelCard:hover{transform:translateY(-2px);border-color:#a5b4fc;box-shadow:0 14px 32px rgba(79,70,229,.12)}
+.channelCard b{display:block;font-size:14px}
+.channelCard small{display:block;color:var(--muted);font-size:12px;margin-top:3px;line-height:1.4}
+.channelIcon{width:40px;height:40px;flex:0 0 40px;border-radius:12px;display:inline-flex;align-items:center;
+  justify-content:center;color:#fff}
+.facebookChannelIcon,.instagramChannelIcon,.bufferChannelIcon,.metaChannelIcon{background:#fff;border:1px solid #e2e8f0;box-shadow:inset 0 0 0 1px rgba(15,23,42,.02)}
+.facebookChannelIcon img,.instagramChannelIcon img,.bufferChannelIcon img{display:block;width:30px;height:30px;object-fit:contain}
+.bufferChannelIcon img{width:27px;height:27px}
+.metaChannelIcon{border-color:#dbeafe;box-shadow:inset 0 0 0 1px rgba(0,100,224,.03)}
+.metaChannelIcon img{display:block;width:30px;height:24px;object-fit:contain}
+.providerBadge{gap:7px}
+.providerBadgeLogo{display:block;width:17px;height:17px;object-fit:contain;flex:0 0 17px}
+
+.badge{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:5px 11px;font-size:12px;
+  font-weight:850;background:#f1f5f9;color:#334155}
+.badge svg{display:block}
+.status.on{background:#dcfce7;color:#166534}
+.status.off{background:#f1f5f9;color:#64748b}
+.tokenWarn{color:#b45309;font-weight:800}
+.capabilityBad{color:#991b1b;font-weight:800}
+
+.networkKebabWrap{position:relative}
+.networkKebabBtn{border:1px solid var(--line);background:#fff;border-radius:11px;width:36px;height:36px;
+  font-size:18px;cursor:pointer;color:#475569}
+.networkKebabBtn:hover{border-color:var(--primary);color:var(--primary)}
+.networkKebabMenu{display:none;position:absolute;right:0;top:calc(100% + 8px);min-width:230px;z-index:900;
+  background:#fff;border:1px solid var(--line);border-radius:16px;padding:8px;
+  box-shadow:0 22px 60px rgba(15,23,42,.18)}
+.networkKebabMenu.open{display:block}
+.networkKebabMenu.isPortal{position:fixed;right:auto;top:auto;z-index:30000;max-height:calc(100vh - 16px);overflow-y:auto}
+.networkKebabMenu button,.networkKebabMenu a{display:block;width:100%;text-align:left;border:0;background:#f8fafc;
+  border-radius:11px;padding:10px 11px;margin-bottom:6px;font:inherit;font-weight:850;font-size:13px;
+  cursor:pointer;color:#0f172a;text-decoration:none}
+.networkKebabMenu button:hover,.networkKebabMenu a:hover{background:#eef2ff;color:#3730a3}
+.networkKebabMenu .danger{background:#fef2f2;color:#991b1b}
+
+.notice{border-radius:14px;padding:12px 14px;margin-bottom:16px;font-weight:800;font-size:13px}
+.notice.ok{background:#ecfdf5;border:1px solid #bbf7d0;color:#047857}
+.notice.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.notice.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+
+.shareModalOverlay,.bufferModalOverlay{position:fixed;inset:0;background:rgba(15,23,42,.5);
+  backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;z-index:10000}
+.shareModalOverlay.isOpen,.bufferModalOverlay.isOpen{display:flex}
+.shareModal,.bufferModal{width:min(520px,100%);background:#fff;border-radius:24px;padding:26px;
+  box-shadow:0 30px 90px rgba(15,23,42,.3)}
+.shareModal h2,.bufferModal h2{margin:0 0 10px;font-size:21px;letter-spacing:-.03em}
+.shareModal p,.bufferModal p{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 16px}
+.shareModal label,.bufferForm label{display:block;font-weight:900;font-size:13px;margin:14px 0 6px;color:#334155}
+.shareModal select,.bufferForm input{width:100%;min-height:44px;border:1px solid #cbd5e1;border-radius:14px;
+  padding:0 12px;font:inherit;font-size:14px}
+.shareModalActions,.bufferActions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.bufferModalTop{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.bufferModalClose{border:1px solid var(--line);background:#fff;width:36px;height:36px;border-radius:11px;
+  font-size:20px;cursor:pointer;color:#475569;flex:0 0 auto}
+.bufferHelp{margin-top:12px;color:var(--muted);font-size:12px;line-height:1.5}
+.bufferStatus{margin-top:12px;font-size:13px;font-weight:800;min-height:18px}
+.bufferStatus.error{color:#991b1b}
+.bufferStatus.success{color:#047857}
+.bufferCancel{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:13px;padding:11px 15px;
+  font:inherit;font-weight:900;cursor:pointer}
+.bufferSave{border:0;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;
+  border-radius:13px;padding:11px 16px;font:inherit;font-weight:900;cursor:pointer}
+.loader{padding:14px;text-align:center;color:var(--muted);font-size:13px;display:none}
+.toast{position:fixed;right:18px;bottom:18px;z-index:20000;display:none;border-radius:14px;padding:12px 15px;
+  font-weight:850;font-size:14px;box-shadow:0 18px 44px rgba(15,23,42,.28)}
+
+/* BUFFER_QUOTA_N8N_V90_PARITY */
+.quotaCell{min-width:235px;display:grid;gap:5px}
+.quotaMain{display:grid;grid-template-columns:26px minmax(0,1fr) 26px;align-items:center;column-gap:7px}
+.quotaBalance{display:block;width:26px;height:26px}
+.quotaValue{font-size:14px;font-weight:950;color:#0f172a;text-align:center;justify-self:center}
+.quotaRefresh{justify-self:end;width:26px;height:26px;border:1px solid #dbe3ee;border-radius:999px;background:#fff;color:#475569;cursor:pointer;font-weight:950;line-height:1}
+.quotaRefresh:hover{border-color:#818cf8;color:#4338ca}
+.quotaRefresh:disabled{opacity:.55;cursor:wait}
+.quotaDetail,.quotaQueue{max-width:275px;font-size:11px;line-height:1.35;color:#64748b}
+.quotaQueue{padding-top:5px;border-top:1px dashed #dbe3ee;font-weight:750;color:#475569}
+.quotaQueue:empty{display:none}
+.quotaCell.isLoading .quotaValue{color:#64748b}
+.quotaCell.isWarning .quotaValue{color:#b45309}
+.quotaCell.isDanger .quotaValue{color:#b91c1c}
+.quotaCell.isUnavailable .quotaValue,.quotaCell.isDisabled .quotaValue{color:#64748b}

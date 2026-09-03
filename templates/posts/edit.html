@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Modifier le sujet · Post Generator{% endblock %}
+{% block extra_style %}
+<link rel="stylesheet" href="/static/css/form.css">
+<link rel="stylesheet" href="/static/css/edit.css">
+{% endblock %}
+{% block content %}
+<section class="card editRequestCard">
+  <div class="editRequestHead">
+    <h2>Paramètres du sujet</h2>
+    <p>Complète les champs ci-dessous pour générer des idées de post prêtes à publier.</p>
+  </div>
+  <form class="form editRequestForm" method="post" action="/app/posts/edit">
+    <input type="hidden" name="id" value="{{ r.id }}">
+    <div class="row editRequestRow">
+      <div class="field"><label>Sujet <span style="color:#dc2626">*</span></label>
+        <textarea name="subject" required maxlength="300" data-char-limit="300" class="editSubjectInput">{{ r.subject or '' }}</textarea></div>
+      <div class="field"><label>Nombre d'idées</label>
+        <input name="post_count" type="number" min="1" max="8" value="{{ r.post_count or 3 }}"></div>
+    </div>
+    <div class="field"><label>Prompt</label>
+      <textarea name="prompt" maxlength="3500" data-char-limit="3500">{{ r.prompt or '' }}</textarea></div>
+    <div class="row editRequestRow">
+      <div class="field"><label>Objectif</label><input name="commercial_objective" value="{{ r.commercial_objective or '' }}"></div>
+      <div class="field"><label>Secteur</label><input name="target_sector" value="{{ r.target_sector or '' }}"></div>
+    </div>
+    <div class="row editRequestRow">
+      <div class="field"><label>Entreprise</label><input name="company" value="{{ fd.company or '' }}"></div>
+      <div class="field"><label>Site web</label><input name="website" value="{{ fd.website or '' }}"></div>
+    </div>
+    <div class="row editRequestRow">
+      <div class="field"><label>Solution</label><input name="solution" value="{{ fd.solution or '' }}"></div>
+      <div class="field"><label>Tags par défaut</label>
+        <input name="default_tags" value="{{ default_tags }}" placeholder="#IA #SaaS"></div>
+    </div>
+    <div class="row editRequestRow">
+      <div class="field"><label>Langue</label><input name="language" value="{{ r.language or 'français' }}"></div>
+      <div class="field"><label>Domaines à couvrir</label><div id="editContentDomains" class="multiSelect"></div></div>
+    </div>
+    <div class="row editRequestRow">
+      <div class="field"><label>Audience</label><div id="editTargetAudience" class="multiSelect"></div></div>
+      <div class="field"><label>Formats</label><div id="editPreferredFormats" class="multiSelect"></div></div>
+    </div>
+    <div class="field"><label>Contraintes</label>
+      <textarea name="constraints" maxlength="900" data-char-limit="900">{{ r.constraints or '' }}</textarea></div>
+    <div class="actions editRequestActions">
+      <button class="btn-primary" type="submit">Enregistrer</button>
+      <a class="btn light" href="/app/posts">Annuler</a>
+    </div>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+/* Port verbatim du multi-select de la page Edit Request (champs cachés
+   régénérés à chaque rendu pour une soumission de formulaire classique). */
+const EDIT_MULTI_DATA = {{ multi_data | tojson }};
+function uniqValues(values){
+  return Array.from(new Set((values||[]).map(function(v){return String(v||'').trim();}).filter(Boolean)));
+}
+function createMultiSelect(cfg){
+  const mount=document.getElementById(cfg.mountId); if(!mount)return;
+  const state={options:uniqValues(cfg.options),selected:uniqValues(cfg.selected)};
+  mount.innerHTML='<div class="msBox"><div class="msTags"></div><input class="msSearch" type="text" autocomplete="off"></div><div class="msOptions"></div><div class="msHidden"></div>';
+  const tagsEl=mount.querySelector('.msTags'),input=mount.querySelector('.msSearch'),
+        opts=mount.querySelector('.msOptions'),hidden=mount.querySelector('.msHidden');
+  input.placeholder='Rechercher ou ajouter...';
+  function add(v){v=String(v||'').trim();if(!v)return;
+    if(!state.options.includes(v))state.options.push(v);
+    if(!state.selected.includes(v))state.selected.push(v);
+    input.value='';render();}
+  function rem(v){state.selected=state.selected.filter(function(x){return x!==v;});render();}
+  function render(){
+    tagsEl.innerHTML='';hidden.innerHTML='';
+    state.selected.forEach(function(v){
+      const t=document.createElement('span');t.className='msTag';
+      t.innerHTML='<span></span><button type="button">×</button>';
+      t.querySelector('span').textContent=v;
+      t.querySelector('button').onclick=function(e){e.stopPropagation();rem(v);};
+      tagsEl.appendChild(t);
+      const h=document.createElement('input');h.type='hidden';h.name=cfg.name;h.value=v;hidden.appendChild(h);
+    });
+    renderOpts();
+  }
+  function renderOpts(){
+    const q=input.value.trim().toLowerCase();opts.innerHTML='';
+    state.options.filter(function(o){
+      return !state.selected.includes(o)&&(!q||o.toLowerCase().includes(q));
+    }).slice(0,12).forEach(function(o){
+      const b=document.createElement('button');b.type='button';b.className='msOption';b.textContent=o;
+      b.onmousedown=function(e){e.preventDefault();add(o);input.focus();};opts.appendChild(b);
+    });
+    if(q&&!state.options.map(function(o){return o.toLowerCase();}).includes(q)
+        &&!state.selected.map(function(o){return o.toLowerCase();}).includes(q)){
+      const b=document.createElement('button');b.type='button';b.className='msOption';
+      b.textContent='Ajouter : '+input.value.trim();
+      b.onmousedown=function(e){e.preventDefault();add(input.value);input.focus();};opts.prepend(b);
+    }
+    if(!opts.children.length){
+      const d=document.createElement('div');d.className='msEmpty';
+      d.textContent='Écris une valeur et appuie sur Entrée.';opts.appendChild(d);
+    }
+  }
+  input.onfocus=function(){renderOpts();opts.classList.add('isOpen');};
+  input.onblur=function(){setTimeout(function(){opts.classList.remove('isOpen');},140);};
+  input.oninput=function(){renderOpts();opts.classList.add('isOpen');};
+  input.onkeydown=function(e){
+    if(e.key==='Enter'){
+      e.preventDefault();
+      const first=opts.querySelector('.msOption');
+      if(first)first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true,cancelable:true}));
+      else add(input.value);
+    }
+    if(e.key==='Backspace'&&!input.value&&state.selected.length)rem(state.selected[state.selected.length-1]);
+  };
+  mount.querySelector('.msBox').onclick=function(){input.focus();};
+  render();
+}
+createMultiSelect({mountId:'editContentDomains',name:'content_domains',
+  options:EDIT_MULTI_DATA.domains.options,selected:EDIT_MULTI_DATA.domains.selected});
+createMultiSelect({mountId:'editTargetAudience',name:'target_audience',
+  options:EDIT_MULTI_DATA.audiences.options,selected:EDIT_MULTI_DATA.audiences.selected});
+createMultiSelect({mountId:'editPreferredFormats',name:'preferred_formats',
+  options:EDIT_MULTI_DATA.formats.options,selected:EDIT_MULTI_DATA.formats.selected});
+</script>
+{% endblock %}

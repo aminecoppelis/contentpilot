@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{ title }} · Post Generator</title>
+  <style>
+    /* Port verbatim de "GLOBAL - Construire Error Page" */
+    :root{--bg:#f6f8fc;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--danger:#dc2626;--accent:#635bff}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+      background:radial-gradient(circle at top left,#fee2e2,transparent 34%),var(--bg);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text)}
+    .card{width:min(660px,100%);background:#fff;border:1px solid var(--line);border-radius:28px;padding:32px;
+      box-shadow:0 24px 70px rgba(15,23,42,.14)}
+    .badge{display:inline-flex;align-items:center;border-radius:999px;padding:8px 11px;background:#fef2f2;
+      border:1px solid #fecaca;color:#991b1b;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.07em}
+    .icon{width:64px;height:64px;border-radius:20px;margin:20px 0 16px;background:#fef2f2;border:1px solid #fecaca;
+      color:var(--danger);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:950}
+    h1{margin:0;font-size:32px;line-height:1.15;letter-spacing:-.04em}
+    .message{margin:14px 0 0;color:#334155;font-size:16px;line-height:1.6;overflow-wrap:anywhere}
+    .detail{margin-top:14px;color:var(--muted);font-size:13px;line-height:1.5}
+    .help{margin-top:22px;padding:14px 16px;border:1px solid #e2e8f0;border-radius:16px;background:#f8fafc;
+      color:#475569;font-size:14px;line-height:1.5}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border:0;
+      border-radius:14px;padding:12px 15px;font-weight:950;cursor:pointer}
+    .primary{background:#0f172a;color:#fff}
+    .secondary{background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe}
+    @media(max-width:560px){.card{padding:24px}.actions{flex-direction:column}.btn{width:100%}}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <span class="badge">{{ badge }}</span>
+    <div class="icon">!</div>
+    <h1>{{ title }}</h1>
+    <p class="message">{{ message }}</p>
+    {% if detail %}<p class="detail">{{ detail }}</p>{% endif %}
+    <div class="help">Tu peux revenir à la page précédente et réessayer. Si l'erreur persiste, transmets la
+      référence affichée au support.</div>
+    <div class="actions">
+      <a class="btn primary" href="{{ back }}"
+         onclick="if(window.history.length>1){event.preventDefault();window.history.back();return false;}">Revenir à la page précédente</a>
+      <a class="btn secondary" href="/app/posts">Retour aux sujets</a>
+    </div>
+  </main>
+</body>
+</html>

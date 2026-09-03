@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% from "partials/network_badges.html" import history_publication_badges, published_network_logo %}
+{% block title %}Posts publiés · Post Generator{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/published.css">{% endblock %}
+{% block content %}
+<section class="header">
+  <div class="eyebrow">Publication</div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <h1 class="h1" style="margin:0">Posts publiés</h1>
+    <span id="publishedPageCount" class="countPill"
+          title="Nombre de lignes correspondant aux filtres actifs"
+          aria-label="Nombre de lignes correspondant aux filtres actifs : {{ total }}">{{ total }}</span>
+  </div>
+  <p class="sub">Suivi des publications programmées, en attente, publiées, annulées ou en erreur.</p>
+  {% with panel_id='publishedStatusFilter', base_path='/published' %}
+    {% include "partials/status_filter.html" %}
+  {% endwith %}
+</section>
+
+<div id="publishedBulkToolbar" class="publishedBulkToolbar" hidden>
+  <div class="publishedBulkSummary">
+    <strong id="publishedBulkCount">0</strong><span id="publishedBulkLabel">ligne sélectionnée</span>
+  </div>
+  <button type="button" id="publishedBulkDeleteBtn" class="publishedBulkDeleteBtn" disabled>Supprimer la sélection</button>
+</div>
+
+<section class="card">
+  <table>
+    <thead><tr>
+      <th class="publishedBulkCell">
+        <input id="publishedSelectAll" type="checkbox" aria-label="Sélectionner toutes les lignes chargées"
+               title="Sélectionner toutes les lignes chargées"></th>
+      <th>Post</th><th>Réseau</th><th>Statut</th><th>Date de dernière modif</th>
+      <th>Créé par</th><th>Publié par</th><th>Programmée</th><th>Publiée</th><th>Erreur</th>
+    </tr></thead>
+    <tbody id="publishedTableBody">
+    {% for r in rows %}
+      <tr>
+        <td class="publishedBulkCell">
+          <input class="publishedRowCheck" type="checkbox" value="{{ r.publication_id }}"
+                 aria-label="Sélectionner cette publication"></td>
+        <td><b>{{ r.idea_title or '' }}</b><div class="mini">{{ r.publication_id }}</div></td>
+        <td>{{ published_network_logo(r.platform, r.platform_label, r.publication_type or '') }}</td>
+        <td><span class="status {{ r.status }}">{{ r.status_label }}</span></td>
+        <td>{{ r.last_modified }}</td>
+        <td>{% if r.created_by_name %}<span class="personCell" title="{{ r.created_by_name }}">
+            <span class="personAvatar">{{ r.created_by_initials }}</span></span>
+            {% else %}<span class="personEmpty">-</span>{% endif %}</td>
+        <td>{% if r.published_by_name %}<span class="personCell" title="{{ r.published_by_name }}">
+            <span class="personAvatar">{{ r.published_by_initials }}</span></span>
+            {% else %}<span class="personEmpty">-</span>{% endif %}</td>
+        <td>{{ r.scheduled_label or '—' }}</td>
+        <td>{{ r.published_label or '—' }}</td>
+        <td>
+          {% if r.error_message %}
+            <button type="button" class="publishedErrorDetailsBtn"
+                    data-error-title="{{ r.idea_title or 'Publication' }}"
+                    data-error-status="{{ r.status_label }}"
+                    data-publication-id="{{ r.publication_id }}"
+                    data-error-message="{{ r.error_message }}">Voir l'erreur</button>
+          {% else %}<span class="publishedNoError">—</span>{% endif %}
+        </td>
+      </tr>
+    {% else %}
+      <tr class="publishedEmptyRow"><td colspan="10">Aucune publication.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+<div id="publishedLoadState" class="tableLoadState" style="display:{{ 'block' if has_more else 'none' }}">
+  Fais défiler pour charger plus de lignes.</div>
+<div id="publishedSentinel" style="height:1px"></div>
+
+<div id="publishedErrorModal" class="publishedErrorModal" role="dialog" aria-modal="true"
+     aria-labelledby="publishedErrorModalTitle" aria-hidden="true">
+  <div class="publishedErrorDialog" role="document">
+    <div class="publishedErrorDialogHead">
+      <div>
+        <h2 id="publishedErrorModalTitle" class="publishedErrorDialogTitle">Détail de l'erreur</h2>
+        <div id="publishedErrorModalMeta" class="publishedErrorDialogMeta"></div>
+      </div>
+      <button type="button" class="publishedErrorClose" data-close-published-error="1" aria-label="Fermer">×</button>
+    </div>
+    <div class="publishedErrorDialogBody">
+      <p class="publishedErrorLabel">Message retourné</p>
+      <pre id="publishedErrorModalMessage" class="publishedErrorMessage"></pre>
+    </div>
+    <div class="publishedErrorDialogActions">
+      <button type="button" class="publishedErrorCloseBtn" data-close-published-error="1">Fermer</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/published.js"></script>
+<script>
+window.initInfiniteTable({
+  tbodyId:'publishedTableBody', sentinelId:'publishedSentinel', loadStateId:'publishedLoadState',
+  endpoint:'/app/published/list-page', initialOffset:{{ next_offset }}, hasMore:{{ 'true' if has_more else 'false' }}
+});
+</script>
+{% endblock %}

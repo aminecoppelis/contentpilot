@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Inscription · Post Generator</title>
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <style>.authCard.authRegisterCard{width:min(500px,100%);max-width:500px}</style>
+</head>
+<body>
+<div class="auth-shell">
+  <main class="card authCard authRegisterCard">
+    <div class="brand">Créer un compte</div>
+    <p class="sub">
+      {% if invited_registration %}
+        Crée ton compte avec l'adresse email ayant reçu l'invitation. Après activation et connexion, le workspace sera rejoint automatiquement.
+      {% else %}
+        Chaque utilisateur aura ses propres sujets, médias et publications.
+      {% endif %}
+    </p>
+    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+    <form method="post" action="/app/register">
+      <input type="hidden" name="redirect" value="{{ redirect }}">
+      <input type="hidden" name="form_started_at" id="form_started_at" value="">
+      <input type="hidden" name="user_timezone" id="user_timezone" value="">
+      <div class="hpField" aria-hidden="true">
+        <label>Site web</label>
+        <input name="company_website" tabindex="-1" autocomplete="off">
+      </div>
+      <div class="field"><label>Prénom</label><input name="first_name" autocomplete="given-name" required></div>
+      <div class="field"><label>Nom</label><input name="last_name" autocomplete="family-name" required></div>
+      <div class="field"><label>Email</label><input name="email" type="email" autocomplete="email" required></div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input name="password" type="password" autocomplete="new-password" minlength="10" required>
+        <div class="hint" style="font-size:12px;color:#64748b;margin-top:6px;line-height:1.35">Minimum 10 caractères.</div>
+      </div>
+      <div class="field"><label>Confirmer le mot de passe</label><input name="confirm_password" type="password" autocomplete="new-password" minlength="10" required></div>
+      <button class="btn" type="submit">Créer le compte</button>
+    </form>
+    <div class="links">Déjà inscrit ? <a href="/app/login?redirect={{ redirect }}">Se connecter</a></div>
+  </main>
+</div>
+<script>document.getElementById('form_started_at').value=Date.now();try{document.getElementById('user_timezone').value=Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){}</script>
+</body>
+</html>

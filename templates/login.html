@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Connexion · Post Generator</title>
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+<div class="auth-shell">
+  <main class="card authCard authLoginCard">
+    <div class="brand">Post Generator</div>
+    <p class="sub">Connecte-toi pour accéder à tes sujets, médias et publications.</p>
+    {% if error %}<div id="loginError" class="alert err">{{ error }}</div>{% endif %}
+    {% if info == "check_email" %}<div class="alert ok">Compte créé. Vérifie ta boîte mail pour l'activer.</div>{% endif %}
+    {% if info == "smtp_down" %}<div class="alert err">Le compte a été enregistré, mais l'email d'activation n'a pas pu être envoyé
+      (serveur SMTP injoignable). Le lien d'activation figure dans les logs du serveur —
+      contacte l'administrateur ou configure SMTP dans le fichier .env.</div>{% endif %}
+    <form id="loginForm" method="post" action="/app/login">
+      <input type="hidden" name="redirect" value="{{ redirect }}">
+      <input type="hidden" name="form_started_at" id="form_started_at" value="">
+      <input type="hidden" name="user_timezone" id="user_timezone" value="">
+      <div class="hpField" aria-hidden="true">
+        <label>Site web</label>
+        <input name="company_website" tabindex="-1" autocomplete="off">
+      </div>
+      <div class="field"><label>Email</label>
+        <input name="email" type="email" autocomplete="email" required autofocus>
+      </div>
+      <div class="field"><label>Mot de passe</label>
+        <input name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button id="loginButton" class="btn" type="submit">Se connecter</button>
+    </form>
+    <div class="links">Pas encore de compte ? <a href="/app/register?redirect={{ redirect }}">Créer un compte</a></div>
+  </main>
+</div>
+<script>
+/* Port EXACT du JS original (AUTH - HTML Login) : anti-bot form_started_at
+   + compte à rebours de verrouillage progressif côté client. */
+document.getElementById('form_started_at').value = Date.now();
+try{document.getElementById('user_timezone').value=Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){}
+
+(function () {
+  var retryUntil = {{ retry_until_ms | default(0) }};
+  var wasRateLimitError = {{ 'true' if is_rate_limit_error else 'false' }};
+  var form = document.getElementById('loginForm');
+  var button = document.getElementById('loginButton');
+  var alertBox = document.getElementById('loginError');
+  if (!form || !button) return;
+
+  function remainingSeconds() {
+    return retryUntil > 0 ? Math.max(0, Math.ceil((retryUntil - Date.now()) / 1000)) : 0;
+  }
+  function waitText(seconds) {
+    var safe = Math.max(0, Math.ceil(Number(seconds || 0)));
+    var minutes = Math.floor(safe / 60), secs = safe % 60;
+    if (minutes > 0 && secs > 0) return minutes + ' min ' + String(secs).padStart(2, '0') + ' s';
+    if (minutes > 0) return minutes + ' minute' + (minutes > 1 ? 's' : '');
+    return safe + ' seconde' + (safe > 1 ? 's' : '');
+  }
+  function cleanRateLimitUrl() {
+    if (!wasRateLimitError) return;
+    try {
+      var url = new URL(window.location.href);
+      var currentError = String(url.searchParams.get('error') || '');
+      if (currentError.indexOf('Trop de tentatives de connexion.') === 0) url.searchParams.delete('error');
+      url.searchParams.delete('retry_until');
+      var next = url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash;
+      window.history.replaceState(null, '', next);
+    } catch (e) {}
+  }
+  function clearExpiredState() {
+    button.disabled = false;
+    button.textContent = 'Se connecter';
+    if (alertBox) { alertBox.remove(); alertBox = null; }
+    cleanRateLimitUrl();
+  }
+  function render() {
+    var remaining = remainingSeconds();
+    if (remaining <= 0) { clearExpiredState(); return 0; }
+    button.disabled = true;
+    button.textContent = 'Réessayer dans ' + waitText(remaining);
+    if (alertBox) alertBox.textContent = 'Trop de tentatives de connexion. Réessaie dans ' + waitText(remaining) + '.';
+    return remaining;
+  }
+  form.addEventListener('submit', function (event) { if (remainingSeconds() > 0) event.preventDefault(); });
+  if (render() > 0) {
+    var timer = setInterval(function () { if (render() <= 0) clearInterval(timer); }, 250);
+  }
+})();
+</script>
+</body>
+</html>

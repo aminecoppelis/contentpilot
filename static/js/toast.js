@@ -1,0 +1,10 @@
+/* Port verbatim du composant pgToast/pgFlash/pgConsumeQueryToast partagé. */
+(function(){
+if(window.pgToast)return;
+function getContainer(){var c=document.getElementById('pgToastContainer');if(!c){c=document.createElement('div');c.id='pgToastContainer';c.className='pgToastContainer';c.setAttribute('aria-live','polite');c.setAttribute('aria-atomic','true');document.body.appendChild(c);}return c;}
+window.pgToast=function(message,type){var text=String(message||'').trim();if(!text)return;var c=getContainer();var el=document.createElement('div');el.className='pgToast '+(type||'success');el.textContent=text;c.appendChild(el);requestAnimationFrame(function(){el.classList.add('show');});setTimeout(function(){el.classList.remove('show');setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},220);},3800);};
+window.pgFlash=function(message,type){try{sessionStorage.setItem('pgFlash',JSON.stringify({message:String(message||''),type:type||'success',createdAt:Date.now()}));}catch(e){}};
+window.pgConsumeFlash=function(){try{var raw=sessionStorage.getItem('pgFlash');if(!raw)return;sessionStorage.removeItem('pgFlash');var data=JSON.parse(raw);if(!data||!data.message)return;if(Date.now()-Number(data.createdAt||0)>300000)return;window.pgToast(data.message,data.type||'success');}catch(e){}};
+window.pgConsumeQueryToast=function(){try{var url=new URL(window.location.href);var p=url.searchParams;var message='';var type='success';if(p.get('error')){message=p.get('error');type='error';p.delete('error');}else if(p.get('success')){message=p.get('success');p.delete('success');}else if(p.get('message')){message=p.get('message');p.delete('message');}else if(p.get('updated')==='1'){message='Sujet mis à jour.';p.delete('updated');}else if(p.get('created')==='1'){message='Sujet créé.';p.delete('created');}else if(p.get('deleted')==='1'){message='Sujet supprimé.';p.delete('deleted');}p.delete('t');if(message){window.pgToast(message,type);history.replaceState({},document.title,url.pathname+(p.toString()?'?'+p.toString():'')+url.hash);}}catch(e){}};
+setTimeout(function(){window.pgConsumeFlash();window.pgConsumeQueryToast();},0);
+})();

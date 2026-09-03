@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Configuration Meta · Administration{% endblock %}
+{% block extra_style %}
+<style>
+  .hero{background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.28);border-radius:26px;
+    padding:26px 28px;margin-bottom:18px;box-shadow:0 16px 44px rgba(15,23,42,.07)}
+  .eyebrow{font-size:13px;font-weight:900;color:var(--primary);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+  .titleLine{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .hero h1{margin:0;font-size:30px;letter-spacing:-.035em}
+  .hero p.muted{color:var(--muted);line-height:1.55;margin:12px 0 0;font-size:14px}
+  .metaInfo{position:relative;display:inline-flex}
+  .metaInfo>summary{list-style:none;width:28px;height:28px;border-radius:999px;background:#eef2ff;
+    color:#4338ca;border:1px solid #c7d2fe;display:inline-flex;align-items:center;justify-content:center;
+    font-weight:950;cursor:pointer;font-size:14px}
+  .metaInfo>summary::-webkit-details-marker{display:none}
+  .metaInfoBubble{position:absolute;left:0;top:calc(100% + 10px);width:min(460px,80vw);background:#fff;
+    border:1px solid var(--line);border-radius:18px;padding:18px;z-index:900;
+    box-shadow:0 24px 60px rgba(15,23,42,.18);font-size:13px;line-height:1.55;color:#334155}
+  .metaInfoBubble p{margin:10px 0 0}
+  .notice{border-radius:14px;padding:13px 15px;margin-bottom:16px;font-size:13px;line-height:1.5;font-weight:750}
+  .notice.success{background:#ecfdf5;border:1px solid #bbf7d0;color:#047857}
+  .notice.error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px;
+    box-shadow:0 12px 34px rgba(15,23,42,.05)}
+  .globalGrid{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:22px}
+  .providerGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.globalGrid,.providerGrid{grid-template-columns:1fr}}
+  .provider{border:1px solid var(--line);border-radius:18px;padding:20px;background:#fbfcfe}
+  .provider h2{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 16px;font-size:19px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-weight:900;font-size:13px;color:#334155;margin-bottom:7px}
+  .field input,.field textarea{width:100%;border:1px solid #cbd5e1;border-radius:13px;padding:11px 13px;font:inherit;font-size:14px}
+  .field textarea{min-height:88px;resize:vertical}
+  .hint{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.45}
+  .toggle{display:flex;align-items:center;gap:9px;font-weight:850;font-size:13px;margin:14px 0}
+  .toggle input{width:auto}
+  .actions{margin-top:14px}
+  .btn.primary{border:0;border-radius:13px;padding:12px 16px;font-weight:900;cursor:pointer;font:inherit;
+    background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;width:100%}
+  .statusPill{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
+    border-radius:999px;padding:4px 10px}
+  .statusPill.on{background:#dcfce7;color:#166534}
+  .statusPill.off{background:#f1f5f9;color:#64748b}
+</style>
+{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="eyebrow">Administration</div>
+  <div class="titleLine">
+    <h1>Configuration OAuth Facebook et Instagram</h1>
+    <details class="metaInfo">
+      <summary aria-label="Comprendre les identifiants OAuth" title="Comprendre les identifiants OAuth">i</summary>
+      <div class="metaInfoBubble">
+        <b>Comprendre les identifiants OAuth</b>
+        <p>La plateforme utilise des identifiants techniques OAuth. Aucun compte Facebook ou Instagram global n'est enregistré ici.</p>
+        <p><strong>Facebook App ID</strong><br>Identifiant technique de l'application OAuth utilisée pour connecter directement les Pages Facebook des utilisateurs.</p>
+        <p><strong>Facebook Configuration ID</strong><br>Identifiant du parcours Facebook Login for Business. Ce n'est pas un App ID et il n'a pas de secret associé.</p>
+        <p><strong>Instagram App ID</strong><br>Identifiant technique utilisé par Instagram Login direct, avec son Instagram App Secret.</p>
+        <p>Pour remplacer un App ID, modifie le champ correspondant. Pour remplacer un App Secret, saisis le nouveau secret dans le champ vide : l'ancien secret n'est jamais affiché dans le navigateur.</p>
+      </div>
+    </details>
+  </div>
+  <p class="muted">Configure uniquement les applications OAuth techniques. Les utilisateurs se connectent ensuite
+     directement à Facebook ou Instagram dans Mes réseaux ; aucun compte social global n'est utilisé et un jeton
+     chiffré distinct est enregistré pour chaque compte.</p>
+</section>
+
+{% if notice %}<div class="notice {{ 'error' if notice_error else 'success' }}">{{ notice }}</div>{% endif %}
+
+<div class="notice" style="background:#fff7ed;border:1px solid #fed7aa;color:#9a3412">
+  <b>Accès aux comptes externes</b><br>Pour connecter des personnes qui ne sont ni développeurs ni testeurs de
+  l'application, les applications Facebook et Instagram doivent être en mode Live avec les accès avancés approuvés.
+  Cette contrainte vient de Meta et ne peut pas être contournée par le workflow.
+</div>
+
+<form id="metaConfigForm" method="post" action="/app/networks/meta/config/save">
+<section class="panel">
+  <div class="globalGrid">
+    <div class="field"><label for="public_app_url">URL publique de l'application</label>
+      <input id="public_app_url" name="public_app_url" type="url" required readonly
+             value="{{ resolved_public_app_url }}">
+      <div class="hint">Détectée depuis l’instance / APP_BASE_URL. Callbacks :
+        <code>{{ resolved_public_app_url }}/app/networks/facebook/callback</code> et
+        <code>{{ resolved_public_app_url }}/app/networks/instagram/callback</code>.</div>
+    </div>
+    <div class="field"><label for="graph_version">Version Graph API</label>
+      <input id="graph_version" name="graph_version" required
+             value="{{ (facebook.graph_version if facebook else default_graph_version) or default_graph_version }}"
+             placeholder="{{ default_graph_version }}">
+    </div>
+  </div>
+
+  <div class="providerGrid">
+    <article class="provider">
+      <h2><span>Facebook</span>
+        <span class="statusPill {{ 'on' if facebook and facebook.is_enabled else 'off' }}">
+          {{ 'Activé' if facebook and facebook.is_enabled else 'Inactif' }}</span></h2>
+      <div class="field"><label>App ID Facebook</label>
+        <input id="facebook_app_id" name="facebook_app_id" inputmode="numeric" autocomplete="off"
+               value="{{ (facebook.app_id if facebook else '') or '' }}"></div>
+      <div class="field"><label>App Secret Facebook</label>
+        <input id="facebook_app_secret" name="facebook_app_secret" type="password" value="" autocomplete="new-password"
+               placeholder="{{ 'Secret déjà enregistré — laisser vide pour conserver' if facebook and facebook.app_secret else 'Saisir le secret' }}">
+        <div class="hint">Le secret enregistré n'est jamais réaffiché.</div></div>
+      <div class="field"><label>Configuration ID Facebook Login for Business</label>
+        <input name="facebook_login_config_id" autocomplete="off"
+               value="{{ (facebook.login_config_id if facebook else '') or '' }}">
+        <div class="hint">Recommandé pour Facebook Login for Business. Les permissions sont alors définies dans cette configuration.</div></div>
+      <div class="field"><label>Permissions Facebook</label>
+        <textarea name="facebook_scopes">{{ (facebook.scopes if facebook and facebook.scopes else 'pages_show_list,pages_read_engagement,pages_manage_posts') }}</textarea></div>
+      <label class="toggle"><input type="checkbox" name="facebook_enabled" value="1"
+             {{ 'checked' if facebook and facebook.is_enabled }}> Activer Facebook</label>
+      <div class="actions"><button class="btn primary" type="submit" name="after_save" value="facebook">Enregistrer et tester Facebook</button></div>
+      <div class="hint">Le bouton enregistre toute la configuration, puis lance le parcours OAuth Facebook pour vérifier
+        les identifiants, l'URI de redirection, les permissions et l'accès aux Pages.</div>
+    </article>
+
+    <article class="provider">
+      <h2><span>Instagram</span>
+        <span class="statusPill {{ 'on' if instagram and instagram.is_enabled else 'off' }}">
+          {{ 'Activé' if instagram and instagram.is_enabled else 'Inactif' }}</span></h2>
+      <div class="field"><label>Instagram App ID</label>
+        <input id="instagram_app_id" name="instagram_app_id" inputmode="numeric" autocomplete="off"
+               value="{{ (instagram.app_id if instagram else '') or '' }}"></div>
+      <div class="field"><label>Instagram App Secret</label>
+        <input id="instagram_app_secret" name="instagram_app_secret" type="password" value="" autocomplete="new-password"
+               placeholder="{{ 'Secret déjà enregistré — laisser vide pour conserver' if instagram and instagram.app_secret else 'Saisir le secret' }}">
+        <div class="hint">Le secret enregistré n'est jamais réaffiché.</div></div>
+      <div class="field"><label>Permissions Instagram</label>
+        <textarea name="instagram_scopes">{{ (instagram.scopes if instagram and instagram.scopes else 'instagram_business_basic,instagram_business_content_publish') }}</textarea>
+        <div class="hint">Permissions minimales requises :
+          <code>instagram_business_basic</code> et <code>instagram_business_content_publish</code>.
+          Chaque utilisateur autorise ensuite son propre compte ; les jetons sont chiffrés et
+          renouvelés automatiquement.</div></div>
+      <label class="toggle"><input type="checkbox" name="instagram_enabled" value="1"
+             {{ 'checked' if instagram and instagram.is_enabled }}> Activer Instagram</label>
+      <div class="actions"><button class="btn primary" type="submit" name="after_save" value="instagram">Enregistrer et tester Instagram</button></div>
+      <div class="hint">Le bouton enregistre toute la configuration, puis lance le parcours OAuth Instagram pour
+        vérifier les identifiants, l'URI de redirection et les permissions.</div>
+    </article>
+  </div>
+</section>
+</form>
+{% endblock %}

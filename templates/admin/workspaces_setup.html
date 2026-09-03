@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Migration workspaces · Administration{% endblock %}
+{% block content %}
+<section class="card">
+  <h1 style="font-size:28px;margin:0 0 8px">Initialisation des workspaces</h1>
+  <p class="subtitle" style="color:var(--muted);margin:0 0 20px">
+    Crée les tables du modèle multi-workspace si elles n'existent pas et corrige les partages
+    de comptes sociaux hérités de l'ancienne logique automatique. Cette opération est idempotente.</p>
+  {% if error %}
+    <div class="alert alert-error"><b>{{ message }}</b><br><code style="font-size:12px">{{ error }}</code></div>
+  {% else %}
+    <div class="alert alert-info">{{ message }}</div>
+  {% endif %}
+  <a class="btn-primary" href="/app/admin/settings">Retour aux réglages</a>
+</section>
+{% endblock %}

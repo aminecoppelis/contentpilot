@@ -1,0 +1,88 @@
+/* Nouveau sujet — parité visuelle du formulaire n8n V90. */
+.newSubjectCard.card{background:#fff;border:1px solid #e5e7eb;border-radius:24px;box-shadow:0 18px 50px rgba(15,23,42,.08);overflow:hidden;padding:0;min-width:0;max-width:100%}
+.newSubjectCard .head{padding:24px 30px 18px;border-bottom:1px solid #e5e7eb}
+.newSubjectCard .head h2{margin:0 0 8px;font-size:24px;letter-spacing:-.03em;color:#0f172a}
+.newSubjectCard .head .subtitle{margin:0;color:#64748b;line-height:1.5;font-size:15px}
+.newSubjectCard form{padding:28px 30px;display:grid;gap:18px;min-width:0;max-width:100%}
+.newSubjectCard .grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;min-width:0}
+.newSubjectCard .grid>*{min-width:0}
+.newSubjectCard .field{margin:0;min-width:0;max-width:100%}
+.newSubjectCard .field label{display:block;font-weight:700;font-size:13px;margin-bottom:7px;color:#334155}
+.newSubjectCard .req{color:#ef4444;margin-left:4px}
+.newSubjectCard .error{display:none;margin-top:8px;color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:9px 11px;font-size:13px}
+.newSubjectCard .error.isVisible,.newSubjectCard .field.isInvalid .error,.newSubjectCard .field.hasError .error{display:block}
+.newSubjectCard .field.hasError input,.newSubjectCard .field.hasError select,.newSubjectCard .field.hasError textarea,.newSubjectCard .field.isInvalid input,.newSubjectCard .field.isInvalid select,.newSubjectCard .field.isInvalid textarea,.newSubjectCard .field.hasError .msBox,.newSubjectCard .field.isInvalid .msBox{border-color:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.10)}
+.newSubjectCard .field input,.newSubjectCard .field select,.newSubjectCard .field textarea{display:block;box-sizing:border-box;width:100%;min-width:0;max-width:100%;border:1px solid #e5e7eb;border-radius:14px;padding:13px 14px;font:inherit;color:#111827;background:#fff;outline:none}
+.newSubjectCard .field textarea{min-height:110px;resize:vertical}
+.newSubjectCard .promptField textarea{min-height:260px;line-height:1.55}
+.newSubjectCard .field input:focus,.newSubjectCard .field select:focus,.newSubjectCard .field textarea:focus{border-color:#4f46e5;box-shadow:0 0 0 4px rgba(79,70,229,.12)}
+.newSubjectCard .hint{font-size:12px;color:#64748b;margin-top:6px;line-height:1.45}
+.newSubjectCard .promptField .labelRow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px}
+.newSubjectCard .promptField .labelRow label{margin-bottom:0}
+.newSubjectCard .promptBtn{border:1px solid #c7d2fe;background:#eef2ff;color:#4338ca;border-radius:999px;padding:8px 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:all .18s ease;white-space:nowrap}
+.newSubjectCard .promptBtn:hover{background:#e0e7ff;border-color:#818cf8;transform:translateY(-1px);box-shadow:0 8px 18px rgba(79,70,229,.12)}
+.newSubjectCard .promptBtn:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.newSubjectCard .assistStatus{display:none;margin-top:8px;border-radius:12px;padding:9px 11px;font-size:13px;line-height:1.35}
+.newSubjectCard .assistStatus.isVisible{display:block}.newSubjectCard .assistStatus.info{background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3}.newSubjectCard .assistStatus.error,.newSubjectCard .assistStatus.errorStatus{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}.newSubjectCard .assistStatus.success{background:#ecfdf5;border:1px solid #bbf7d0;color:#047857}
+.newSubjectCard .newSubjectSubmit{border:0;border-radius:16px;padding:15px 18px;font-weight:800;cursor:pointer;background:linear-gradient(135deg,#4f46e5,#06b6d4);color:#fff;font-size:15px;box-shadow:0 14px 30px rgba(79,70,229,.22);transition:transform .18s ease,opacity .18s ease;width:100%;font-family:inherit}
+.newSubjectCard .newSubjectSubmit:hover{transform:translateY(-1px);box-shadow:0 18px 38px rgba(79,70,229,.28)}.newSubjectCard .newSubjectSubmit:disabled{opacity:.7;cursor:not-allowed;transform:none}
+/* Suggestions */
+.newSubjectCard .subjectSuggestWrap{position:relative;min-width:0}.newSubjectCard .subjectSuggestions{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:650;display:none;background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 18px 44px rgba(15,23,42,.14);padding:7px;max-height:280px;overflow:auto}.newSubjectCard .subjectSuggestions.isOpen{display:grid;gap:4px}.newSubjectCard .subjectSuggestion{appearance:none;border:0;width:100%;background:#fff;text-align:left;border-radius:12px;padding:11px 12px;cursor:pointer;font:inherit;color:#334155;font-size:14px;font-weight:700;line-height:1.35}.newSubjectCard .subjectSuggestion:hover,.newSubjectCard .subjectSuggestion.isActive{background:#eef2ff;color:#3730a3}
+/* Multi-select exact V90 */
+.newSubjectCard .multiSelect{position:relative;min-width:0}.newSubjectCard .msBox{box-sizing:border-box;width:100%;min-width:0;max-width:100%;min-height:50px;border:1px solid #e5e7eb;border-radius:16px;background:#fff;padding:8px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;cursor:text;transition:border-color .18s ease,box-shadow .18s ease}.newSubjectCard .msBox:focus-within{border-color:#4f46e5;box-shadow:0 0 0 4px rgba(79,70,229,.12)}.newSubjectCard .msTags{display:flex;flex-wrap:wrap;gap:8px;min-width:0;max-width:100%}.newSubjectCard .msTag{display:inline-flex;align-items:center;gap:7px;max-width:100%;min-width:0;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:999px;padding:7px 10px;font-size:13px;font-weight:650;line-height:1}.newSubjectCard .msTag>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.newSubjectCard .msTag button{flex:0 0 auto;border:0;background:transparent;color:#4338ca;font-weight:900;cursor:pointer;padding:0;font-size:14px;line-height:1}.newSubjectCard .msSearch{flex:1 1 180px;min-width:150px!important;width:auto!important;border:0!important;box-shadow:none!important;padding:8px!important;font-size:14px!important;background:transparent!important;outline:none!important}.newSubjectCard .msOptions{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:640;background:#fff;border:1px solid #e5e7eb;border-radius:16px;box-shadow:0 18px 44px rgba(15,23,42,.14);padding:8px;display:none;max-height:260px;overflow:auto}.newSubjectCard .msOptions.isOpen{display:block}.newSubjectCard .msOption{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;background:#fff;text-align:left;border-radius:12px;padding:11px 12px;cursor:pointer;font:inherit;color:#334155;font-size:14px}.newSubjectCard .msOption:hover{background:#f8fafc;color:#111827}.newSubjectCard .msOptionAdd{color:#4338ca;font-weight:750;background:#eef2ff!important}.newSubjectCard .msEmpty{padding:11px 12px;color:#64748b;font-size:13px}.newSubjectCard .msHidden{display:none}
+/* Overlay : même apparence que n8n, mais la requête HTTP répond maintenant en 202 puis redirige vers la vue background. */
+.loaderOverlay{position:fixed;inset:0;background:rgba(248,250,252,.88);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:20000;padding:20px}.loaderOverlay.isVisible,.loaderOverlay.isOpen{display:flex}.loaderBox{width:min(460px,100%);background:#fff;border:1px solid #e5e7eb;border-radius:24px;box-shadow:0 24px 70px rgba(15,23,42,.18);padding:30px;text-align:center}.spinner{width:54px;height:54px;border-radius:999px;border:5px solid #e0e7ff;border-top-color:#4f46e5;margin:0 auto 18px;animation:pgSpin .8s linear infinite}.loaderTitle{font-weight:900;font-size:20px;letter-spacing:-.02em;margin:0 0 8px;color:#111827}.loaderText{color:#64748b;line-height:1.5;margin:0;font-size:14px}.loaderSteps{display:grid;gap:8px;margin-top:20px;text-align:left}.loaderStep{font-size:13px;color:#334155;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px;padding:10px 12px}@keyframes pgSpin{to{transform:rotate(360deg)}}
+@media(max-width:760px){.newSubjectCard .grid{grid-template-columns:1fr}.newSubjectCard .head,.newSubjectCard form{padding:22px}.newSubjectCard .promptField .labelRow{align-items:flex-start;flex-direction:column}.newSubjectCard .promptBtn{align-self:flex-end}}
+
+/* =====================================================================
+   V90_NEW_SUBJECT_OVERFLOW_GUARD_2026_09_02
+   La page doit rester identique au formulaire n8n même si des styles
+   globaux (.grid/.field/input/.card) évoluent ailleurs dans l'application.
+   ===================================================================== */
+.newSubjectCard,
+.newSubjectCard *,
+.newSubjectCard *::before,
+.newSubjectCard *::after{box-sizing:border-box}
+.newSubjectCard{width:100%;max-width:100%;min-width:0;overflow:hidden}
+.newSubjectCard .head,
+.newSubjectCard form,
+.newSubjectCard form>*{width:100%;max-width:100%;min-width:0}
+.newSubjectCard .grid{width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important}
+.newSubjectCard .grid>.field,
+.newSubjectCard .field,
+.newSubjectCard .subjectSuggestWrap,
+.newSubjectCard .multiSelect,
+.newSubjectCard .msBox,
+.newSubjectCard .msTags{min-width:0;max-width:100%}
+.newSubjectCard input,
+.newSubjectCard select,
+.newSubjectCard textarea,
+.newSubjectCard button{max-width:100%}
+.newSubjectCard input,
+.newSubjectCard select,
+.newSubjectCard textarea{width:100%!important;min-width:0!important}
+.newSubjectCard textarea{overflow-wrap:anywhere;word-break:break-word}
+.newSubjectCard .msBox{overflow:visible}
+.newSubjectCard .msTags{flex:1 1 auto;width:auto;overflow:hidden}
+.newSubjectCard .msTag{max-width:min(100%,520px)}
+.newSubjectCard .msTag>span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.newSubjectCard .msSearch{flex:1 1 160px!important;min-width:120px!important;max-width:100%!important}
+.newSubjectCard .msOption{min-width:0;max-width:100%;overflow:hidden}
+.newSubjectCard .msOption>span{min-width:0;overflow-wrap:anywhere;word-break:break-word}
+.newSubjectCard .subjectSuggestion,
+.newSubjectCard .subjectSuggestionBtn{max-width:100%;overflow-wrap:anywhere;word-break:break-word}
+.newSubjectCard .promptField .labelRow{min-width:0;flex-wrap:wrap}
+.newSubjectCard .promptField .labelRow label{min-width:0}
+.newSubjectCard .promptBtn{flex:0 0 auto;max-width:100%}
+.newSubjectCard .newSubjectSubmit{max-width:100%!important;width:100%!important}
+
+@media(max-width:900px){
+  .newSubjectCard .grid{grid-template-columns:1fr!important}
+}
+@media(max-width:520px){
+  .newSubjectCard .head{padding:20px 18px 16px}
+  .newSubjectCard form{padding:20px 18px}
+  .newSubjectCard .msSearch{flex-basis:100%!important;min-width:0!important}
+  .newSubjectCard .promptField .labelRow{align-items:stretch}
+  .newSubjectCard .promptBtn{align-self:flex-start}
+}

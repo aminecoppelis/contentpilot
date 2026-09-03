@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Utilisateurs · Administration{% endblock %}
+{% block extra_style %}
+<style>
+  .header{background:rgba(255,255,255,.88);border:1px solid rgba(148,163,184,.28);border-radius:28px;
+    padding:26px 28px;margin-bottom:20px;box-shadow:0 16px 44px rgba(15,23,42,.08)}
+  .eyebrow{font-size:13px;font-weight:900;color:var(--primary);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+  .h1{font-size:36px;line-height:1.08;letter-spacing:-.04em}
+  .sub{color:var(--muted);margin:10px 0 0;line-height:1.5}
+  .card{background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;
+    box-shadow:0 12px 34px rgba(15,23,42,.05)}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:#f8fafc}
+  td small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+  .badge{display:inline-flex;border-radius:999px;padding:4px 10px;font-size:11px;font-weight:900;
+    text-transform:uppercase;letter-spacing:.03em}
+  .badge.admin{background:#eef2ff;color:#3730a3}
+  .badge.user{background:#f1f5f9;color:#475569}
+  .badge.active{background:#dcfce7;color:#166534}
+  .badge.inactive{background:#fee2e2;color:#991b1b}
+  .rowActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn{border:0;border-radius:11px;padding:9px 13px;font-weight:900;cursor:pointer;font:inherit;
+    background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}
+  .btn.small{padding:7px 11px;font-size:13px}
+  .btn.warn{background:#fef3c7;color:#92400e;border:1px solid #fde68a}
+  .btn.success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+  .btn.danger{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .notice{border-radius:14px;padding:12px 14px;margin-bottom:16px;font-weight:850;display:none}
+  .notice.show{display:block;background:#ecfdf5;border:1px solid #bbf7d0;color:#047857}
+  .notice.show.error{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+  .modalOverlay{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;padding:20px;z-index:10000}
+  .modalOverlay.show{display:flex}
+  .modal{width:min(560px,100%);background:#fff;border-radius:24px;padding:26px;
+    box-shadow:0 30px 90px rgba(15,23,42,.28)}
+  .modal h2{margin:0 0 18px;font-size:22px;letter-spacing:-.03em}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .field.full{grid-column:1/-1}
+  .field label{display:block;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;
+    color:#64748b;margin-bottom:6px}
+  .field input,.field select{width:100%;border:1px solid #cbd5e1;border-radius:13px;padding:11px 13px;font:inherit}
+  .modalActions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+  .req{color:#ef4444}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+{% block content %}
+<div id="adminNotice" class="notice {{ 'show' if notice }}{{ ' error' if notice_error }}" role="status">{{ notice or "" }}</div>
+
+<section class="header">
+  <div class="eyebrow">Administration</div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <h1 class="h1" style="margin:0">Utilisateurs</h1>
+    <span id="adminUsersPageCount" title="Nombre total de lignes"
+          aria-label="Nombre total de lignes : {{ total_users }}"
+          style="display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;
+                 padding:0 10px;border-radius:999px;background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe;
+                 font-size:14px;font-weight:950;line-height:1;box-shadow:0 6px 16px rgba(79,70,229,.08)">{{ total_users }}</span>
+  </div>
+  <p class="sub">Gère les informations, le rôle et l'état des comptes depuis l'interface.</p>
+</section>
+
+<section class="card">
+  <table>
+    <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Statut</th><th>Créé le</th><th>Actions</th></tr></thead>
+    <tbody id="adminUsersTbody">
+    {% include "admin/_user_rows.html" %}
+    {% if not users %}<tr id="adminUsersEmpty"><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">Aucun utilisateur.</td></tr>{% endif %}
+    </tbody>
+  </table>
+  <div id="adminUsersLoadState" style="padding:14px 16px;text-align:center;color:#64748b;font-size:13px;
+       display:{{ 'block' if users_has_more else 'none' }}">Fais défiler pour charger plus d'utilisateurs.</div>
+  <div id="adminUsersSentinel" style="height:1px"></div>
+</section>
+
+<div id="editUserModal" class="modalOverlay">
+  <div class="modal">
+    <h2>Modifier l'utilisateur</h2>
+    <form method="post" action="/app/admin/users/action" data-admin-action-form="1">
+      <input type="hidden" name="action" value="update">
+      <input type="hidden" id="editUserId" name="user_id">
+      <div class="grid">
+        <div class="field"><label>Prénom <span class="req">*</span></label><input id="editFirstName" name="first_name" required></div>
+        <div class="field"><label>Nom <span class="req">*</span></label><input id="editLastName" name="last_name" required></div>
+        <div class="field full"><label>Email <span class="req">*</span></label><input id="editEmail" name="email" type="email" required></div>
+        <div class="field full"><label>Rôle <span class="req">*</span></label>
+          <select id="editRole" name="role" required>
+            <option value="user">Utilisateur</option><option value="admin">Administrateur</option>
+          </select></div>
+      </div>
+      <div class="modalActions">
+        <button type="button" class="btn" style="background:#e2e8f0;color:#334155" onclick="closeUserEdit()">Annuler</button>
+        <button type="submit" class="btn">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+/* Port verbatim du script de la page Admin Users (modale + garde de double soumission). */
+function submitAdminAction(event, form){
+  if(!form || form.dataset.submitting==='1'){ if(event) event.preventDefault(); return false; }
+  const confirmMessage=String(form.dataset.confirmMessage||'').trim();
+  if(confirmMessage && !window.confirm(confirmMessage)){ if(event) event.preventDefault(); return false; }
+  form.dataset.submitting='1';
+  const submitButton=form.querySelector('button[type="submit"]');
+  if(submitButton){
+    submitButton.disabled=true;
+    submitButton.dataset.originalText=submitButton.textContent||'';
+    submitButton.textContent='Traitement...';
+  }
+  return true;
+}
+function bindAdminActionForms(){
+  document.querySelectorAll('form[data-admin-action-form="1"]').forEach(function(form){
+    if(form.dataset.bound==='1') return;
+    form.dataset.bound='1';
+    form.addEventListener('submit',function(event){submitAdminAction(event,form);});
+  });
+}
+function openUserEdit(u){
+  document.getElementById('editUserId').value=u.id||'';
+  document.getElementById('editFirstName').value=u.first_name||'';
+  document.getElementById('editLastName').value=u.last_name||'';
+  document.getElementById('editEmail').value=u.email||'';
+  document.getElementById('editRole').value=u.role||'user';
+  document.getElementById('editUserModal').classList.add('show');
+}
+function closeUserEdit(){document.getElementById('editUserModal').classList.remove('show');}
+document.getElementById('editUserModal').addEventListener('click',e=>{if(e.target.id==='editUserModal')closeUserEdit();});
+document.addEventListener('click',function(event){
+  var trigger=event.target&&event.target.closest?event.target.closest('[data-user-edit]'):null;
+  if(trigger){ try{ openUserEdit(JSON.parse(decodeURIComponent(trigger.getAttribute('data-user-edit')))); }catch(e){} }
+  document.querySelectorAll('details.userMenu[open]').forEach(function(menu){
+    if(!menu.contains(event.target))menu.removeAttribute('open');
+  });
+});
+bindAdminActionForms();
+// Scroll infini Admin : les lignes ajoutées réutilisent exactement les mêmes formulaires/actions.
+(function initAdminUsersInfiniteScroll(){
+  var tbody=document.getElementById('adminUsersTbody');
+  var sentinel=document.getElementById('adminUsersSentinel');
+  var state=document.getElementById('adminUsersLoadState');
+  if(!tbody||!sentinel||!state)return;
+  var page=2;
+  var hasMore={{ 'true' if users_has_more else 'false' }};
+  var loading=false;
+  if(!hasMore){state.style.display='none';return;}
+  async function loadMore(){
+    if(loading||!hasMore)return;
+    loading=true;state.style.display='block';state.textContent='Chargement…';
+    try{
+      var r=await fetch('/app/admin/users/list-page?page='+encodeURIComponent(page),{credentials:'same-origin'});
+      var d=await r.json();var data=d.data||d;
+      if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
+      var empty=document.getElementById('adminUsersEmpty');if(empty)empty.remove();
+      if(data.rows_html)tbody.insertAdjacentHTML('beforeend',data.rows_html);
+      hasMore=Boolean(data.has_more);page=Number(data.next_page||page+1);
+      bindAdminActionForms();
+      state.style.display=hasMore?'block':'none';
+      state.textContent=hasMore?'Fais défiler pour charger plus d’utilisateurs.':'Toutes les lignes sont affichées.';
+    }catch(e){state.style.display='block';state.textContent='Chargement impossible. Réessaie en faisant défiler.';}
+    finally{loading=false;}
+  }
+  var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting)loadMore();});},{rootMargin:'240px'});
+  observer.observe(sentinel);
+})();
+
+</script>
+{% endblock %}

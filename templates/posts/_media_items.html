@@ -1,0 +1,41 @@
+{% set selected_by_role = media | selectattr('media_role', 'equalto', 'cover') | list %}
+{% set has_selected_media = selected_by_role|length > 0 %}
+{% for m in media %}
+{% set is_selected = (m.media_role == 'cover') %}
+<div class="mediaCarouselItem {{ 'active' if is_selected or ((not has_selected_media) and loop.first) }}"
+     data-carousel-item="{{ idea_index }}" data-media-pos="{{ loop.index0 }}"
+     data-media-id="{{ m.id }}" data-media-kind="{{ m.media_type }}">
+  <div class="mediaPreviewFrame" data-open-media-preview="1" data-media-index="{{ idea_index }}" data-media-pos="{{ loop.index0 }}">
+    <div class="mediaPreviewOverlay">
+      <button type="button" class="mediaCornerBtn"
+              onclick="event.preventDefault();event.stopPropagation();window.openMediaLightbox({{ idea_index }},{{ loop.index0 }});return false"
+              title="Ouvrir en grand" aria-label="Ouvrir en grand">□</button>
+    </div>
+    {% if m.media_type == 'video' %}
+      <video controls playsinline preload="metadata" src="{{ m.url }}"
+             data-video-proxy-url="/app/posts/media-video.mp4?media_id={{ m.id }}"></video>
+    {% else %}
+      <img src="{{ m.url }}" alt="Aperçu image" onclick="window.openMediaLightbox({{ idea_index }},{{ loop.index0 }})">
+    {% endif %}
+  </div>
+  <div class="mediaCarouselMeta">
+    <span>{{ 'Vidéo' if m.media_type == 'video' else 'Image' }}</span>
+    <span class="mediaCarouselCounter">{{ loop.index }} / {{ media|length }}</span>
+    {% if is_selected %}<span class="status published" data-media-selected-badge>Sélectionné</span>{% endif %}
+  </div>
+  <div class="mediaActionRow">
+    {% if is_selected %}
+      <button type="button" class="mediaUiBtn selected" data-select-media-btn disabled aria-disabled="true">Sélectionné</button>
+    {% else %}
+      <button type="button" class="mediaUiBtn primary" data-select-media-btn
+              onclick="event.preventDefault();event.stopPropagation();window.selectMedia('{{ m.id }}',{{ idea_index }},this);return false">Choisir ce média</button>
+    {% endif %}
+    <button type="button" class="mediaUiBtn" data-edit-media="1"
+            onclick="event.preventDefault();event.stopPropagation();window.openMediaEditModal({{ idea_index }},{{ loop.index0 }});return false">Modifier</button>
+    <button type="button" class="mediaUiBtn"
+            onclick="event.preventDefault();event.stopPropagation();window.downloadGalleryMedia({{ idea_index }},{{ loop.index0 }});return false">Télécharger</button>
+    <button type="button" class="mediaUiBtn danger"
+            onclick="event.preventDefault();event.stopPropagation();window.deleteMedia('{{ m.id }}',{{ idea_index }});return false">Supprimer</button>
+  </div>
+</div>
+{% endfor %}

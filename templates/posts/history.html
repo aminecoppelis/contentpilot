@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "partials/network_badges.html" import history_publication_badges, published_network_logo %}
+{% block title %}Idées de post · Post Generator{% endblock %}
+{% block content %}
+<section class="header">
+  <div class="eyebrow">Contenus</div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <h1 class="h1" style="margin:0">Idées de post</h1>
+    <span id="historyPageCount" class="countPill"
+          title="Nombre de lignes correspondant aux filtres actifs"
+          aria-label="Nombre de lignes correspondant aux filtres actifs : {{ total }}">{{ total }}</span>
+  </div>
+  <p class="sub">Toutes les idées générées, avec leur statut, leur auteur et les informations de publication.</p>
+  {% with panel_id='historyStatusFilter', base_path='/history' %}
+    {% include "partials/status_filter.html" %}
+  {% endwith %}
+</section>
+
+<section class="card">
+  <table>
+    <thead><tr>
+      <th>Idée</th><th>Statut</th><th>Sujet</th><th>Date de dernière modif</th>
+      <th>Créée par</th><th>Publié par</th><th>Nb médias</th><th>Publication</th><th>Actions</th>
+    </tr></thead>
+    <tbody id="historyTableBody">
+    {% for r in rows %}
+      <tr>
+        <td><b>{{ r.idea_title or '' }}</b><div class="mini">{{ r.idea_id }}</div></td>
+        <td><span class="status {{ r.idea_status }}">{{ r.status_label }}</span></td>
+        <td>{{ r.subject or '' }}</td>
+        <td>{{ r.last_modified }}</td>
+        <td>{% if r.created_by_name %}<span class="personCell" title="{{ r.created_by_name }}">
+            <span class="personAvatar">{{ r.created_by_initials }}</span></span>
+            {% else %}<span class="personEmpty">-</span>{% endif %}</td>
+        <td>{% if r.published_by_name %}<span class="personCell" title="{{ r.published_by_name }}">
+            <span class="personAvatar">{{ r.published_by_initials }}</span></span>
+            {% else %}<span class="personEmpty">-</span>{% endif %}</td>
+        <td>{{ r.media_count }}</td>
+        <td>{{ history_publication_badges(r.publications) }}</td>
+        <td><div class="actions">
+          <a class="btn light" href="/app/posts/view?request_id={{ r.request_id }}&idea_id={{ r.idea_id }}">Ouvrir</a>
+        </div></td>
+      </tr>
+    {% else %}
+      <tr><td colspan="9">Aucune idée de post.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+<div id="historyLoadState" class="tableLoadState" style="display:{{ 'block' if has_more else 'none' }}">
+  Fais défiler pour charger plus de lignes.</div>
+<div id="historySentinel" style="height:1px"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+window.initInfiniteTable({
+  tbodyId:'historyTableBody', sentinelId:'historySentinel', loadStateId:'historyLoadState',
+  endpoint:'/app/history/list-page', initialOffset:{{ next_offset }}, hasMore:{{ 'true' if has_more else 'false' }}
+});
+</script>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block title %}Mon compte · Post Generator{% endblock %}
+{% block extra_style %}
+<style>
+  .header{background:rgba(255,255,255,.88);backdrop-filter:blur(14px);border:1px solid rgba(148,163,184,.28);
+    border-radius:28px;padding:28px 30px;margin-bottom:22px;box-shadow:0 16px 44px rgba(15,23,42,.08)}
+  .eyebrow{font-size:13px;font-weight:900;color:#635bff;text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+  .header h1{margin:0;font-size:40px;line-height:1.08;letter-spacing:-.04em}
+  .header p{margin:10px 0 0;color:var(--muted);line-height:1.5}
+  .card{background:#fff;border:1px solid var(--line);border-radius:26px;
+    box-shadow:0 18px 50px rgba(15,23,42,.08);padding:26px;margin-bottom:18px}
+  .accountHead{display:flex;align-items:center;gap:18px;margin-bottom:24px}
+  .avatar{width:72px;height:72px;border-radius:999px;background:linear-gradient(135deg,#635bff,#06b6d4);
+    color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:950}
+  .accountName{font-size:24px;font-weight:950;letter-spacing:-.03em}
+  .accountMail{color:var(--muted);font-size:14px;margin-top:4px}
+  .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  .info{border:1px solid #e2e8f0;border-radius:18px;padding:15px;background:#f8fafc}
+  .info span,.field label{display:block;font-size:12px;font-weight:900;text-transform:uppercase;
+    letter-spacing:.07em;color:#64748b;margin-bottom:6px}
+  .info b{font-size:15px;color:#0f172a}
+  .formGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .field input{width:100%;border:1px solid #cbd5e1;border-radius:14px;padding:13px 14px;font:inherit;
+    color:#0f172a;background:#fff;outline:none}
+  .field input:focus{border-color:#635bff;box-shadow:0 0 0 4px rgba(99,91,255,.12)}
+  .field.full{grid-column:1/-1}
+  .hint{margin-top:7px;color:#64748b;font-size:13px;line-height:1.45}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .btn,button.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;
+    border:0;border-radius:14px;padding:12px 14px;font-weight:950;cursor:pointer;font:inherit}
+  .btn.primary{background:#0f172a;color:#fff}
+  .btn.save{background:linear-gradient(135deg,#635bff,#06b6d4);color:#fff}
+  .btn.secondary{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}
+  .banner{border-radius:16px;padding:12px 14px;margin-bottom:18px;font-weight:850;line-height:1.45}
+  .banner.success{background:#ecfdf5;border:1px solid #bbf7d0;color:#047857}
+  .banner.error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+  .sectionTitle{margin:0 0 14px;font-size:20px;letter-spacing:-.03em}
+  .warning{border:1px solid #fde68a;background:#fffbeb;color:#92400e;border-radius:16px;padding:12px 14px;
+    font-size:13px;line-height:1.45;margin-top:12px}
+  .editPanel[hidden]{display:none!important}
+  .req{color:#ef4444}
+  @media(max-width:760px){.grid2,.formGrid{grid-template-columns:1fr}.header h1{font-size:32px}
+    .accountHead{align-items:flex-start;flex-direction:column}.field.full{grid-column:auto}}
+</style>
+{% endblock %}
+{% block content %}
+<section class="header">
+  <div class="eyebrow">Compte</div>
+  <h1>Mon compte</h1>
+  <p>Consulte tes informations personnelles et ouvre les formulaires uniquement lorsque tu souhaites les modifier.</p>
+</section>
+
+{% if banner_message %}<div class="banner {{ banner_type }}">{{ banner_message }}</div>{% endif %}
+
+<section class="card">
+  <div class="accountHead">
+    <div class="avatar">{{ auth_user.initials }}</div>
+    <div>
+      <div class="accountName">{{ auth_user.full_name or auth_user.email }}</div>
+      <div class="accountMail">{{ auth_user.email }}</div>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="info"><span>Prénom</span><b>{{ auth_user.first_name or "—" }}</b></div>
+    <div class="info"><span>Nom</span><b>{{ auth_user.last_name or "—" }}</b></div>
+    <div class="info"><span>Email</span><b>{{ auth_user.email }}</b></div>
+    <div class="info"><span>Compte activé</span><b>{{ activated_at or "—" }}</b></div>
+    <div class="info"><span>Fuseau horaire</span><b>{{ auth_user.timezone }}</b></div>
+  </div>
+  <div class="actions">
+    <button class="btn primary" type="button" data-toggle-panel="profilePanel">Modifier</button>
+    <button class="btn secondary" type="button" data-toggle-panel="passwordPanel">Modifier le mot de passe</button>
+  </div>
+</section>
+
+<section class="card editPanel" id="profilePanel" hidden>
+  <h2 class="sectionTitle">Modifier mes informations</h2>
+  <form method="post" action="/app/account">
+    <input type="hidden" name="action" value="profile">
+    <div class="formGrid">
+      <div class="field"><label>Prénom <span class="req">*</span></label>
+        <input name="first_name" value="{{ auth_user.first_name }}" required></div>
+      <div class="field"><label>Nom <span class="req">*</span></label>
+        <input name="last_name" value="{{ auth_user.last_name }}" required></div>
+      <div class="field full"><label>Email <span class="req">*</span></label>
+        <input name="email" type="email" value="{{ auth_user.email }}" required>
+        <div class="hint">Si tu modifies ton email, le compte sera désactivé et un nouveau lien d'activation sera envoyé à la nouvelle adresse.</div>
+      </div>
+      <div class="field full"><label>Mot de passe actuel</label>
+        <input name="current_password" type="password" autocomplete="current-password">
+        <div class="hint">Obligatoire uniquement si tu changes l'email.</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn save" type="submit">Enregistrer</button>
+      <button class="btn secondary" type="button" data-close-panel="profilePanel">Annuler</button>
+    </div>
+  </form>
+</section>
+
+<section class="card editPanel" id="passwordPanel" hidden>
+  <h2 class="sectionTitle">Modifier mon mot de passe</h2>
+  <form method="post" action="/app/account">
+    <input type="hidden" name="action" value="password">
+    <div class="formGrid">
+      <div class="field full"><label>Mot de passe actuel <span class="req">*</span></label>
+        <input name="current_password" type="password" autocomplete="current-password" required></div>
+      <div class="field"><label>Nouveau mot de passe <span class="req">*</span></label>
+        <input name="new_password" type="password" autocomplete="new-password" required minlength="10"></div>
+      <div class="field"><label>Confirmer <span class="req">*</span></label>
+        <input name="confirm_password" type="password" autocomplete="new-password" required minlength="10"></div>
+    </div>
+    <div class="warning">Le nouveau mot de passe doit contenir au moins 10 caractères.</div>
+    <div class="actions">
+      <button class="btn save" type="submit">Modifier le mot de passe</button>
+      <button class="btn secondary" type="button" data-close-panel="passwordPanel">Annuler</button>
+    </div>
+  </form>
+</section>
+
+<section class="actions"><a class="btn primary" href="/app/posts">Retour aux sujets</a></section>
+{% endblock %}
+{% block scripts %}
+<script>
+/* Port verbatim du script de bascule des panneaux (page Account originale) */
+(function(){
+  function closeAll(except){ document.querySelectorAll('.editPanel').forEach(function(panel){ if(panel.id!==except) panel.hidden=true; }); }
+  document.querySelectorAll('[data-toggle-panel]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      const id=btn.getAttribute('data-toggle-panel'); const panel=document.getElementById(id); if(!panel)return;
+      const willOpen=panel.hidden; closeAll(id); panel.hidden=!willOpen;
+      if(willOpen){ panel.scrollIntoView({behavior:'smooth',block:'start'});
+        const input=panel.querySelector('input:not([type="hidden"])'); if(input)setTimeout(function(){input.focus();},300); }
+    });
+  });
+  document.querySelectorAll('[data-close-panel]').forEach(function(btn){
+    btn.addEventListener('click',function(){ const panel=document.getElementById(btn.getAttribute('data-close-panel')); if(panel)panel.hidden=true; });
+  });
+  document.addEventListener('click',function(event){
+    document.querySelectorAll('details.userMenu[open]').forEach(function(menu){ if(!menu.contains(event.target))menu.removeAttribute('open'); });
+  });
+})();
+</script>
+{% endblock %}

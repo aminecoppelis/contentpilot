@@ -1,0 +1,19 @@
+{% for r in requests %}
+<tr id="request-row-{{ r.id }}">
+  <td><b>{{ r.title or r.subject or "Sans sujet" }}</b><div class="mini">{{ r.id }}</div></td>
+  <td><span class="status {{ r.status }}">{{ r.status_label }}</span></td>
+  <td>{{ r.ideas_count }}</td>
+  <td>{{ r.approved_count }}</td>
+  <td>{{ r.media_count }}</td>
+  <td>{{ r.last_modified }}</td>
+  <td>{{ r.created_by_name or "—" }}</td>
+  <td><div class="actions">
+    {% if r.ideas_count|int > 0 or r.status in ['generating','generating_more'] %}<a class="btn light" href="/app/posts/view?request_id={{ r.id }}">Idées</a>{% else %}<button class="btn light" type="button" disabled title="Aucune idée disponible">Idées</button>{% endif %}
+    <a class="btn light" href="/app/posts/edit?id={{ r.id }}">Modifier</a>
+    <form class="inlineForm" method="post" action="/app/posts/delete" onsubmit="return deleteRequestFromList(event,this)">
+      <input type="hidden" name="id" value="{{ r.id }}">
+      <button class="danger" type="submit">Supprimer</button>
+    </form>
+  </div></td>
+</tr>
+{% endfor %}

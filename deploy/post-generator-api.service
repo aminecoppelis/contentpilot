@@ -1,0 +1,45 @@
+# =====================================================================
+#  Variante pour montée en charge : API SEULE, sans worker ni crons.
+#
+#  À utiliser conjointement avec post-generator.service configuré, lui,
+#  en un seul exemplaire porteur du scheduler.
+#    API        : plusieurs workers uvicorn, DISABLE_SCHEDULER=1
+#    Scheduler  : un seul process, worker + crons actifs
+#
+#  Adapter alors le ProxyPass Apache vers le port 8001.
+# =====================================================================
+
+[Unit]
+Description=Post Generator — API seule (sans worker ni crons)
+After=network-online.target postgresql.service
+Requires=postgresql.service
+
+[Service]
+Type=exec
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/post_generator
+EnvironmentFile=/home/ubuntu/post_generator/.env
+Environment=DISABLE_SCHEDULER=1
+# Une seule instance doit appliquer les migrations : on la réserve au
+# service porteur du scheduler pour éviter toute concurrence au démarrage.
+Environment=AUTO_MIGRATE=false
+
+ExecStart=/home/ubuntu/post_generator/venv/bin/uvicorn app.main:app \
+    --host 127.0.0.1 \
+    --port 8001 \
+    --workers 4 \
+    --proxy-headers \
+    --forwarded-allow-ips=127.0.0.1 \
+    --log-level info \
+    --no-access-log
+
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/home/ubuntu/post_generator /var/lib/post_generator /var/log/post_generator
+
+[Install]
+WantedBy=multi-user.target

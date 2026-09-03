@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}Workspace · Post Generator{% endblock %}
+{% block extra_style %}
+<style>
+  .header{background:rgba(255,255,255,.88);border:1px solid rgba(148,163,184,.28);border-radius:28px;
+    padding:26px 28px;margin-bottom:20px;box-shadow:0 16px 44px rgba(15,23,42,.08)}
+  .eyebrow{font-size:13px;font-weight:900;color:var(--primary);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+  .header h1{margin:0;font-size:36px;line-height:1.08;letter-spacing:-.04em}
+  .header p.muted{margin:10px 0 0;color:var(--muted);line-height:1.5}
+  .card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:22px;margin-bottom:16px;
+    box-shadow:0 12px 34px rgba(15,23,42,.05)}
+  .card h2{margin:0 0 14px;font-size:19px;letter-spacing:-.025em}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .field{margin-bottom:12px}
+  .field label{display:block;font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;
+    color:#64748b;margin-bottom:6px}
+  .field input,.field select{width:100%;border:1px solid #cbd5e1;border-radius:13px;padding:11px 13px;font:inherit}
+  button,.btn{border:0;border-radius:13px;padding:10px 14px;font-weight:900;cursor:pointer;font:inherit;
+    background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}
+  button.secondary{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}
+  button.danger,.danger{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+  .tableWrap{overflow:auto;border:1px solid var(--line);border-radius:16px}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:12px 13px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  td small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+  .pill{display:inline-flex;background:#eef2ff;color:#3730a3;border-radius:999px;padding:4px 10px;
+    font-size:12px;font-weight:900}
+  .inline{display:inline-flex;gap:6px;align-items:center;margin:0 6px 0 0}
+  .inline select{border:1px solid #cbd5e1;border-radius:10px;padding:6px 8px;font:inherit;font-size:13px}
+  .inline button{padding:7px 11px;font-size:13px}
+  .dangerZone{border-color:#fecaca;background:#fffbfb}
+  .dangerZone h2{color:#991b1b}
+  .dangerZone p{color:#7f1d1d;font-size:13px;line-height:1.5}
+  .notice{border-radius:14px;padding:12px 14px;margin-bottom:16px;font-weight:850;
+    background:#ecfdf5;border:1px solid #bbf7d0;color:#047857}
+  .notice.error{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+</style>
+{% endblock %}
+{% block content %}
+<section class="header">
+  <div class="eyebrow">Collaboration</div>
+  <h1>{{ ws.name or "Workspace" }}</h1>
+  <p class="muted">Les sujets, médias, réseaux sociaux et publications affichés appartiennent uniquement à ce workspace.</p>
+</section>
+
+<div id="flash"></div>
+
+<section class="grid">
+  <div class="card">
+    <h2>Workspace actif</h2>
+    {% if is_super_admin %}<p class="muted"><b>Accès global super administrateur</b></p>{% endif %}
+    {% if can_admin %}
+      <form method="post" action="/app/workspace/action">
+        <input type="hidden" name="action" value="rename">
+        <div class="field"><label>Nom</label>
+          <input name="name" value="{{ ws.name or '' }}" required maxlength="150"></div>
+        <button class="secondary">Renommer</button>
+      </form>
+    {% else %}
+      <p class="muted">Rôle : {{ role_label }}</p>
+    {% endif %}
+    {% if not is_owner and not is_super_admin %}
+      <form method="post" action="/app/workspace/action" onsubmit="return confirm('Quitter ce workspace ?')">
+        <input type="hidden" name="action" value="leave">
+        <button class="danger">Quitter le workspace</button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+
+{% if can_admin %}
+<section class="card">
+  <h2>Inviter un utilisateur</h2>
+  <form method="post" action="/app/workspace/action">
+    <input type="hidden" name="action" value="invite">
+    <div class="grid">
+      <div class="field"><label>Email</label><input type="email" name="email" required></div>
+      <div class="field"><label>Rôle</label>
+        <select name="role"><option value="member">Membre</option><option value="admin">Administrateur</option></select>
+      </div>
+    </div>
+    <button>Envoyer l'invitation</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>Membres</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Actions</th></tr></thead>
+    <tbody>
+    {% for m in members %}
+      <tr>
+        <td><b>{{ m.name }}</b><small>{{ m.email }}</small></td>
+        <td><span class="pill">{{ m.role_label }}</span></td>
+        <td>
+          {% if m.is_owner %}—
+          {% elif can_admin %}
+            <form method="post" action="/app/workspace/action" class="inline">
+              <input type="hidden" name="action" value="member_role">
+              <input type="hidden" name="target_user_id" value="{{ m.user_id }}">
+              <select name="role">
+                <option value="member" {{ 'selected' if m.role=='member' }}>Membre</option>
+                <option value="admin" {{ 'selected' if m.role=='admin' }}>Administrateur</option>
+              </select>
+              <button>Modifier</button>
+            </form>
+            <form method="post" action="/app/workspace/action" class="inline"
+                  onsubmit="return confirm('Retirer ce membre du workspace ?')">
+              <input type="hidden" name="action" value="remove_member">
+              <input type="hidden" name="target_user_id" value="{{ m.user_id }}">
+              <button class="danger">Retirer</button>
+            </form>
+          {% endif %}
+        </td>
+      </tr>
+    {% else %}<tr><td colspan="3">Aucun membre.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+
+{% if can_admin %}
+<section class="card">
+  <h2>Invitations en attente</h2>
+  <div class="tableWrap"><table>
+    <thead><tr><th>Email</th><th>Rôle</th><th>Expiration</th><th></th></tr></thead>
+    <tbody>
+    {% for i in invitations %}
+      <tr>
+        <td><b>{{ i.email }}</b></td>
+        <td>{{ i.role_label }}</td>
+        <td>{{ i.expires_label }}</td>
+        <td>
+          <form method="post" action="/app/workspace/action" class="inline">
+            <input type="hidden" name="action" value="revoke_invite">
+            <input type="hidden" name="invitation_id" value="{{ i.id }}">
+            <button class="danger">Annuler</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}<tr><td colspan="4">Aucune invitation en attente.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endif %}
+
+{% if can_delete %}
+<section class="card dangerZone">
+  <h2>Supprimer le workspace</h2>
+  <p>Cette action retire immédiatement l'accès à ce workspace pour tous ses membres. Les sujets, médias,
+     comptes sociaux et publications associés ne seront plus accessibles depuis l'application.</p>
+  <form method="post" action="/app/workspace/action" class="deleteWorkspaceForm" data-workspace-name="{{ ws.name or '' }}">
+    <input type="hidden" name="action" value="delete">
+    <div class="field"><label>Pour confirmer, saisis exactement <b>{{ ws.name or '' }}</b></label>
+      <input name="name" required autocomplete="off" placeholder="Nom exact du workspace"></div>
+    <button type="submit" class="danger deleteWorkspaceBtn">Supprimer le workspace</button>
+  </form>
+</section>
+{% elif can_delete_base and not has_alternative_workspace %}
+<section class="card dangerZone">
+  <h2>Supprimer le workspace</h2>
+  <p>Ce workspace est le dernier workspace auquel ton compte a accès. Crée d'abord un autre workspace depuis
+     la liste déroulante en haut de page avant de pouvoir supprimer celui-ci.</p>
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+/* Port verbatim de la confirmation de suppression + flash de la page Workspace */
+(function(){
+  document.querySelectorAll('.deleteWorkspaceForm').forEach(function(form){
+    form.addEventListener('submit',function(event){
+      var expected=String(form.getAttribute('data-workspace-name')||'').trim();
+      var input=form.querySelector('input[name="name"]');
+      var actual=String(input&&input.value||'').trim();
+      if(!expected||actual!==expected){
+        event.preventDefault();
+        alert('Le nom saisi ne correspond pas exactement au nom du workspace.');
+        if(input)input.focus();return;
+      }
+      if(!confirm('Supprimer définitivement le workspace « '+expected+' » ?'))event.preventDefault();
+    });
+  });
+  try{
+    const u=new URL(location.href);
+    const ok=u.searchParams.get('success');const err=u.searchParams.get('error');
+    const link=u.searchParams.get('invite_link');const f=document.getElementById('flash');
+    if(ok||err||link){
+      f.className='notice'+(err?' error':'');
+      f.textContent=err||ok||(link?'Invitation créée : '+link:'');
+      if(link){const a=document.createElement('a');a.href=link;a.textContent=' Ouvrir le lien';a.style.marginLeft='8px';f.appendChild(a);}
+      u.searchParams.delete('success');u.searchParams.delete('error');u.searchParams.delete('invite_link');
+      history.replaceState({},'',u.pathname+(u.searchParams.toString()?'?'+u.searchParams.toString():''));
+    }
+  }catch(e){}
+})();
+</script>
+{% endblock %}

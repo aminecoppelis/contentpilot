@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Idées générées{% endblock %}
+{% block content %}
+<h1>Idées générées</h1>
+<p class="subtitle">{{ ideas|length }} idée(s) pour cette demande.</p>
+<div class="grid">
+  {% for idea in ideas %}
+  <div class="idea-card">
+    <h3>{{ idea.title }}</h3>
+    <p>{{ idea.post_text }}</p>
+    {% for tag in (idea.hashtags or []) %}<span class="tag">{{ tag }}</span>{% endfor %}
+    <div style="margin-top:12px">
+      <a class="btn-ghost" href="/app/posts/view?idea_id={{ idea.idea_id }}">Voir / éditer</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

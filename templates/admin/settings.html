@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Paramétrage admin · Post Generator{% endblock %}
+{% block extra_style %}
+<style>
+  /* .pageHeader est aligné sur .header (layout.css) */
+  .eyebrow{font-size:13px;font-weight:900;color:var(--primary);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+  .pageHeader h1{margin:0;font-size:34px;letter-spacing:-.04em}
+  .subtitle{color:var(--muted);line-height:1.55;margin:10px 0 0;font-size:14px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px;margin-bottom:16px;
+    box-shadow:0 12px 34px rgba(15,23,42,.05)}
+  .card .head h2{margin:0 0 6px;font-size:20px;letter-spacing:-.03em}
+  .toggle{display:flex;align-items:center;gap:10px;font-weight:850;margin:18px 0;font-size:14px}
+  .toggle input{width:auto}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-weight:900;font-size:13px;color:#334155;margin-bottom:7px}
+  .field input,.field select{width:100%;border:1px solid #cbd5e1;border-radius:13px;padding:12px 13px;font:inherit}
+  .hint{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.45}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:700px){.grid{grid-template-columns:1fr}}
+  .badge{display:inline-flex;background:#dcfce7;color:#166534;border-radius:999px;padding:3px 9px;
+    font-size:11px;font-weight:900;margin-left:8px}
+  .security{border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;border-radius:14px;padding:12px 14px;
+    font-size:13px;line-height:1.5;margin:18px 0}
+  .btn{border:0;border-radius:14px;padding:13px 18px;font-weight:900;cursor:pointer;font:inherit;
+    background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}
+  .toast{border-radius:14px;padding:12px 14px;margin-bottom:16px;font-weight:850}
+  .toast.success{background:#ecfdf5;border:1px solid #bbf7d0;color:#047857}
+  .toast.error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+</style>
+{% endblock %}
+{% block content %}
+{% if notice %}<div class="toast {{ 'error' if notice_error else 'success' }}">{{ notice }}</div>{% endif %}
+
+<section class="pageHeader">
+  <div class="eyebrow">Administration</div>
+  <h1>Paramétrage</h1>
+  <p class="subtitle">Configure les intégrations globales utilisées par le workflow de génération. Le token
+     Serper reste côté serveur et n'est jamais renvoyé dans les pages de génération.</p>
+</section>
+
+<section class="card">
+  <div class="head">
+    <h2>Serper / Google Search</h2>
+    <p class="subtitle">Serper servira à enrichir la création de sujet avec des résultats Google Search,
+       recherches associées et questions fréquentes.</p>
+  </div>
+  <form method="post" action="/app/admin/settings/save" autocomplete="off">
+    <label class="toggle">
+      <input type="checkbox" name="serper_enabled" value="1" {{ 'checked' if cfg.is_enabled }}>
+      Activer l'enrichissement Serper dans la génération de sujets
+    </label>
+
+    <div class="field">
+      <label>Token API Serper {% if cfg.has_api_key %}<span class="badge">token enregistré</span>{% endif %}</label>
+      <input type="password" name="serper_api_key" autocomplete="new-password"
+             placeholder="{{ 'Laisser vide pour conserver le token actuel' if cfg.has_api_key else 'Colle le token Serper' }}">
+      <div class="hint">Le champ reste vide volontairement. Saisis une nouvelle valeur uniquement pour remplacer le token.</div>
+    </div>
+
+    <div class="grid">
+      <div class="field"><label>Pays Google Search</label>
+        <select name="serper_gl">
+          {% for v in gl_options %}
+            <option value="{{ v }}" {{ 'selected' if cfg.gl==v }}>{{ 'Monde' if v=='world' else v|upper }}</option>
+          {% endfor %}
+        </select>
+        <div class="hint">France recommandé pour tes contenus FR. Utilise Monde si tu veux des angles plus génériques.</div>
+      </div>
+      <div class="field"><label>Langue</label>
+        <select name="serper_hl">
+          {% for v in hl_options %}<option value="{{ v }}" {{ 'selected' if cfg.hl==v }}>{{ v|upper }}</option>{% endfor %}
+        </select>
+        <div class="hint">Langue des résultats demandés à Google Search via Serper.</div>
+      </div>
+    </div>
+
+    <div class="field"><label>Nombre de résultats à analyser</label>
+      <input type="number" name="serper_num" min="3" max="10" value="{{ cfg.num }}">
+      <div class="hint">Recommandé : 6 à 8. Au-dessus, le prompt IA devient plus lourd.</div>
+    </div>
+
+    <div class="security"><b>Sécurité :</b> le token est chiffré en base via pgcrypto. Il est déchiffré
+      uniquement côté serveur au moment d'appeler Serper.</div>
+
+    <button class="btn" type="submit">Enregistrer le paramétrage</button>
+  </form>
+</section>
+{% endblock %}

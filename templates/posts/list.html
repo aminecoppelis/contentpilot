@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Mes sujets · Post Generator{% endblock %}
+{% block extra_style %}
+<style>
+  .hero{background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:22px;
+    box-shadow:0 16px 44px rgba(15,23,42,.07);padding:22px;margin-bottom:18px}
+  .hero h1{margin:0 0 6px;font-size:34px;letter-spacing:-.04em}
+  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+  .btn,button{border:0;border-radius:13px;padding:10px 13px;font-weight:900;cursor:pointer;
+    text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}
+  .btn.primary,button.primary{background:linear-gradient(135deg,var(--primary),#06b6d4);color:#fff}
+  .btn.light,button.light{background:#f1f5f9;color:#0f172a}
+  .btn.danger,button.danger{background:#dc2626;color:#fff}
+  .tableWrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:18px}
+  table{width:100%;border-collapse:collapse;min-width:960px}
+  th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:middle;
+    font-size:14px;line-height:1.35}
+  thead th{white-space:nowrap;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  tbody td:nth-child(3),tbody td:nth-child(4),tbody td:nth-child(5){text-align:center}
+  .mini{font-size:11px;color:var(--muted);margin-top:3px}
+  .status{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:900;
+    text-transform:uppercase;letter-spacing:.03em}
+  .status.generated,.status.approved{background:#dcfce7;color:#166534}
+  .status.generating,.status.generating_more{background:#fef3c7;color:#92400e}
+  .status.pending_review,.status.ready_for_review,.status.needs_changes{background:#e0e7ff;color:#3730a3}
+  .status.error{background:#fee2e2;color:#991b1b}
+  .status.draft,.status.no_ideas{background:#f1f5f9;color:#475569}
+  .status.published{background:#dbeafe;color:#1e40af}
+  .inlineForm{margin:0;display:inline}
+  .tableWrap tbody .actions{margin-top:0;align-items:center;justify-content:flex-start;flex-wrap:nowrap;gap:10px}
+</style>
+{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="eyebrow">Contenus</div>
+  <h1>Mes sujets</h1>
+  <p class="muted">Chaque ligne correspond à un brief soumis pour génération IA.</p>
+  <div class="actions"><a class="btn primary" href="/app/posts/new">+ Nouveau sujet</a></div>
+</section>
+
+<div class="tableWrap">
+  <table>
+    <thead><tr>
+      <th>Sujet</th><th>Statut</th><th>Idées</th><th>Approuvées</th><th>Médias</th>
+      <th>Dernière modif.</th><th>Créé par</th><th>Actions</th>
+    </tr></thead>
+    <tbody id="postRequestRows">
+    {% for r in requests %}
+      <tr id="request-row-{{ r.id }}">
+        <td><b>{{ r.title or r.subject or "Sans sujet" }}</b><div class="mini">{{ r.id }}</div></td>
+        <td><span class="status {{ r.status }}">{{ r.status_label }}</span></td>
+        <td>{{ r.ideas_count }}</td>
+        <td>{{ r.approved_count }}</td>
+        <td>{{ r.media_count }}</td>
+        <td>{{ r.last_modified }}</td>
+        <td>{{ r.created_by_name or "—" }}</td>
+        <td>
+          <div class="actions">
+            {% if r.ideas_count|int > 0 or r.status in ['generating','generating_more'] %}<a class="btn light" href="/app/posts/view?request_id={{ r.id }}">Idées</a>{% else %}<button class="btn light" type="button" disabled title="Aucune idée disponible">Idées</button>{% endif %}
+            <a class="btn light" href="/app/posts/edit?id={{ r.id }}">Modifier</a>
+            <form class="inlineForm" method="post" action="/app/posts/delete" onsubmit="return deleteRequestFromList(event,this)">
+              <input type="hidden" name="id" value="{{ r.id }}">
+              <button class="danger" type="submit">Supprimer</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">Aucun sujet pour le moment.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div id="postRequestLoadState" style="padding:14px 16px;text-align:center;color:var(--muted);font-size:13px;display:{{ 'block' if has_more else 'none' }}">Fais défiler pour charger plus de sujets.</div>
+<div id="postRequestSentinel" style="height:1px"></div>
+{% endblock %}
+{% block scripts %}
+<script>
+/* Port du comportement de suppression en liste (toast + suppression de ligne sans reload) */
+function showListToast(message, type){
+  var existing=document.getElementById('listToast');
+  if(!existing){
+    existing=document.createElement('div');
+    existing.id='listToast';
+    existing.style.position='fixed';existing.style.right='18px';existing.style.bottom='18px';
+    existing.style.zIndex='9999';existing.style.maxWidth='360px';existing.style.borderRadius='14px';
+    existing.style.padding='12px 14px';existing.style.fontWeight='900';
+    existing.style.boxShadow='0 18px 44px rgba(15,23,42,.18)';
+    document.body.appendChild(existing);
+  }
+  existing.textContent=message||'';
+  existing.style.background=type==='error' ? '#fee2e2' : '#dcfce7';
+  existing.style.color=type==='error' ? '#991b1b' : '#166534';
+  existing.style.border=type==='error' ? '1px solid #fecaca' : '1px solid #bbf7d0';
+  existing.style.display='block';
+  clearTimeout(existing.__timer);
+  existing.__timer=setTimeout(function(){ existing.style.display='none'; }, 3500);
+}
+async function deleteRequestFromList(event, form){
+  event.preventDefault();
+  if(!confirm('Supprimer ce sujet et ses idées ?')) return false;
+  var id = form.querySelector('input[name=id]').value;
+  try{
+    var resp = await fetch('/app/posts/delete', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({request_id:id})});
+    var data = await resp.json();
+    if(data.success){
+      document.getElementById('request-row-'+id)?.remove();
+      showListToast('Supprimé.');
+    } else {
+      showListToast(data.message || 'Suppression impossible.', 'error');
+    }
+  }catch(e){ showListToast('Suppression impossible.', 'error'); }
+  return false;
+}
+(function initPostsInfiniteScroll(){
+  var tbody=document.getElementById('postRequestRows');
+  var sentinel=document.getElementById('postRequestSentinel');
+  var state=document.getElementById('postRequestLoadState');
+  if(!tbody||!sentinel||!state)return;
+  var page={{ next_page }};var hasMore={{ 'true' if has_more else 'false' }};var loading=false;
+  if(!hasMore){state.style.display='none';return;}
+  async function loadMore(){
+    if(loading||!hasMore)return;loading=true;state.style.display='block';state.textContent='Chargement…';
+    try{
+      var url=new URL('/app/posts/list-page',location.origin);url.searchParams.set('page',String(page));
+      {% if status %}url.searchParams.set('status',{{ status|tojson }});{% endif %}
+      var r=await fetch(url,{credentials:'same-origin'});var d=await r.json();var data=d.data||d;
+      if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
+      var empty=tbody.querySelector('tr td[colspan="8"]');if(empty&&empty.parentElement)empty.parentElement.remove();
+      if(data.rows_html)tbody.insertAdjacentHTML('beforeend',data.rows_html);
+      page=Number(data.next_page||page+1);hasMore=Boolean(data.has_more);
+      state.style.display=hasMore?'block':'none';state.textContent=hasMore?'Fais défiler pour charger plus de sujets.':'Toutes les lignes sont affichées.';
+    }catch(e){state.style.display='block';state.textContent='Chargement impossible. Réessaie en faisant défiler.';}finally{loading=false;}
+  }
+  new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting)loadMore();});},{rootMargin:'240px'}).observe(sentinel);
+})();
+
+</script>
+{% endblock %}

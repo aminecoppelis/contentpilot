@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Post Generator{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/layout.css">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="stylesheet" href="/static/css/topbar.css">
+  <link rel="stylesheet" href="/static/css/toast.css">
+  <link rel="stylesheet" href="/static/css/tables.css">
+  {% block extra_style %}{% endblock %}
+</head>
+<body>
+  {% if auth_user %}
+  <header class="topbar">
+    <div class="brand">Post Generator · V0</div>
+    <button type="button" class="pgMobileNavToggle" aria-expanded="false" aria-controls="pg-main-nav" aria-label="Ouvrir le menu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="pgMainNav" id="pg-main-nav">
+
+      {# --- Sélecteur de workspace (port verbatim du markup partagé) --- #}
+      <details class="pgWorkspaceMenu">
+        <summary aria-label="Changer de workspace" title="Workspace actif : {{ auth_user.active_workspace_display_name }}">
+          <span class="pgWorkspaceCurrentIcon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/>
+              <path d="M16 9h2a2 2 0 0 1 2 2v10M8 7h4M8 11h4M8 15h4M7 21h10"/>
+            </svg>
+          </span>
+          <span class="pgWorkspaceCurrentText"><small>Workspace</small><b>{{ auth_user.active_workspace_display_name }}</b></span>
+          <svg class="pgWorkspaceChevron" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </summary>
+        <div class="pgWorkspaceDropdown" role="menu" aria-label="Liste des workspaces">
+          <div class="pgWorkspaceDropdownHeader">Changer de workspace</div>
+          <div class="pgWorkspaceSearchWrap">
+            <svg class="pgWorkspaceSearchIcon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.8"/>
+              <path d="m12.5 12.5 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            <input type="search" class="pgWorkspaceSearch" placeholder="Rechercher un workspace…" autocomplete="off" aria-label="Rechercher un workspace">
+          </div>
+          <div class="pgWorkspaceList">
+            {% for w in auth_user.workspaces %}
+              {% set is_active = w.id == auth_user.active_workspace_id %}
+              <button type="button" class="pgWorkspaceItem {{ 'isActive' if is_active }}"
+                      data-workspace-id="{{ w.id }}" role="menuitemradio"
+                      aria-checked="{{ 'true' if is_active else 'false' }}" {{ 'disabled' if is_active }}>
+                <span class="pgWorkspaceItemIcon" aria-hidden="true">{{ (w.name or 'W')[0] | upper }}</span>
+                <span class="pgWorkspaceItemText"><b>{{ w.display_name }}</b>{% if is_active %}<small>Workspace actif</small>{% endif %}</span>
+                <span class="pgWorkspaceCheck" aria-hidden="true">{{ '✓' if is_active }}</span>
+              </button>
+            {% else %}
+              <div class="pgWorkspaceItem isActive" role="menuitemradio" aria-checked="true">
+                <span class="pgWorkspaceItemIcon" aria-hidden="true">W</span>
+                <span class="pgWorkspaceItemText"><b>{{ auth_user.active_workspace_display_name }}</b><small>Workspace actif</small></span>
+                <span class="pgWorkspaceCheck" aria-hidden="true">✓</span>
+              </div>
+            {% endfor %}
+          </div>
+          <div class="pgWorkspaceEmpty" role="status">Aucun workspace trouvé</div>
+          <div class="pgWorkspaceAddWrap">
+            <button type="button" class="pgWorkspaceAddButton" aria-label="Ajouter un workspace">
+              <span class="pgWorkspaceAddIcon" aria-hidden="true">+</span>
+              <span class="pgWorkspaceAddText"><b>Ajouter un workspace</b><small>Créer sans quitter cette page</small></span>
+            </button>
+          </div>
+        </div>
+      </details>
+
+      {# --- Navigation principale (mêmes libellés/ordre que l'original) --- #}
+      <a class="nav {{ 'active' if active_nav=='dashboard' }}" href="/app/dashboard">Accueil</a>
+      <a class="nav {{ 'active' if active_nav=='strategies' }}" href="/app/strategies">Stratégies</a>
+      <a class="nav {{ 'active' if active_nav=='posts' }}" href="/app/posts">Sujets</a>
+      <a class="nav {{ 'active' if active_nav=='history' }}" href="/app/history">Idées de post</a>
+      <a class="nav {{ 'active' if active_nav=='published' }}" href="/app/published">Posts publiés</a>
+      <a class="nav {{ 'active' if active_nav=='networks' }}" href="/app/networks">Mes réseaux</a>
+
+      {# --- Menu utilisateur (port verbatim, styles inline d'origine) --- #}
+      <details class="userMenu" style="position:relative;display:inline-flex;align-items:center">
+        <summary style="list-style:none;display:inline-flex;align-items:center;gap:9px;cursor:pointer;background:#fff;border:1px solid var(--line,#e2e8f0);border-radius:999px;padding:6px 10px 6px 6px;font-weight:900;color:#0f172a;box-shadow:0 8px 20px rgba(15,23,42,.06)">
+          <span style="width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,var(--accent,#4f46e5),var(--accent2,#06b6d4));color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:950">{{ auth_user.initials }}</span>
+          <span style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ auth_user.full_name or auth_user.email }}</span>
+          <span style="font-size:12px;color:#64748b">▾</span>
+        </summary>
+        <div style="position:absolute;right:0;top:calc(100% + 10px);min-width:260px;z-index:1000;background:#fff;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 22px 60px rgba(15,23,42,.18);padding:10px">
+          <a href="/app/workspace" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#0f172a;background:#eef2ff;border:1px solid #c7d2fe;border-radius:13px;padding:10px 11px;font-weight:950;margin-bottom:8px">Gérer le workspace</a>
+          <a href="/app/account" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#0f172a;background:#f8fafc;border:1px solid #e2e8f0;border-radius:13px;padding:10px 11px;font-weight:950;margin-bottom:8px">Mon compte</a>
+          {% if auth_user.is_super_admin %}
+          <a href="/app/admin/settings" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#0f172a;background:#eef2ff;border:1px solid #c7d2fe;border-radius:13px;padding:10px 11px;font-weight:950;margin-bottom:8px">Paramétrage</a>
+          <a href="/app/admin/users" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#0f172a;background:#f8fafc;border:1px solid #e2e8f0;border-radius:13px;padding:10px 11px;font-weight:950;margin-bottom:8px">Utilisateurs</a>
+          {% endif %}
+          <a href="/app/logout" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:13px;padding:10px 11px;font-weight:950">Déconnexion</a>
+        </div>
+      </details>
+    </nav>
+  </header>
+  {% endif %}
+
+  <main class="app">
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+  /* Fuseau utilisateur : détecté par le navigateur, transmis à toutes les
+     requêtes et mémorisé sur le compte. Les dates DB restent en UTC. */
+  (function(){
+    var detected='';
+    try{detected=Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){}
+    var fallback={{ (auth_user.timezone if auth_user else "Europe/Paris") | tojson }};
+    var tz=detected||fallback||'UTC';
+    window.__PG_TIMEZONE=tz;window.__PG_SERVER_TIMEZONE=fallback;
+    try{document.cookie='pg_timezone='+encodeURIComponent(tz)+'; Path=/; Max-Age=31536000; SameSite=Lax';}catch(e){}
+    window.pgUserTimezone=function(){return window.__PG_TIMEZONE||tz;};
+  })();
+  </script>
+  <script>
+  /* authTransport — port verbatim : injecte les en-têtes de session sur les
+     appels fetch() et les soumissions de formulaire same-origin. */
+  (function(){
+    if(window.__pgAuthTransportInstalled)return;window.__pgAuthTransportInstalled=true;
+    var sid={{ (auth_user.session_id if auth_user else "") | tojson }};
+    var tok={{ (auth_user.request_token if auth_user else "") | tojson }};
+    if(!sid||!tok)return;
+    window.__PG_AUTH={session_id:sid,request_token:tok};
+    var originalFetch=window.fetch.bind(window);
+    window.fetch=function(input,init){
+      init=init||{};
+      try{
+        var rawUrl=typeof input==='string'?input:(input&&input.url)||'';
+        var target=new URL(rawUrl,window.location.href);
+        if(target.origin===window.location.origin){
+          var headers=new Headers(init.headers||((input&&input.headers)?input.headers:undefined));
+          headers.set('X-PG-Session-Id',sid);headers.set('X-PG-Request-Token',tok);
+          if(window.__PG_TIMEZONE)headers.set('X-PG-Timezone',window.__PG_TIMEZONE);
+          var method=String(init.method||((input&&input.method)?input.method:'GET')).toUpperCase();
+          var body=init.body;
+          if(method!=='GET'&&method!=='HEAD'){
+            try{
+              if(typeof URLSearchParams!=='undefined'&&body instanceof URLSearchParams){
+                body.set('auth_session_id',sid);body.set('auth_request_token',tok);
+              }else if(typeof FormData!=='undefined'&&body instanceof FormData){
+                body.set('auth_session_id',sid);body.set('auth_request_token',tok);
+              }
+            }catch(e){}
+          }
+          init=Object.assign({},init,{headers:headers,body:body,credentials:'same-origin'});
+        }
+      }catch(e){}
+      return originalFetch(input,init);
+    };
+    document.addEventListener('submit',function(event){
+      var form=event.target;if(!(form instanceof HTMLFormElement))return;
+      try{var target=new URL(form.action||window.location.href,window.location.href);if(target.origin!==window.location.origin)return;}catch(e){return;}
+      function ensure(name,value){var el=form.querySelector('input[name="'+name+'"]');if(!el){el=document.createElement('input');el.type='hidden';el.name=name;form.appendChild(el);}el.value=value;}
+      ensure('auth_session_id',sid);ensure('auth_request_token',tok);if(window.__PG_TIMEZONE)ensure('user_timezone',window.__PG_TIMEZONE);
+    },true);
+    try{
+      var tz=window.__PG_TIMEZONE||'';
+      var stored=localStorage.getItem('pg_timezone_synced')||'';
+      if(tz&&stored!==tz){
+        originalFetch('/app/timezone',{method:'POST',headers:{'Content-Type':'application/json','X-PG-Session-Id':sid,'X-PG-Request-Token':tok,'X-PG-Timezone':tz},credentials:'same-origin',body:JSON.stringify({timezone:tz})})
+          .then(function(r){if(r.ok){localStorage.setItem('pg_timezone_synced',tz);if(window.__PG_SERVER_TIMEZONE&&window.__PG_SERVER_TIMEZONE!==tz)window.location.reload();}}).catch(function(){});
+      }
+    }catch(e){}
+  })();
+  </script>
+  <div id="pgToastContainer" class="pgToastContainer" aria-live="polite" aria-atomic="true"></div>
+  <script src="/static/js/topbar.js"></script>
+  <script src="/static/js/toast.js"></script>
+  <script src="/static/js/tables.js"></script>
+  <script src="/static/js/textarea_limits.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

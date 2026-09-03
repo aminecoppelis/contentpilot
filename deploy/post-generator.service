@@ -1,0 +1,69 @@
+# =====================================================================
+#  Post Generator — service systemd (à installer SUR LA VM)
+#
+#  Topologie : nginx frontal  ->  cette VM:8000
+#  Aucun Apache ni nginx n'est requis sur la VM.
+#
+#  Installation :
+#    sudo cp deploy/post-generator.service /etc/systemd/system/
+#    sudo nano /etc/systemd/system/post-generator.service
+#        -> adapter User, WorkingDirectory et surtout FORWARDED_ALLOW_IPS
+#    sudo systemctl daemon-reload
+#    sudo systemctl enable --now post-generator
+#    journalctl -u post-generator -f
+# =====================================================================
+
+[Unit]
+Description=Post Generator — API, worker de génération et crons
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+[Service]
+Type=exec
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/post_generator
+EnvironmentFile=/home/ubuntu/post_generator/.env
+
+# --host 0.0.0.0 : la VM doit être joignable par le serveur nginx frontal.
+#                  Protéger le port 8000 par pare-feu (voir plus bas).
+#
+# --forwarded-allow-ips : REMPLACER 192.168.1.10 par l'IP DU SERVEUR NGINX.
+#   uvicorn n'honore X-Forwarded-For que s'il vient d'un proxy déclaré de
+#   confiance. Sans cette valeur correcte, toutes les connexions
+#   paraîtraient venir de la même IP et le verrouillage anti-brute-force
+#   bloquerait tous les utilisateurs d'un coup.
+#   Ne jamais mettre "*" sur un service exposé : n'importe qui pourrait
+#   alors usurper son adresse IP.
+ExecStart=/home/ubuntu/post_generator/venv/bin/uvicorn app.main:app \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --workers 1 \
+    --proxy-headers \
+    --forwarded-allow-ips=192.168.1.10 \
+    --log-level info
+
+# --workers 1 : le worker de génération et les crons tournent via APScheduler
+# DANS le process applicatif. Avec plusieurs workers uvicorn, le cron
+# s'exécuterait N fois par minute. Pour scaler, utiliser en complément
+# post-generator-api.service (plusieurs workers, DISABLE_SCHEDULER=1).
+
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+KillSignal=SIGINT
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=post-generator
+
+# --- Durcissement ---
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+ReadWritePaths=/home/ubuntu/post_generator /var/lib/post_generator /var/log/post_generator
+
+[Install]
+WantedBy=multi-user.target
