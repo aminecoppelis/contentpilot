@@ -2,71 +2,177 @@
 {% block title %}Accueil · Post Generator{% endblock %}
 {% block extra_style %}
 <style>
-  .hero.dashboardHero{background:#fff;border:1px solid var(--line);border-radius:24px;padding:26px;
-    min-height:150px;display:flex;flex-direction:column;justify-content:center;
-    box-shadow:0 18px 50px rgba(15,23,42,.06)}
-  .hero h1{margin:0 0 10px;font-size:34px;line-height:1.05;letter-spacing:-.04em}
-  .hero p.muted{margin:0;color:var(--muted);font-size:14px;line-height:1.55;max-width:720px}
-  .kpiGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px}
-  .kpiCard{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;
-    min-height:126px;box-shadow:0 10px 28px rgba(15,23,42,.04)}
-  .kpiCard small{display:block;color:#53657f;font-size:12px;font-weight:950;text-transform:uppercase;letter-spacing:.07em}
-  .kpiCard b{display:block;font-size:34px;margin-top:10px;letter-spacing:-.04em}
-  .kpiCard span{display:block;color:var(--muted);font-size:13px;margin-top:5px;line-height:1.35}
-  .dashMain{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:18px}
-  .panel{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px;
-    box-shadow:0 12px 34px rgba(15,23,42,.045)}
-  .panel h2{font-size:18px;letter-spacing:-.025em;margin:0 0 14px}
-  .panelTitleRow{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .panelTitleRow h2{margin:0}
-  .dashRetryBtn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;
-    font-size:12px;font-weight:800;color:#334155;cursor:pointer}
-  .dashRetryBtn:hover{border-color:var(--primary);color:var(--primary)}
-  .nextActionsList{display:grid;gap:10px}
-  .nextCard{border:1px solid #dbeafe;background:#f8fbff;border-radius:18px;padding:16px}
-  .nextCardItem{display:flex;align-items:center;gap:12px;min-height:82px}
-  .nextActionLink{text-decoration:none;color:inherit;cursor:pointer;transition:.16s ease}
-  .nextActionLink:hover{transform:translateY(-1px);border-color:#a5b4fc;background:#f5f7ff;
-    box-shadow:0 9px 24px rgba(79,70,229,.09)}
-  .nextActionRank{flex:0 0 34px;width:34px;height:34px;border-radius:999px;display:inline-flex;
-    align-items:center;justify-content:center;background:#eef2ff;border:1px solid #c7d2fe;
-    color:#4338ca;font-size:12px;font-weight:950}
-  .nextActionText{min-width:0;display:flex;flex-direction:column;gap:5px;flex:1}
-  .nextActionArrow{flex:0 0 auto;color:#6366f1;font-size:26px;font-weight:700;line-height:1}
-  .nextCard b{display:block;font-size:17px;line-height:1.35}
-  .nextCard small{display:block;color:var(--muted);font-size:13px;margin-top:8px;line-height:1.45}
-  .recentList,.todoList{list-style:none;margin:0;padding:0;display:grid;gap:10px}
-  .recentList li,.todoList li{border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:13px}
-  .emptyState{color:var(--muted);font-size:13px;padding:14px 0}
-  .dashboardToast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
-    background:#111827;color:#fff;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:700;
-    opacity:0;pointer-events:none;transition:.2s ease}
-  .dashboardToast.isVisible{opacity:1;transform:translateX(-50%) translateY(0)}
-  .dashboardToast.isError{background:#991b1b}
+  /* Dashboard — cartes tokenisées (clair + sombre), accent unique #3b82f6. */
+  .dashWrap { display: flex; flex-direction: column; gap: 20px; }
+
+  /* --- KPI --- */
+  .kpiGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .kpiCard {
+    display: flex; flex-direction: column; gap: 4px;
+    background: var(--surface, #fff);
+    border: 1px solid var(--line, #e9ebf0);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: var(--shadow-card, 0 1px 3px rgba(16, 24, 40, .06));
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .kpiCard:hover { border-color: var(--brand-tint-2, #d8e8ff); transform: translateY(-2px); }
+  .kpiTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .kpiLabel {
+    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em;
+    color: var(--ink-3, #9aa3b2); line-height: 1.35; padding-top: 2px;
+  }
+  .kpiIcon {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--brand-tint, #eaf2ff); color: var(--brand, #3b82f6);
+  }
+  .kpiIcon svg { width: 18px; height: 18px; }
+  .kpiValue {
+    font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1;
+    color: var(--ink, #1f2430); margin-top: 8px;
+  }
+  .kpiHint { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2, #5b6472); margin-top: 4px; }
+  .kpiHint::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--brand, #3b82f6); opacity: .55; }
+
+  /* --- Panneaux --- */
+  .dashMain { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .panel {
+    background: var(--surface, #fff);
+    border: 1px solid var(--line, #e9ebf0);
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: var(--shadow-card, 0 1px 3px rgba(16, 24, 40, .06));
+  }
+  .panelHead { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .panelIcon {
+    flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--brand-tint, #eaf2ff); color: var(--brand, #3b82f6);
+  }
+  .panelIcon svg { width: 18px; height: 18px; }
+  .panelHead h2 { flex: 1; min-width: 0; margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.02em; color: var(--ink, #1f2430); }
+
+  .dashRetryBtn {
+    flex: 0 0 auto;
+    border: 1px solid var(--line-2, #e2e5ea); background: var(--surface, #fff);
+    border-radius: 999px; padding: 7px 13px;
+    font-size: 12px; font-weight: 700; color: var(--ink-2, #5b6472); cursor: pointer;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .dashRetryBtn:hover { border-color: var(--brand, #3b82f6); color: var(--brand, #3b82f6); background: var(--brand-tint, #eaf2ff); }
+  .dashRetryBtn:disabled { opacity: .6; cursor: not-allowed; }
+
+  .nextActionsList { display: grid; gap: 10px; }
+  .nextCard {
+    display: block;
+    border: 1px solid var(--brand-tint-2, #d8e8ff);
+    background: var(--brand-tint, #f4f8ff);
+    border-radius: 14px; padding: 13px 14px;
+    text-decoration: none; color: inherit;
+    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  .nextActionLink:hover { transform: translateY(-1px); border-color: var(--brand, #3b82f6); box-shadow: 0 8px 22px rgba(59, 130, 246, .12); }
+  .nextCardItem { display: flex; align-items: center; gap: 12px; }
+  .nextActionRank {
+    flex: 0 0 30px; width: 30px; height: 30px; border-radius: 999px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--surface, #fff); border: 1px solid var(--brand-tint-2, #d8e8ff);
+    color: var(--brand, #3b82f6); font-size: 12px; font-weight: 800;
+  }
+  .nextActionText { min-width: 0; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+  .nextActionText b { font-size: 14px; line-height: 1.3; color: var(--ink, #1f2430); }
+  .nextActionText small { color: var(--ink-2, #5b6472); font-size: 12px; line-height: 1.4; }
+  .nextActionArrow { flex: 0 0 auto; color: var(--brand, #3b82f6); font-size: 20px; line-height: 1; }
+
+  .recentList { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .recentList li {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    border: 1px solid var(--line, #e9ebf0); border-radius: 12px;
+    padding: 11px 13px; font-size: 13px; color: var(--ink-2, #5b6472);
+  }
+  .status-badge {
+    display: inline-flex; padding: 3px 9px; border-radius: 999px;
+    background: var(--brand-tint, #eaf2ff); color: var(--brand, #3b82f6);
+    font-size: 11px; font-weight: 700;
+  }
+  .todoList { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .todoList li { border: 1px solid var(--line, #e9ebf0); border-radius: 12px; padding: 11px 13px; font-size: 13px; color: var(--ink-2, #5b6472); }
+
+  .emptyState {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 9px; padding: 30px 16px; text-align: center;
+    color: var(--ink-2, #5b6472); font-size: 13px; line-height: 1.5;
+  }
+  .emptyState svg { width: 26px; height: 26px; color: var(--ink-3, #9aa3b2); }
+
+  .dashboardToast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #111827; color: #fff; padding: 12px 18px; border-radius: 12px;
+    font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none; transition: .2s ease; z-index: 4000;
+  }
+  .dashboardToast.isVisible { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .dashboardToast.isError { background: #991b1b; }
+
+  @media (max-width: 1100px) {
+    .kpiGrid { grid-template-columns: repeat(2, 1fr); }
+    .dashMain { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .kpiGrid { grid-template-columns: 1fr; }
+  }
 </style>
 {% endblock %}
 {% block content %}
-<section class="hero dashboardHero commonPageHero">
-  <div class="eyebrow">Vue d’ensemble</div>
-  <h1>Accueil</h1>
-  <p class="muted">Vue essentielle du workspace actif : comptes, stratégies, actions planifiées et publications.</p>
+<div class="dashWrap">
+<section class="hero dashboardHero">
+  <div class="eyebrow">{{ t('dash.eyebrow') }}</div>
+  <h1 style="color: var(--primary-blue); font-size: 2.2rem; font-weight: 900;">{{ t('dash.title') }}</h1>
+  <p class="muted">{{ t('dash.subtitle') }}</p>
 </section>
 
-<section class="kpiGrid" aria-label="KPI essentiels">
-  <article class="kpiCard"><small>Comptes connectés</small><b>{{ connected_accounts }}</b>
-    <span>{{ "Compte(s) actif(s)" if connected_accounts else "Aucun compte" }}</span></article>
-  <article class="kpiCard"><small>Stratégies actives</small><b>{{ active_strategies }}</b>
-    <span>{{ "Stratégie(s) en cours" if active_strategies else "Aucune stratégie" }}</span></article>
-  <article class="kpiCard"><small>Actions planifiées</small><b>{{ planned_actions }}</b>
-    <span>{{ "Action(s) programmée(s)" if planned_actions else "Aucune action" }}</span></article>
-  <article class="kpiCard"><small>Posts publiés</small><b>{{ published_posts }}</b>
-    <span>{{ (failed_items ~ " alerte(s)") if failed_items else "Aucune alerte" }}</span></article>
+<section class="kpiGrid" aria-label="Indicateurs clés">
+  <article class="kpiCard">
+    <div class="kpiTop">
+      <span class="kpiLabel">{{ t('dash.kpi.accounts') }}</span>
+      <span class="kpiIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
+    </div>
+    <b class="kpiValue">{{ connected_accounts }}</b>
+    <span class="kpiHint">{{ t('dash.kpi.accounts.some') if connected_accounts else t('dash.kpi.accounts.none') }}</span>
+  </article>
+  <article class="kpiCard">
+    <div class="kpiTop">
+      <span class="kpiLabel">{{ t('dash.kpi.strategies') }}</span>
+      <span class="kpiIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
+    </div>
+    <b class="kpiValue">{{ active_strategies }}</b>
+    <span class="kpiHint">{{ t('dash.kpi.strategies.some') if active_strategies else t('dash.kpi.strategies.none') }}</span>
+  </article>
+  <article class="kpiCard">
+    <div class="kpiTop">
+      <span class="kpiLabel">{{ t('dash.kpi.actions') }}</span>
+      <span class="kpiIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M12 14v3l2 1"/></svg></span>
+    </div>
+    <b class="kpiValue">{{ planned_actions }}</b>
+    <span class="kpiHint">{{ t('dash.kpi.actions.some') if planned_actions else t('dash.kpi.actions.none') }}</span>
+  </article>
+  <article class="kpiCard">
+    <div class="kpiTop">
+      <span class="kpiLabel">{{ t('dash.kpi.posts') }}</span>
+      <span class="kpiIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></span>
+    </div>
+    <b class="kpiValue">{{ published_posts }}</b>
+    <span class="kpiHint">{{ t('dash.kpi.posts.alerts', count=failed_items) if failed_items else t('dash.kpi.posts.none') }}</span>
+  </article>
 </section>
 
 <section class="dashMain">
   <article class="panel">
-    <div class="panelTitleRow"><h2>Prochaines actions</h2>
-      <button type="button" class="dashRetryBtn" id="retryOverdueBtn">Nettoyer et relancer</button></div>
+    <div class="panelHead">
+      <span class="panelIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></svg></span>
+      <h2>{{ t('dash.next.title') }}</h2>
+      <button type="button" class="dashRetryBtn" id="retryOverdueBtn">{{ t('dash.next.retry') }}</button>
+    </div>
     <div class="nextActionsList">
       {% for a in next_actions %}
         <a class="nextCard nextActionLink" href="{{ a.url }}">
@@ -77,28 +183,44 @@
           </div>
         </a>
       {% else %}
-        <div class="emptyState">Aucune action planifiée pour le moment.</div>
+        <div class="emptyState">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+          {{ t('dash.next.empty') }}
+        </div>
       {% endfor %}
     </div>
   </article>
 
   <article class="panel">
-    <h2>Activité récente</h2>
+    <div class="panelHead">
+      <span class="panelIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+      <h2>{{ t('dash.activity.title') }}</h2>
+    </div>
+    {% if recent_activity %}
     <ul class="recentList">
-      {% for item in recent_activity %}<li>{{ item.title }} — <span class="status-badge">{{ item.status }}</span></li>
-      {% else %}<li class="emptyState">Aucune activité récente.</li>{% endfor %}
+      {% for item in recent_activity %}<li>{{ item.title }} <span class="status-badge">{{ item.status }}</span></li>{% endfor %}
     </ul>
+    {% else %}
+    <div class="emptyState">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      {{ t('dash.activity.empty') }}
+    </div>
+    {% endif %}
   </article>
 
   {% if todos %}
   <article class="panel">
-    <h2>À faire</h2>
+    <div class="panelHead">
+      <span class="panelIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+      <h2>{{ t('dash.todo.title') }}</h2>
+    </div>
     <ul class="todoList">
       {% for t in todos %}<li>{{ t }}</li>{% endfor %}
     </ul>
   </article>
   {% endif %}
 </section>
+</div>
 
 <div class="dashboardToast" id="dashboardToast" role="status" aria-live="polite"></div>
 {% endblock %}
@@ -122,7 +244,7 @@
     if(!retryButton)return;
     var previousText = retryButton.textContent;
     retryButton.disabled = true;
-    retryButton.textContent = 'Nettoyage…';
+    retryButton.textContent = "{{ t('dash.next.retrying') }}";
     try{
       var response = await fetch('/app/strategies/overdue/retry', {
         method:'POST', headers:{'Content-Type':'application/json'},
@@ -140,7 +262,7 @@
       showDashToast(error.message || 'Relance impossible.', true);
     }finally{
       retryButton.disabled = false;
-      retryButton.textContent = previousText || 'Nettoyer et relancer';
+      retryButton.textContent = previousText || "{{ t('dash.next.retry') }}";
     }
   }
   if(retryButton){

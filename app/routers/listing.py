@@ -16,7 +16,7 @@ from app.dependencies.auth import require_auth
 from app.user_timezone import format_user_datetime
 
 router = APIRouter(tags=["Listing"])
-templates = Jinja2Templates(directory="templates")
+from app.templating import templates, render_fragment
 
 PAGE_SIZE = 25
 
@@ -189,7 +189,7 @@ async def get_history_list_page(request: Request, offset: int = 0, filter: str |
                                  user=Depends(require_auth)):
     statuses = _parse_filter(filter)
     rows, total = await _load_history(user.active_workspace_id, statuses, offset, user.timezone)
-    html = templates.get_template("posts/_history_rows.html").render(rows=rows)
+    html = render_fragment(request, "posts/_history_rows.html", rows=rows)
     return JSONResponse({"success": True, "data": {
         "rows_html": html, "has_more": offset + len(rows) < total,
         "next_offset": offset + len(rows), "total": total,
@@ -263,7 +263,7 @@ async def get_published_list_page(request: Request, offset: int = 0, filter: str
                                    user=Depends(require_auth)):
     statuses = _parse_filter(filter)
     rows, total = await _load_published(user.active_workspace_id, statuses, offset, user.timezone)
-    html = templates.get_template("posts/_published_rows.html").render(rows=rows)
+    html = render_fragment(request, "posts/_published_rows.html", rows=rows)
     return JSONResponse({"success": True, "data": {
         "rows_html": html, "has_more": offset + len(rows) < total,
         "next_offset": offset + len(rows), "total": total,

@@ -3,24 +3,24 @@
 {% block title %}Idées de post · Post Generator{% endblock %}
 {% block content %}
 <section class="header">
-  <div class="eyebrow">Contenus</div>
+  <div class="eyebrow">{{ t('common.content_eyebrow') }}</div>
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <h1 class="h1" style="margin:0">Idées de post</h1>
+    <h1 class="h1" style="margin:0">{{ t('nav.ideas') }}</h1>
     <span id="historyPageCount" class="countPill"
-          title="Nombre de lignes correspondant aux filtres actifs"
-          aria-label="Nombre de lignes correspondant aux filtres actifs : {{ total }}">{{ total }}</span>
+          title="{{ t('common.filtered_count') }}"
+          aria-label="{{ t('common.filtered_count') }} : {{ total }}">{{ total }}</span>
   </div>
-  <p class="sub">Toutes les idées générées, avec leur statut, leur auteur et les informations de publication.</p>
+  <p class="sub">{{ t('history.subtitle') }}</p>
   {% with panel_id='historyStatusFilter', base_path='/history' %}
     {% include "partials/status_filter.html" %}
   {% endwith %}
 </section>
 
-<section class="card">
+<section class="tableWrap">
   <table>
     <thead><tr>
-      <th>Idée</th><th>Statut</th><th>Sujet</th><th>Date de dernière modif</th>
-      <th>Créée par</th><th>Publié par</th><th>Nb médias</th><th>Publication</th><th>Actions</th>
+      <th>{{ t('history.table.idea') }}</th><th>{{ t('common.status') }}</th><th>{{ t('posts.list.table.subject') }}</th><th>{{ t('strat.table.last_modified') }}</th>
+      <th>{{ t('posts.list.table.created_by') }}</th><th>{{ t('history.table.published_by') }}</th><th>{{ t('history.table.media_count') }}</th><th>{{ t('history.table.publication') }}</th><th>{{ t('common.actions') }}</th>
     </tr></thead>
     <tbody id="historyTableBody">
     {% for r in rows %}
@@ -38,17 +38,17 @@
         <td>{{ r.media_count }}</td>
         <td>{{ history_publication_badges(r.publications) }}</td>
         <td><div class="actions">
-          <a class="btn light" href="/app/posts/view?request_id={{ r.request_id }}&idea_id={{ r.idea_id }}">Ouvrir</a>
+          <a class="btn light" href="/app/posts/view?request_id={{ r.request_id }}&idea_id={{ r.idea_id }}">{{ t('strat.open') }}</a>
         </div></td>
       </tr>
     {% else %}
-      <tr><td colspan="9">Aucune idée de post.</td></tr>
+      <tr><td colspan="9">{{ t('history.empty') }}</td></tr>
     {% endfor %}
     </tbody>
   </table>
 </section>
 <div id="historyLoadState" class="tableLoadState" style="display:{{ 'block' if has_more else 'none' }}">
-  Fais défiler pour charger plus de lignes.</div>
+  {{ t('history.scroll_more') }}</div>
 <div id="historySentinel" style="height:1px"></div>
 {% endblock %}
 {% block scripts %}

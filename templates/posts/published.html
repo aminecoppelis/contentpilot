@@ -4,14 +4,14 @@
 {% block extra_style %}<link rel="stylesheet" href="/static/css/published.css">{% endblock %}
 {% block content %}
 <section class="header">
-  <div class="eyebrow">Publication</div>
+  <div class="eyebrow">{{ t('published.eyebrow') }}</div>
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <h1 class="h1" style="margin:0">Posts publiés</h1>
+    <h1 class="h1" style="margin:0">{{ t('nav.published') }}</h1>
     <span id="publishedPageCount" class="countPill"
-          title="Nombre de lignes correspondant aux filtres actifs"
-          aria-label="Nombre de lignes correspondant aux filtres actifs : {{ total }}">{{ total }}</span>
+          title="{{ t('common.filtered_count') }}"
+          aria-label="{{ t('common.filtered_count') }} : {{ total }}">{{ total }}</span>
   </div>
-  <p class="sub">Suivi des publications programmées, en attente, publiées, annulées ou en erreur.</p>
+  <p class="sub">{{ t('published.subtitle') }}</p>
   {% with panel_id='publishedStatusFilter', base_path='/published' %}
     {% include "partials/status_filter.html" %}
   {% endwith %}
@@ -19,26 +19,26 @@
 
 <div id="publishedBulkToolbar" class="publishedBulkToolbar" hidden>
   <div class="publishedBulkSummary">
-    <strong id="publishedBulkCount">0</strong><span id="publishedBulkLabel">ligne sélectionnée</span>
+    <strong id="publishedBulkCount">0</strong><span id="publishedBulkLabel">{{ t('published.row_selected') }}</span>
   </div>
-  <button type="button" id="publishedBulkDeleteBtn" class="publishedBulkDeleteBtn" disabled>Supprimer la sélection</button>
+  <button type="button" id="publishedBulkDeleteBtn" class="publishedBulkDeleteBtn" disabled>{{ t('published.delete_selection') }}</button>
 </div>
 
-<section class="card">
+<section class="tableWrap">
   <table>
     <thead><tr>
       <th class="publishedBulkCell">
-        <input id="publishedSelectAll" type="checkbox" aria-label="Sélectionner toutes les lignes chargées"
-               title="Sélectionner toutes les lignes chargées"></th>
-      <th>Post</th><th>Réseau</th><th>Statut</th><th>Date de dernière modif</th>
-      <th>Créé par</th><th>Publié par</th><th>Programmée</th><th>Publiée</th><th>Erreur</th>
+        <input id="publishedSelectAll" type="checkbox" aria-label="{{ t('published.select_all') }}"
+               title="{{ t('published.select_all') }}"></th>
+      <th>{{ t('published.table.post') }}</th><th>{{ t('strat.table.network') }}</th><th>{{ t('common.status') }}</th><th>{{ t('strat.table.last_modified') }}</th>
+      <th>{{ t('posts.list.table.created_by') }}</th><th>{{ t('history.table.published_by') }}</th><th>{{ t('published.table.scheduled') }}</th><th>{{ t('published.table.published') }}</th><th>{{ t('published.table.error') }}</th>
     </tr></thead>
     <tbody id="publishedTableBody">
     {% for r in rows %}
       <tr>
         <td class="publishedBulkCell">
           <input class="publishedRowCheck" type="checkbox" value="{{ r.publication_id }}"
-                 aria-label="Sélectionner cette publication"></td>
+                 aria-label="{{ t('published.select_row') }}"></td>
         <td><b>{{ r.idea_title or '' }}</b><div class="mini">{{ r.publication_id }}</div></td>
         <td>{{ published_network_logo(r.platform, r.platform_label, r.publication_type or '') }}</td>
         <td><span class="status {{ r.status }}">{{ r.status_label }}</span></td>
@@ -54,21 +54,21 @@
         <td>
           {% if r.error_message %}
             <button type="button" class="publishedErrorDetailsBtn"
-                    data-error-title="{{ r.idea_title or 'Publication' }}"
+                    data-error-title="{{ r.idea_title or t('published.table.post') }}"
                     data-error-status="{{ r.status_label }}"
                     data-publication-id="{{ r.publication_id }}"
-                    data-error-message="{{ r.error_message }}">Voir l'erreur</button>
+                    data-error-message="{{ r.error_message }}">{{ t('published.view_error') }}</button>
           {% else %}<span class="publishedNoError">—</span>{% endif %}
         </td>
       </tr>
     {% else %}
-      <tr class="publishedEmptyRow"><td colspan="10">Aucune publication.</td></tr>
+      <tr class="publishedEmptyRow"><td colspan="10">{{ t('published.empty') }}</td></tr>
     {% endfor %}
     </tbody>
   </table>
 </section>
 <div id="publishedLoadState" class="tableLoadState" style="display:{{ 'block' if has_more else 'none' }}">
-  Fais défiler pour charger plus de lignes.</div>
+  {{ t('history.scroll_more') }}</div>
 <div id="publishedSentinel" style="height:1px"></div>
 
 <div id="publishedErrorModal" class="publishedErrorModal" role="dialog" aria-modal="true"
@@ -76,17 +76,17 @@
   <div class="publishedErrorDialog" role="document">
     <div class="publishedErrorDialogHead">
       <div>
-        <h2 id="publishedErrorModalTitle" class="publishedErrorDialogTitle">Détail de l'erreur</h2>
+        <h2 id="publishedErrorModalTitle" class="publishedErrorDialogTitle">{{ t('published.error_detail') }}</h2>
         <div id="publishedErrorModalMeta" class="publishedErrorDialogMeta"></div>
       </div>
-      <button type="button" class="publishedErrorClose" data-close-published-error="1" aria-label="Fermer">×</button>
+      <button type="button" class="publishedErrorClose" data-close-published-error="1" aria-label="{{ t('common.close') }}">×</button>
     </div>
     <div class="publishedErrorDialogBody">
-      <p class="publishedErrorLabel">Message retourné</p>
+      <p class="publishedErrorLabel">{{ t('published.returned_message') }}</p>
       <pre id="publishedErrorModalMessage" class="publishedErrorMessage"></pre>
     </div>
     <div class="publishedErrorDialogActions">
-      <button type="button" class="publishedErrorCloseBtn" data-close-published-error="1">Fermer</button>
+      <button type="button" class="publishedErrorCloseBtn" data-close-published-error="1">{{ t('common.close') }}</button>
     </div>
   </div>
 </div>

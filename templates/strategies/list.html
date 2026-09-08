@@ -3,34 +3,34 @@
 {% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css">{% endblock %}
 {% block content %}
 <section class="hero strategiesListHero">
-  <div class="eyebrow">Croissance</div>
+  <div class="eyebrow">{{ t('strat.eyebrow') }}</div>
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <h1 style="margin:0">Stratégies</h1>
-    <span id="strategiesPageCount" class="countPill" title="Nombre total de stratégies"
-          aria-label="Nombre total de stratégies : {{ strategies|length }}">{{ strategies|length }}</span>
+    <h1 style="margin:0">{{ t('strat.title') }}</h1>
+    <span id="strategiesPageCount" class="countPill" title="{{ t('strat.count_label') }}"
+          aria-label="{{ t('strat.count_label') }} : {{ strategies|length }}">{{ strategies|length }}</span>
   </div>
-  <p class="muted">Liste des stratégies de croissance stockées en BDD.</p>
+  <p class="muted">{{ t('strat.subtitle') }}</p>
   <div class="actions">
     <button type="button" class="btn primary" id="openCreateBtn" aria-controls="strategyModal" aria-haspopup="dialog"
       onclick="var m=document.getElementById('strategyModal');if(m){m.classList.add('isOpen');m.setAttribute('aria-hidden','false');document.body.classList.add('modalOpen');}return false;">
-      Nouvelle stratégie</button>
+      {{ t('strat.new') }}</button>
   </div>
 </section>
 
 <div class="tableWrap strategiesTableWrap">
   <table>
     <thead><tr>
-      <th>Stratégie</th><th>Statut</th><th>Réseau</th><th>Compte</th>
-      <th>Actions</th><th>Version</th><th>Date de dernière modif</th><th>Actions</th>
+      <th>{{ t('strat.table.strategy') }}</th><th>{{ t('common.status') }}</th><th>{{ t('strat.table.network') }}</th><th>{{ t('strat.table.account') }}</th>
+      <th>{{ t('common.actions') }}</th><th>{{ t('strat.table.version') }}</th><th>{{ t('strat.table.last_modified') }}</th><th>{{ t('common.actions') }}</th>
     </tr></thead>
     <tbody id="strategiesTableBody">
     {% for s in strategies %}
       <tr>
-        <td class="strategyTitleCell"><b>{{ s.title or 'Stratégie' }}</b>
+        <td class="strategyTitleCell"><b>{{ s.title or t('strat.default_title') }}</b>
           {% if s.objective_label %}<small>{{ s.objective_label }}</small>{% endif %}</td>
         <td><span class="statusPill {{ s.status }}">{{ s.status_label }}</span></td>
         <td>{{ s.platform_label }}</td>
-        <td>{{ s.account_name or 'Compte social' }}</td>
+        <td>{{ s.account_name or t('strat.default_account') }}</td>
         <td><div class="strategyProgressCell">
           <span>{{ s.done_actions }} / {{ s.total_actions }}</span>
           <div class="progressLine"><span style="width:{{ s.progress_pct }}%"></span></div>
@@ -38,13 +38,13 @@
         <td>{{ s.current_version or 1 }}</td>
         <td>{{ s.updated_label }}</td>
         <td class="actionsCell"><div class="strategyTableActions">
-          <a class="btn secondary tiny strategyTableActionBtn" href="/app/strategies?strategy_id={{ s.id }}">Ouvrir</a>
+          <a class="btn secondary tiny strategyTableActionBtn" href="/app/strategies?strategy_id={{ s.id }}">{{ t('strat.open') }}</a>
           <button type="button" class="btn danger tiny strategyListDeleteBtn"
-                  data-strategy-id="{{ s.id }}" data-strategy-title="{{ s.title or 'Stratégie' }}">Supprimer</button>
+                  data-strategy-id="{{ s.id }}" data-strategy-title="{{ s.title or t('strat.default_title') }}">{{ t('common.delete') }}</button>
         </div></td>
       </tr>
     {% else %}
-      <tr><td colspan="8">Aucune stratégie.</td></tr>
+      <tr><td colspan="8">{{ t('strat.empty') }}</td></tr>
     {% endfor %}
     </tbody>
   </table>
@@ -55,52 +55,51 @@
   <div class="modalCard">
     <div class="modalHead">
       <div>
-        <h2 id="strategyModalTitle">Créer une stratégie</h2>
-        <p>Une stratégie est liée à un seul réseau enregistré. Tu peux en créer plusieurs.</p>
+        <h2 id="strategyModalTitle">{{ t('strat.modal.create_title') }}</h2>
+        <p>{{ t('strat.modal.create_subtitle') }}</p>
       </div>
-      <button type="button" class="closeBtn" id="closeModalBtn" aria-label="Fermer"
+      <button type="button" class="closeBtn" id="closeModalBtn" aria-label="{{ t('common.close') }}"
         onclick="var m=document.getElementById('strategyModal');if(m){m.classList.remove('isOpen');m.setAttribute('aria-hidden','true');document.body.classList.remove('modalOpen');}return false;">×</button>
     </div>
     {% if not accounts %}
-      <div class="accountWarning">Aucun compte social actif dans ce workspace. Connecte d'abord un réseau
-        depuis <a href="/app/networks">Mes réseaux</a>.</div>
+      <div class="accountWarning">{{ t('strat.modal.no_account_pre') }}
+        <a href="/app/networks">{{ t('nav.networks') }}</a>.</div>
     {% endif %}
     <form class="strategyForm" id="strategyForm">
-      <div class="field"><label>Réseau à analyser *</label>
+      <div class="field"><label>{{ t('strat.modal.network_label') }}</label>
         <select name="social_account_id" required>
-          <option value="" selected disabled>Choisir un compte</option>
+          <option value="" selected disabled>{{ t('strat.modal.choose_account') }}</option>
           {% for a in accounts %}<option value="{{ a.id }}">{{ a.label }}</option>{% endfor %}
         </select>
       </div>
       <input type="hidden" name="objective_type" value="custom">
       <div class="formGrid">
-        <div class="field"><label>Durée *</label>
+        <div class="field"><label>{{ t('strat.modal.duration') }}</label>
           <select name="duration_days" required>
-            <option value="" selected disabled>Choisir une durée</option>
-            <option value="30">30 jours</option><option value="60">60 jours</option>
-            <option value="90">90 jours</option><option value="120">120 jours</option>
+            <option value="" selected disabled>{{ t('strat.modal.choose_duration') }}</option>
+            <option value="30">30 {{ t('strat.modal.days') }}</option><option value="60">60 {{ t('strat.modal.days') }}</option>
+            <option value="90">90 {{ t('strat.modal.days') }}</option><option value="120">120 {{ t('strat.modal.days') }}</option>
           </select>
-          <div class="hint">La durée sert à calculer les cibles quand l'instruction contient un objectif chiffré.</div>
+          <div class="hint">{{ t('strat.modal.duration_hint') }}</div>
         </div>
-        <div class="field"><label>Langue</label>
-          <select name="language"><option value="français">Français</option><option value="anglais">Anglais</option></select>
+        <div class="field"><label>{{ t('menu.language') }}</label>
+          <select name="language"><option value="français">{{ t('strat.modal.lang_fr') }}</option><option value="anglais">{{ t('strat.modal.lang_en') }}</option></select>
         </div>
       </div>
       <div class="field strategyInstructionsField">
         <div class="strategyInstructionsHeader">
-          <label>Instructions *</label>
-          <button type="button" class="btn secondary strategyInlineAiBtn" id="generateInstructionsBtn" disabled>Générer avec l'IA</button>
+          <label>{{ t('strat.modal.instructions') }}</label>
+          <button type="button" class="btn secondary strategyInlineAiBtn" id="generateInstructionsBtn" disabled>{{ t('strat.modal.generate_ai') }}</button>
         </div>
         <textarea name="instructions" required maxlength="5000"
-          placeholder="Ex : Croissance organique Instagram +20% abonnés. Explique le positionnement du compte, les contenus à privilégier, les offres à mettre en avant, le rythme possible et les sujets à éviter."></textarea>
-        <div class="hint">Décris le but du profil, ou choisis un compte puis clique sur « Générer avec l'IA » pour
-          obtenir une instruction courte avec Problématique et Objectif quantifiable. La durée vient du champ sélectionné.</div>
+          placeholder="{{ t('strat.modal.instructions_placeholder') }}"></textarea>
+        <div class="hint">{{ t('strat.modal.instructions_hint') }}</div>
       </div>
       <input type="hidden" name="research_depth" value="standard">
       <input type="hidden" name="country" value="France">
       <div class="formActions strategyModalActions">
-        <button type="button" class="btn secondary" id="cancelFormBtn">Annuler</button>
-        <button class="btn primary" id="submitStrategyBtn" type="submit" disabled>Analyser et créer la stratégie</button>
+        <button type="button" class="btn secondary" id="cancelFormBtn">{{ t('common.cancel') }}</button>
+        <button class="btn primary" id="submitStrategyBtn" type="submit" disabled>{{ t('strat.modal.submit') }}</button>
       </div>
     </form>
   </div>
@@ -108,22 +107,21 @@
 
 <div class="calendarTaskModal" id="calendarTaskModal" aria-hidden="true">
   <div class="calendarTaskModalBox" role="dialog" aria-modal="true" aria-labelledby="calendarTaskModalTitle">
-    <h2 id="calendarTaskModalTitle">Modifier la tâche</h2>
-    <p id="calendarTaskModalSubtitle">Modifie la date et l'heure de génération. La tâche sera reprise
-       automatiquement à ce créneau.</p>
+    <h2 id="calendarTaskModalTitle">{{ t('strat.calendar.edit_title') }}</h2>
+    <p id="calendarTaskModalSubtitle">{{ t('strat.calendar.edit_subtitle') }}</p>
     <div class="calendarTaskFields">
-      <label>Date<input type="date" id="calendarTaskDate"></label>
-      <label>Heure<input type="time" id="calendarTaskTime" step="60"></label>
+      <label>{{ t('strat.calendar.date') }}<input type="date" id="calendarTaskDate"></label>
+      <label>{{ t('strat.calendar.time') }}<input type="time" id="calendarTaskTime" step="60"></label>
     </div>
-    <p class="calendarTimezoneHint">Fuseau horaire : <b>{{ auth_user.timezone }}</b></p>
+    <p class="calendarTimezoneHint">{{ t('strat.calendar.timezone') }} : <b>{{ auth_user.timezone }}</b></p>
     <div class="calendarTaskModalActions">
-      <button type="button" class="btn secondary" id="calendarTaskCancelBtn">Annuler</button>
-      <button type="button" class="btn primary" id="calendarTaskSaveBtn">Enregistrer</button>
+      <button type="button" class="btn secondary" id="calendarTaskCancelBtn">{{ t('common.cancel') }}</button>
+      <button type="button" class="btn primary" id="calendarTaskSaveBtn">{{ t('common.save') }}</button>
     </div>
   </div>
 </div>
 
-<div class="loader" id="loader">Analyse en cours…</div>
+<div class="loader" id="loader">{{ t('strat.loader') }}</div>
 {% endblock %}
 {% block scripts %}
 <script src="/static/js/strategies.js"></script>

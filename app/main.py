@@ -81,7 +81,7 @@ app.mount("/public-media", StaticFiles(directory=str(get_settings().media_storag
 # Alias de compatibilité pour les anciennes URLs éventuellement déjà stockées
 # en base avant la migration. Il pointe vers LE MÊME dossier, sans duplication.
 app.mount("/n8n-files/public-media", StaticFiles(directory=str(get_settings().media_storage_path), check_dir=False), name="legacy-public-media")
-templates = Jinja2Templates(directory="templates")
+from app.templating import templates
 
 # Tous les routeurs métier sous /app (équivalent du /webhook/V0 original)
 for router in (auth.router, posts.router, media.router, publish.router,

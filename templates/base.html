@@ -1,112 +1,335 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ locale }}" dir="{{ dir }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Post Generator{% endblock %}</title>
-  <link rel="stylesheet" href="/static/css/layout.css">
-  <link rel="stylesheet" href="/static/css/app.css">
-  <link rel="stylesheet" href="/static/css/topbar.css">
-  <link rel="stylesheet" href="/static/css/toast.css">
-  <link rel="stylesheet" href="/static/css/tables.css">
+  
+  <!-- Charte : thème clair par défaut + état replié de la sidebar (anti-flicker) -->
+  <script>
+    (function() {
+      var t = 'light';
+      try { if (localStorage.getItem('theme') === 'dark') t = 'dark'; } catch (e) {}
+      document.documentElement.setAttribute('data-theme', t);
+      try {
+        if (localStorage.getItem('pg_nav_collapsed') === '1') {
+          document.documentElement.classList.add('pg-nav-collapsed');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Police du site : Inter (chargée pour de vrai — elle était demandée partout mais jamais téléchargée) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+
+  <link rel="stylesheet" href="/static/css/layout.css?v={{ request.query_params.get('v', '12') }}">
+  <link rel="stylesheet" href="/static/css/app.css?v={{ request.query_params.get('v', '12') }}">
+  <link rel="stylesheet" href="/static/css/topbar.css?v={{ request.query_params.get('v', '12') }}">
+  <link rel="stylesheet" href="/static/css/toast.css?v={{ request.query_params.get('v', '12') }}">
+  <link rel="stylesheet" href="/static/css/tables.css?v={{ request.query_params.get('v', '12') }}">
+
+  <!-- theme.css loaded last to override legacy styles -->
+  <link rel="stylesheet" href="/static/css/theme.css?v={{ request.query_params.get('v', '12') }}">
   {% block extra_style %}{% endblock %}
+  <!-- ui-kit.css : système visuel unifié, doit rester le DERNIER pour l'emporter -->
+  <link rel="stylesheet" href="/static/css/ui-kit.css?v={{ request.query_params.get('v', '12') }}">
 </head>
-<body>
+<body class="{% if auth_user %}has-sidebar{% endif %}">
+<div class="app-layout">
+  
   {% if auth_user %}
-  <header class="topbar">
-    <div class="brand">Post Generator · V0</div>
-    <button type="button" class="pgMobileNavToggle" aria-expanded="false" aria-controls="pg-main-nav" aria-label="Ouvrir le menu">
-      <span></span><span></span><span></span>
-    </button>
-    <nav class="pgMainNav" id="pg-main-nav">
+  <!-- Overlay tiroir sidebar (mobile) -->
+  <div class="pgSidebarOverlay" id="pgSidebarOverlay" aria-hidden="true"></div>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-3 7h6l-5 13 2-9H7z"/></svg>
+        </span>
+        <span class="brand-text">ACTIF PILOT</span>
+      </div>
+      <button type="button" class="sidebar-collapse-btn" id="pgSidebarToggle" aria-label="{{ t('topbar.collapse_sidebar') }}" aria-expanded="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path d="m14 9-2 3 2 3"/></svg>
+      </button>
+    </div>
 
-      {# --- Sélecteur de workspace (port verbatim du markup partagé) --- #}
-      <details class="pgWorkspaceMenu">
-        <summary aria-label="Changer de workspace" title="Workspace actif : {{ auth_user.active_workspace_display_name }}">
-          <span class="pgWorkspaceCurrentIcon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/>
-              <path d="M16 9h2a2 2 0 0 1 2 2v10M8 7h4M8 11h4M8 15h4M7 21h10"/>
-            </svg>
-          </span>
-          <span class="pgWorkspaceCurrentText"><small>Workspace</small><b>{{ auth_user.active_workspace_display_name }}</b></span>
-          <svg class="pgWorkspaceChevron" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-            <path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </summary>
-        <div class="pgWorkspaceDropdown" role="menu" aria-label="Liste des workspaces">
-          <div class="pgWorkspaceDropdownHeader">Changer de workspace</div>
-          <div class="pgWorkspaceSearchWrap">
-            <svg class="pgWorkspaceSearchIcon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-              <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.8"/>
-              <path d="m12.5 12.5 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-            <input type="search" class="pgWorkspaceSearch" placeholder="Rechercher un workspace…" autocomplete="off" aria-label="Rechercher un workspace">
-          </div>
-          <div class="pgWorkspaceList">
-            {% for w in auth_user.workspaces %}
-              {% set is_active = w.id == auth_user.active_workspace_id %}
-              <button type="button" class="pgWorkspaceItem {{ 'isActive' if is_active }}"
-                      data-workspace-id="{{ w.id }}" role="menuitemradio"
-                      aria-checked="{{ 'true' if is_active else 'false' }}" {{ 'disabled' if is_active }}>
-                <span class="pgWorkspaceItemIcon" aria-hidden="true">{{ (w.name or 'W')[0] | upper }}</span>
-                <span class="pgWorkspaceItemText"><b>{{ w.display_name }}</b>{% if is_active %}<small>Workspace actif</small>{% endif %}</span>
-                <span class="pgWorkspaceCheck" aria-hidden="true">{{ '✓' if is_active }}</span>
-              </button>
-            {% else %}
-              <div class="pgWorkspaceItem isActive" role="menuitemradio" aria-checked="true">
-                <span class="pgWorkspaceItemIcon" aria-hidden="true">W</span>
-                <span class="pgWorkspaceItemText"><b>{{ auth_user.active_workspace_display_name }}</b><small>Workspace actif</small></span>
-                <span class="pgWorkspaceCheck" aria-hidden="true">✓</span>
-              </div>
-            {% endfor %}
-          </div>
-          <div class="pgWorkspaceEmpty" role="status">Aucun workspace trouvé</div>
-          <div class="pgWorkspaceAddWrap">
-            <button type="button" class="pgWorkspaceAddButton" aria-label="Ajouter un workspace">
-              <span class="pgWorkspaceAddIcon" aria-hidden="true">+</span>
-              <span class="pgWorkspaceAddText"><b>Ajouter un workspace</b><small>Créer sans quitter cette page</small></span>
-            </button>
-          </div>
-        </div>
-      </details>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-title">{{ t('nav.section.dashboard') }}</div>
+      <a href="/app/dashboard" class="sidebar-item {{ 'active' if active_nav=='dashboard' }}">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>{{ t('nav.home') }}</span>
+      </a>
 
-      {# --- Navigation principale (mêmes libellés/ordre que l'original) --- #}
-      <a class="nav {{ 'active' if active_nav=='dashboard' }}" href="/app/dashboard">Accueil</a>
-      <a class="nav {{ 'active' if active_nav=='strategies' }}" href="/app/strategies">Stratégies</a>
-      <a class="nav {{ 'active' if active_nav=='posts' }}" href="/app/posts">Sujets</a>
-      <a class="nav {{ 'active' if active_nav=='history' }}" href="/app/history">Idées de post</a>
-      <a class="nav {{ 'active' if active_nav=='published' }}" href="/app/published">Posts publiés</a>
-      <a class="nav {{ 'active' if active_nav=='networks' }}" href="/app/networks">Mes réseaux</a>
+      <div class="sidebar-section-title">{{ t('nav.section.ideation') }}</div>
+      <a href="/app/strategies" class="sidebar-item {{ 'active' if active_nav=='strategies' }}">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+        <span>{{ t('nav.strategies') }}</span>
+      </a>
+      <a href="/app/history" class="sidebar-item {{ 'active' if active_nav=='history' }}">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"></path><path d="M10 22h4"></path><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+        <span>{{ t('nav.ideas') }}</span>
+      </a>
 
-      {# --- Menu utilisateur (port verbatim, styles inline d'origine) --- #}
-      <details class="userMenu" style="position:relative;display:inline-flex;align-items:center">
-        <summary style="list-style:none;display:inline-flex;align-items:center;gap:9px;cursor:pointer;background:#fff;border:1px solid var(--line,#e2e8f0);border-radius:999px;padding:6px 10px 6px 6px;font-weight:900;color:#0f172a;box-shadow:0 8px 20px rgba(15,23,42,.06)">
-          <span style="width:34px;height:34px;border-radius:999px;background:linear-gradient(135deg,var(--accent,#4f46e5),var(--accent2,#06b6d4));color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:950">{{ auth_user.initials }}</span>
-          <span style="max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ auth_user.full_name or auth_user.email }}</span>
-          <span style="font-size:12px;color:#64748b">▾</span>
-        </summary>
-        <div style="position:absolute;right:0;top:calc(100% + 10px);min-width:260px;z-index:1000;background:#fff;border:1px solid #e2e8f0;border-radius:18px;box-shadow:0 22px 60px rgba(15,23,42,.18);padding:10px">
-          <a href="/app/workspace" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#0f172a;background:#eef2ff;border:1px solid #c7d2fe;border-radius:13px;padding:10px 11px;font-weight:950;margin-bottom:8px">Gérer le workspace</a>
-          <a href="/app/account" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#0f172a;background:#f8fafc;border:1px solid #e2e8f0;border-radius:13px;padding:10px 11px;font-weight:950;margin-bottom:8px">Mon compte</a>
-          {% if auth_user.is_super_admin %}
-          <a href="/app/admin/settings" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#0f172a;background:#eef2ff;border:1px solid #c7d2fe;border-radius:13px;padding:10px 11px;font-weight:950;margin-bottom:8px">Paramétrage</a>
-          <a href="/app/admin/users" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#0f172a;background:#f8fafc;border:1px solid #e2e8f0;border-radius:13px;padding:10px 11px;font-weight:950;margin-bottom:8px">Utilisateurs</a>
-          {% endif %}
-          <a href="/app/logout" style="display:flex;align-items:center;justify-content:space-between;gap:10px;text-decoration:none;color:#991b1b;background:#fef2f2;border:1px solid #fecaca;border-radius:13px;padding:10px 11px;font-weight:950">Déconnexion</a>
-        </div>
-      </details>
+      <div class="sidebar-section-title">{{ t('nav.section.creation') }}</div>
+      <a href="/app/posts" class="sidebar-item {{ 'active' if active_nav=='posts' }}">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <span>{{ t('nav.subjects') }}</span>
+      </a>
+      <a href="/app/published" class="sidebar-item {{ 'active' if active_nav=='published' }}">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2L15 22 11 13 2 9l20-7z"></path></svg>
+        <span>{{ t('nav.published') }}</span>
+      </a>
+
+      <div class="sidebar-section-title">{{ t('nav.section.config') }}</div>
+      <a href="/app/networks" class="sidebar-item {{ 'active' if active_nav=='networks' }}">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+        <span>{{ t('nav.networks') }}</span>
+      </a>
     </nav>
-  </header>
+
+    <div class="sidebar-footer">
+      <a href="/app/logout" class="sidebar-item">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <span>{{ t('nav.logout') }}</span>
+      </a>
+    </div>
+  </aside>
   {% endif %}
 
-  <main class="app">
-    {% block content %}{% endblock %}
-  </main>
+  <!-- Main Content Area -->
+  <div class="main-content">
+    {% if auth_user %}
+    <header class="nav">
+      <div class="nav-links">
+        <button type="button" class="btn-icon pgMobileNavToggle" aria-expanded="false" aria-label="{{ t('topbar.toggle_menu') }}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="spacer"></div>
 
-  <script>
-  /* Fuseau utilisateur : détecté par le navigateur, transmis à toutes les
-     requêtes et mémorisé sur le compte. Les dates DB restent en UTC. */
+      <div class="nav-user-actions">
+
+        <!-- Sélecteur de workspace -->
+        <details class="pgWorkspaceMenu">
+          <summary aria-label="{{ t('topbar.change_workspace') }}" title="{{ t('topbar.active_workspace', name=auth_user.active_workspace_display_name) }}">
+            <span class="pgWorkspaceCurrentIcon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M16 9h2a2 2 0 0 1 2 2v10M8 7h4M8 11h4M8 15h4M7 21h10"/>
+              </svg>
+            </span>
+            <span class="pgWorkspaceCurrentText"><b>{{ auth_user.active_workspace_display_name }}</b></span>
+            <svg class="pgWorkspaceChevron" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </summary>
+          <div class="pgWorkspaceDropdown" role="menu" aria-label="Liste des workspaces">
+            <div class="pgWorkspaceDropdownHeader">{{ t('workspace.dropdown.title') }}</div>
+            <div class="pgWorkspaceSearchWrap">
+              <svg class="pgWorkspaceSearchIcon" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.8"/><path d="m12.5 12.5 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <input type="search" class="pgWorkspaceSearch" placeholder="{{ t('workspace.search_placeholder') }}" autocomplete="off" aria-label="{{ t('workspace.search_placeholder') }}">
+            </div>
+            <div class="pgWorkspaceList">
+              {% for w in auth_user.workspaces %}
+                {% set is_active = w.id == auth_user.active_workspace_id %}
+                <button type="button" class="pgWorkspaceItem {{ 'isActive' if is_active }}" data-workspace-id="{{ w.id }}" role="menuitemradio" aria-checked="{{ 'true' if is_active else 'false' }}" {{ 'disabled' if is_active }}>
+                  <span class="pgWorkspaceItemIcon" aria-hidden="true">{{ (w.name or 'W')[0] | upper }}</span>
+                  <span class="pgWorkspaceItemText"><b>{{ w.display_name }}</b>{% if is_active %}<small>{{ t('workspace.active') }}</small>{% endif %}</span>
+                  <span class="pgWorkspaceCheck" aria-hidden="true">{{ '✓' if is_active }}</span>
+                </button>
+              {% else %}
+                <div class="pgWorkspaceItem isActive" role="menuitemradio" aria-checked="true">
+                  <span class="pgWorkspaceItemIcon" aria-hidden="true">W</span>
+                  <span class="pgWorkspaceItemText"><b>{{ auth_user.active_workspace_display_name }}</b><small>{{ t('workspace.active') }}</small></span>
+                  <span class="pgWorkspaceCheck" aria-hidden="true">✓</span>
+                </div>
+              {% endfor %}
+              <div class="pgWorkspaceEmpty">{{ t('workspace.none_found') }}</div>
+            </div>
+            <div class="pgWorkspaceAddWrap">
+              <button type="button" class="pgWorkspaceAddButton">
+                <span class="pgWorkspaceAddIcon" aria-hidden="true">+</span>
+                <span class="pgWorkspaceAddText"><b>{{ t('workspace.create') }}</b><small>{{ t('workspace.create_sub') }}</small></span>
+              </button>
+            </div>
+          </div>
+        </details>
+
+        <!-- Notifications -->
+        <details class="pgNotifMenu">
+          <summary class="pgTopIconBtn" aria-label="{{ t('topbar.notifications') }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </summary>
+          <div class="pgNotifPanel" role="menu">
+            <div class="pgNotifPanelHeader">{{ t('topbar.notifications') }}</div>
+            <div class="pgNotifEmpty">{{ t('topbar.no_notifications') }}</div>
+          </div>
+        </details>
+
+        <!-- Menu Utilisateur -->
+        <details class="userMenu">
+          <summary aria-label="{{ t('topbar.account_menu') }}">
+            <span class="avatar">{{ auth_user.initials }}</span>
+            <span class="userMenuChevron" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none"><path d="m5 7.5 5 5 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </summary>
+          <div class="userMenuPanel" role="menu">
+            <div class="userMenuHead">
+              <span class="avatar">{{ auth_user.initials }}</span>
+              <span class="userMenuId">
+                <b>{{ auth_user.full_name or auth_user.email }}</b>
+                <small>{{ auth_user.email }}</small>
+              </span>
+            </div>
+
+            <button type="button" class="userMenuRow" id="themeToggle" aria-label="{{ t('common.change_theme') }}">
+              <svg id="moonIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              <svg id="sunIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"></line></svg>
+              <span>{{ t('menu.theme') }}</span>
+            </button>
+
+            <div class="userMenuRow userMenuLangRow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+              <span>{{ t('menu.language') }}</span>
+              <span class="pgLangPills">
+                {% for lc in supported_locales %}
+                <a class="pgLangPill {{ 'isActive' if lc == locale }}"
+                   href="/app/locale?to={{ lc }}&next={{ request.url.path | urlencode }}"
+                   aria-current="{{ 'true' if lc == locale else 'false' }}">{{ locale_short[lc] }}</a>
+                {% endfor %}
+              </span>
+            </div>
+
+            <div class="dropdown-divider"></div>
+            <a href="/app/account" class="userMenuRow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <span>{{ t('menu.settings') }}</span>
+            </a>
+            <a href="/app/workspace" class="userMenuRow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"/><path d="M16 9h2a2 2 0 0 1 2 2v10M8 7h4M8 11h4M8 15h4"/></svg>
+              <span>{{ t('menu.manage_workspace') }}</span>
+            </a>
+            {% if auth_user.is_super_admin %}
+            <div class="dropdown-divider"></div>
+            <a href="/app/admin/settings" class="userMenuRow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <span>{{ t('menu.admin_settings') }}</span>
+            </a>
+            <a href="/app/admin/users" class="userMenuRow">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <span>{{ t('menu.users') }}</span>
+            </a>
+            {% endif %}
+            <div class="dropdown-divider"></div>
+            <a href="/app/logout" class="userMenuRow danger">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+              <span>{{ t('menu.logout') }}</span>
+            </a>
+          </div>
+        </details>
+      </div>
+    </header>
+    {% endif %}
+
+    <!-- Contenu de la Page -->
+    <main class="app-content-wrapper wrap" style="padding-top:20px;">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<script>
+  /* Sidebar : repli/déploiement (desktop) + tiroir (mobile) */
+  (function() {
+    var body = document.body;
+    var root = document.documentElement;
+    var deskBtn = document.getElementById('pgSidebarToggle');
+    var overlay = document.getElementById('pgSidebarOverlay');
+
+    function isMobile() {
+      return window.matchMedia('(max-width: 1024px)').matches;
+    }
+    function setCollapsed(collapsed) {
+      root.classList.toggle('pg-nav-collapsed', collapsed);
+      try { localStorage.setItem('pg_nav_collapsed', collapsed ? '1' : '0'); } catch (e) {}
+      if (deskBtn) deskBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    }
+    function setDrawer(open) {
+      body.classList.toggle('pg-sidebar-open', open);
+    }
+
+    if (deskBtn) {
+      deskBtn.addEventListener('click', function() {
+        if (isMobile()) { setDrawer(!body.classList.contains('pg-sidebar-open')); }
+        else { setCollapsed(!root.classList.contains('pg-nav-collapsed')); }
+      });
+    }
+    document.addEventListener('click', function(event) {
+      var mobileBtn = event.target.closest && event.target.closest('.pgMobileNavToggle');
+      if (mobileBtn) {
+        event.preventDefault();
+        setDrawer(!body.classList.contains('pg-sidebar-open'));
+        return;
+      }
+      if (isMobile() && body.classList.contains('pg-sidebar-open')) {
+        if (!event.target.closest('.sidebar') && !event.target.closest('.pgMobileNavToggle')) {
+          setDrawer(false);
+        }
+      }
+    });
+    if (overlay) overlay.addEventListener('click', function() { setDrawer(false); });
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') setDrawer(false);
+    });
+    window.addEventListener('resize', function() {
+      if (!isMobile()) setDrawer(false);
+    });
+  })();
+
+  /* Init Global Theme Toggle (for pages with auth_user) */
+  (function() {
+    var toggleBtn = document.getElementById('themeToggle');
+    if (!toggleBtn) return;
+    
+    var moonIcon = document.getElementById('moonIcon');
+    var sunIcon = document.getElementById('sunIcon');
+    var htmlTag = document.documentElement;
+
+    function updateIcons() {
+      var isLight = htmlTag.getAttribute('data-theme') === 'light';
+      moonIcon.style.display = isLight ? 'block' : 'none';
+      sunIcon.style.display = isLight ? 'none' : 'block';
+    }
+    updateIcons(); // initial
+
+    toggleBtn.addEventListener('click', function(event) {
+      event.preventDefault();
+      var isDark = htmlTag.getAttribute('data-theme') === 'dark';
+      var newTheme = isDark ? 'light' : 'dark';
+      htmlTag.setAttribute('data-theme', newTheme);
+      try { localStorage.setItem('theme', newTheme); } catch (e) {}
+      updateIcons();
+    });
+  })();
+
+  /* Fermeture des menus (notifications) au clic extérieur / Échap */
+  (function() {
+    document.addEventListener('click', function(event) {
+      document.querySelectorAll('details.pgNotifMenu[open]').forEach(function(menu) {
+        if (!menu.contains(event.target)) menu.removeAttribute('open');
+      });
+    });
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        document.querySelectorAll('details.pgNotifMenu[open]').forEach(function(menu) { menu.removeAttribute('open'); });
+      }
+    });
+  })();
+
+  /* Fuseau utilisateur */
   (function(){
     var detected='';
     try{detected=Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){}
@@ -116,10 +339,9 @@
     try{document.cookie='pg_timezone='+encodeURIComponent(tz)+'; Path=/; Max-Age=31536000; SameSite=Lax';}catch(e){}
     window.pgUserTimezone=function(){return window.__PG_TIMEZONE||tz;};
   })();
-  </script>
-  <script>
-  /* authTransport — port verbatim : injecte les en-têtes de session sur les
-     appels fetch() et les soumissions de formulaire same-origin. */
+</script>
+<script>
+  /* authTransport — port verbatim */
   (function(){
     if(window.__pgAuthTransportInstalled)return;window.__pgAuthTransportInstalled=true;
     var sid={{ (auth_user.session_id if auth_user else "") | tojson }};
@@ -167,12 +389,12 @@
       }
     }catch(e){}
   })();
-  </script>
-  <div id="pgToastContainer" class="pgToastContainer" aria-live="polite" aria-atomic="true"></div>
-  <script src="/static/js/topbar.js"></script>
-  <script src="/static/js/toast.js"></script>
-  <script src="/static/js/tables.js"></script>
-  <script src="/static/js/textarea_limits.js"></script>
-  {% block scripts %}{% endblock %}
+</script>
+<div id="pgToastContainer" class="pgToastContainer" aria-live="polite" aria-atomic="true"></div>
+<script src="/static/js/topbar.js"></script>
+<script src="/static/js/toast.js"></script>
+<script src="/static/js/tables.js"></script>
+<script src="/static/js/textarea_limits.js"></script>
+{% block scripts %}{% endblock %}
 </body>
 </html>

@@ -25,7 +25,7 @@ from app.services.settings_service import get_serper_settings, save_serper_setti
 from app.user_timezone import format_user_datetime
 
 router = APIRouter(tags=["Admin"])
-templates = Jinja2Templates(directory="templates")
+from app.templating import templates, render_fragment
 
 ADMIN_USERS_PAGE_SIZE = 20
 
@@ -82,7 +82,7 @@ async def get_admin_users(request: Request, user=Depends(require_admin),
 
 
 @router.get("/admin/users/list-page")
-async def get_admin_users_list_page(page: int = 1, user=Depends(require_admin)):
+async def get_admin_users_list_page(request: Request, page: int = 1, user=Depends(require_admin)):
     """Pagination du scroll infini de la page Admin Users (JSON)."""
     pool = get_pool()
     offset = max(0, (page - 1)) * ADMIN_USERS_PAGE_SIZE
@@ -90,7 +90,7 @@ async def get_admin_users_list_page(page: int = 1, user=Depends(require_admin)):
         rows = await _fetch_users(conn, offset=offset)
         total = await conn.fetchval("SELECT count(*)::int FROM public.app_users WHERE deleted_at IS NULL")
     decorated = _decorate_users(rows, user.id, user.timezone)
-    rows_html = templates.get_template("admin/_user_rows.html").render(users=decorated)
+    rows_html = render_fragment(request, "admin/_user_rows.html", users=decorated)
     return JSONResponse({
         "success": True,
         "data": {

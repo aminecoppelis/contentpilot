@@ -3,23 +3,165 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Inscription · Post Generator</title>
-  <link rel="stylesheet" href="/static/css/layout.css">
+  <title>{{ t('auth.register.title') }} · {{ t('app.name') }}</title>
+  <script>
+    (function(){ try { document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'); } catch(e){ document.documentElement.setAttribute('data-theme','light'); } })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="/static/css/theme.css">
   <link rel="stylesheet" href="/static/css/app.css">
-  <style>.authCard.authRegisterCard{width:min(500px,100%);max-width:500px}</style>
+  <style>
+    /* ===== Inscription — thème clair + sombre (aligné sur login) ===== */
+    :root {
+      --a-bg: #f6f7f9; --a-surface: #ffffff; --a-line: #e9ebf0; --a-line-2: #e2e5ea;
+      --a-ink: #1f2430; --a-ink-2: #5b6472; --a-ink-3: #9aa3b2;
+      --a-brand: #3b82f6; --a-brand-tint: #eaf2ff; --a-hover: #f2f6fc;
+      --a-shadow: 0 12px 44px rgba(16, 24, 40, .07);
+    }
+    :root[data-theme="dark"] {
+      --a-bg: #0e1014; --a-surface: #191c22; --a-line: #2a2e37; --a-line-2: #363b45;
+      --a-ink: #e7e9ee; --a-ink-2: #a3abb8; --a-ink-3: #6b7280;
+      --a-brand: #3b82f6; --a-brand-tint: rgba(59,130,246,.18); --a-hover: rgba(59,130,246,.12);
+      --a-shadow: 0 16px 44px rgba(0, 0, 0, .55);
+    }
+
+    body { background: var(--a-bg) !important; color: var(--a-ink); }
+    .auth-shell { background: var(--a-bg) !important; background-image: none !important; }
+    .auth-shell::before, .auth-shell::after { display: none !important; }
+
+    .authTopBar {
+      position: absolute; top: 18px; right: 18px; z-index: 10;
+      display: flex; align-items: center; gap: 8px;
+    }
+    [dir="rtl"] .authTopBar { right: auto; left: 18px; }
+
+    .authThemeToggle {
+      width: 40px; height: 40px; flex: 0 0 auto;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: 1px solid var(--a-line-2); border-radius: 12px;
+      background: var(--a-surface); color: var(--a-ink-2); cursor: pointer;
+    }
+    .authThemeToggle:hover { color: var(--a-brand); border-color: var(--a-brand); }
+
+    .authLangSelect {
+      height: 40px; padding: 0 30px 0 12px;
+      border: 1px solid var(--a-line-2); border-radius: 12px;
+      background: var(--a-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239aa3b2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
+      color: var(--a-ink); font: inherit; font-size: 13px; font-weight: 700;
+      cursor: pointer; appearance: none; -webkit-appearance: none; outline: none;
+    }
+    [dir="rtl"] .authLangSelect { padding: 0 12px 0 30px; background-position: left 9px center; }
+    .authLangSelect:hover { border-color: var(--a-brand); }
+    .authLangSelect:focus { border-color: var(--a-brand); box-shadow: 0 0 0 3px rgba(59, 130, 246, .18); }
+
+    .authCard {
+      width: 100%; max-width: 460px;
+      padding: 40px 36px;
+      background: var(--a-surface) !important;
+      background-image: none !important;
+      border: 1px solid var(--a-line) !important;
+      border-radius: 18px !important;
+      box-shadow: var(--a-shadow) !important;
+      backdrop-filter: none !important;
+    }
+
+    .authEyebrow {
+      display: block; width: max-content; margin: 0 auto 16px;
+      padding: 6px 14px; border-radius: 999px;
+      background: var(--a-brand-tint); color: var(--a-brand);
+      font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+    }
+    .authCard h1 { margin: 0 0 8px; text-align: center; font-size: 28px; font-weight: 800; letter-spacing: -.02em; color: var(--a-ink); -webkit-text-fill-color: var(--a-ink); }
+    .authCard .sub { margin: 0 0 24px; text-align: center; color: var(--a-ink-2) !important; font-size: 14px; line-height: 1.5; }
+
+    .field { margin-bottom: 15px; }
+    .field label { display: block; margin-bottom: 7px; color: var(--a-ink); font-weight: 700; font-size: 13px; }
+    .field .input,
+    .auth-shell .field .input {
+      width: 100%;
+      background: var(--a-surface) !important;
+      border: 1px solid var(--a-line-2) !important;
+      border-radius: 10px !important;
+      color: var(--a-ink) !important;
+      padding: 12px 14px !important;
+      font-size: 14.5px !important;
+      box-shadow: none !important;
+    }
+    .field .input:focus,
+    .auth-shell .field .input:focus {
+      border-color: var(--a-brand) !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .18) !important;
+    }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 460px) { .grid2 { grid-template-columns: 1fr; } }
+
+    .input-group { position: relative; }
+    .input-group .input { padding-right: 44px !important; }
+    .password-toggle {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px;
+      border: 0; background: transparent; color: var(--a-ink-3); cursor: pointer; border-radius: 8px;
+    }
+    .password-toggle:hover { color: var(--a-brand); background: var(--a-hover); }
+    .hint { font-size: 12px; color: var(--a-ink-3); margin-top: 6px; line-height: 1.4; }
+
+    .auth-shell .btn.primary {
+      width: 100% !important;
+      margin-top: 8px !important;
+      padding: 13px 18px !important;
+      background: #3b82f6 !important;
+      background-image: none !important;
+      border: 0 !important;
+      border-radius: 12px !important;
+      box-shadow: none !important;
+      color: #fff !important;
+      font-size: 15px !important; font-weight: 700 !important;
+    }
+    .auth-shell .btn.primary:hover { background: #2f74e6 !important; filter: none !important; transform: none !important; }
+
+    .links { margin-top: 20px; text-align: center; color: var(--a-ink-2); font-size: 14px; }
+    .links a { color: var(--a-brand); font-weight: 600; text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+
+    .authFoot {
+      margin-top: 22px; padding-top: 16px;
+      border-top: 1px solid var(--a-line);
+      text-align: center; color: var(--a-ink-3); font-size: 12px; line-height: 1.55;
+    }
+    .authFoot a { color: var(--a-brand); font-weight: 600; text-decoration: none; }
+    .authFoot a:hover { text-decoration: underline; }
+
+    .alert { border-radius: 10px; font-size: 13px; }
+  </style>
 </head>
 <body>
 <div class="auth-shell">
-  <main class="card authCard authRegisterCard">
-    <div class="brand">Créer un compte</div>
+  <div class="authTopBar">
+    <select class="authLangSelect" aria-label="{{ t('menu.language') }}"
+            onchange="if(this.value){window.location.href=this.value;}">
+      {% for lc in supported_locales %}
+      <option value="/app/locale?to={{ lc }}&next={{ request.url.path }}" {{ 'selected' if lc == locale }}>{{ locale_names[lc] }}</option>
+      {% endfor %}
+    </select>
+    <button type="button" class="authThemeToggle" id="authThemeToggle" aria-label="{{ t('common.change_theme') }}">
+      <svg id="authMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg id="authSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"/></svg>
+    </button>
+  </div>
+  <main class="authCard authRegisterCard">
+    <span class="authEyebrow">{{ t('app.name') }}</span>
+    <h1>{{ t('auth.register.title') }}</h1>
     <p class="sub">
       {% if invited_registration %}
-        Crée ton compte avec l'adresse email ayant reçu l'invitation. Après activation et connexion, le workspace sera rejoint automatiquement.
+        {{ t('auth.register.subtitle_invited') }}
       {% else %}
-        Chaque utilisateur aura ses propres sujets, médias et publications.
+        {{ t('auth.register.subtitle_normal') }}
       {% endif %}
     </p>
-    {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
     <form method="post" action="/app/register">
       <input type="hidden" name="redirect" value="{{ redirect }}">
       <input type="hidden" name="form_started_at" id="form_started_at" value="">
@@ -28,20 +170,78 @@
         <label>Site web</label>
         <input name="company_website" tabindex="-1" autocomplete="off">
       </div>
-      <div class="field"><label>Prénom</label><input name="first_name" autocomplete="given-name" required></div>
-      <div class="field"><label>Nom</label><input name="last_name" autocomplete="family-name" required></div>
-      <div class="field"><label>Email</label><input name="email" type="email" autocomplete="email" required></div>
-      <div class="field">
-        <label>Mot de passe</label>
-        <input name="password" type="password" autocomplete="new-password" minlength="10" required>
-        <div class="hint" style="font-size:12px;color:#64748b;margin-top:6px;line-height:1.35">Minimum 10 caractères.</div>
+      <div class="grid2">
+        <div class="field"><label>{{ t('auth.field.firstname') }}</label><input class="input" name="first_name" autocomplete="given-name" required></div>
+        <div class="field"><label>{{ t('auth.field.lastname') }}</label><input class="input" name="last_name" autocomplete="family-name" required></div>
       </div>
-      <div class="field"><label>Confirmer le mot de passe</label><input name="confirm_password" type="password" autocomplete="new-password" minlength="10" required></div>
-      <button class="btn" type="submit">Créer le compte</button>
+      <div class="field"><label>{{ t('auth.field.email') }}</label><input class="input" name="email" type="email" autocomplete="email" required></div>
+      <div class="field">
+        <label>{{ t('auth.field.password') }}</label>
+        <div class="input-group">
+          <input class="input" id="regPassword" name="password" type="password" autocomplete="new-password" minlength="10" required>
+          <button type="button" class="password-toggle" data-target="regPassword" aria-label="Afficher le mot de passe">
+            <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+        <div class="hint">{{ t('auth.field.password_hint') }}</div>
+      </div>
+      <div class="field">
+        <label>{{ t('auth.field.confirm_password') }}</label>
+        <div class="input-group">
+          <input class="input" id="regConfirm" name="confirm_password" type="password" autocomplete="new-password" minlength="10" required>
+          <button type="button" class="password-toggle" data-target="regConfirm" aria-label="{{ t('auth.show_password') }}">
+            <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-8-10-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 8 10 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          </button>
+        </div>
+      </div>
+      <button class="btn primary" type="submit">{{ t('auth.register.submit') }}</button>
     </form>
-    <div class="links">Déjà inscrit ? <a href="/app/login?redirect={{ redirect }}">Se connecter</a></div>
+    <div class="links">{{ t('auth.register.has_account') }} <a href="/app/login?redirect={{ redirect }}">{{ t('auth.register.login') }}</a></div>
+    <div class="authFoot">{{ t('auth.foot', privacy=('<a href="#">' ~ t('auth.foot.privacy') ~ '</a>'), terms=('<a href="#">' ~ t('auth.foot.terms') ~ '</a>')) | safe }}</div>
   </main>
 </div>
-<script>document.getElementById('form_started_at').value=Date.now();try{document.getElementById('user_timezone').value=Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){}</script>
+<script>
+  document.getElementById('form_started_at').value=Date.now();
+  try{document.getElementById('user_timezone').value=Intl.DateTimeFormat().resolvedOptions().timeZone||'';}catch(e){}
+
+  /* Afficher / masquer les mots de passe */
+  (function () {
+    document.querySelectorAll('.password-toggle[data-target]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var input = document.getElementById(btn.getAttribute('data-target'));
+        if (!input) return;
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        var open = btn.querySelector('.eye-open'), off = btn.querySelector('.eye-off');
+        if (open) open.style.display = show ? 'none' : 'block';
+        if (off) off.style.display = show ? 'block' : 'none';
+        btn.setAttribute('aria-label', show ? "{{ t('auth.hide_password') }}" : "{{ t('auth.show_password') }}");
+      });
+    });
+  })();
+
+  /* Bascule thème clair / sombre */
+  (function () {
+    var btn = document.getElementById('authThemeToggle');
+    var moon = document.getElementById('authMoon');
+    var sun = document.getElementById('authSun');
+    var root = document.documentElement;
+    if (!btn) return;
+    function paint() {
+      var dark = root.getAttribute('data-theme') === 'dark';
+      if (moon) moon.style.display = dark ? 'none' : 'block';
+      if (sun) sun.style.display = dark ? 'block' : 'none';
+    }
+    paint();
+    btn.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { localStorage.setItem('theme', next); } catch (e) {}
+      paint();
+    });
+  })();
+</script>
 </body>
 </html>

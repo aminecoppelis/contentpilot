@@ -24,7 +24,7 @@ from app.worker.calendar_worker import run_cycle
 from app.user_timezone import parse_user_datetime, to_user_datetime, format_user_datetime
 
 router = APIRouter(tags=["Strategies"])
-templates = Jinja2Templates(directory="templates")
+from app.templating import templates
 
 
 STRATEGY_STATUS_LABELS = {"draft": "Brouillon", "active": "Active", "archived": "Archivée"}

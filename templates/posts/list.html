@@ -32,22 +32,22 @@
 {% endblock %}
 {% block content %}
 <section class="hero">
-  <div class="eyebrow">Contenus</div>
-  <h1>Mes sujets</h1>
-  <p class="muted">Chaque ligne correspond à un brief soumis pour génération IA.</p>
-  <div class="actions"><a class="btn primary" href="/app/posts/new">+ Nouveau sujet</a></div>
+  <div class="eyebrow">{{ t('common.content_eyebrow') }}</div>
+  <h1>{{ t('posts.list.title') }}</h1>
+  <p class="muted">{{ t('posts.list.subtitle') }}</p>
+  <div class="actions"><a class="btn primary" href="/app/posts/new">{{ t('posts.list.new') }}</a></div>
 </section>
 
 <div class="tableWrap">
   <table>
     <thead><tr>
-      <th>Sujet</th><th>Statut</th><th>Idées</th><th>Approuvées</th><th>Médias</th>
-      <th>Dernière modif.</th><th>Créé par</th><th>Actions</th>
+      <th>{{ t('posts.list.table.subject') }}</th><th>{{ t('common.status') }}</th><th>{{ t('posts.list.table.ideas') }}</th><th>{{ t('posts.list.table.approved') }}</th><th>{{ t('posts.list.table.media') }}</th>
+      <th>{{ t('posts.list.table.last_modified') }}</th><th>{{ t('posts.list.table.created_by') }}</th><th>{{ t('common.actions') }}</th>
     </tr></thead>
     <tbody id="postRequestRows">
     {% for r in requests %}
       <tr id="request-row-{{ r.id }}">
-        <td><b>{{ r.title or r.subject or "Sans sujet" }}</b><div class="mini">{{ r.id }}</div></td>
+        <td><b>{{ r.title or r.subject or t('posts.list.no_subject') }}</b><div class="mini">{{ r.id }}</div></td>
         <td><span class="status {{ r.status }}">{{ r.status_label }}</span></td>
         <td>{{ r.ideas_count }}</td>
         <td>{{ r.approved_count }}</td>
@@ -56,26 +56,35 @@
         <td>{{ r.created_by_name or "—" }}</td>
         <td>
           <div class="actions">
-            {% if r.ideas_count|int > 0 or r.status in ['generating','generating_more'] %}<a class="btn light" href="/app/posts/view?request_id={{ r.id }}">Idées</a>{% else %}<button class="btn light" type="button" disabled title="Aucune idée disponible">Idées</button>{% endif %}
-            <a class="btn light" href="/app/posts/edit?id={{ r.id }}">Modifier</a>
+            {% if r.ideas_count|int > 0 or r.status in ['generating','generating_more'] %}<a class="btn light" href="/app/posts/view?request_id={{ r.id }}">{{ t('posts.list.ideas_link') }}</a>{% else %}<button class="btn light" type="button" disabled title="{{ t('posts.list.no_ideas_title') }}">{{ t('posts.list.ideas_link') }}</button>{% endif %}
+            <a class="btn light" href="/app/posts/edit?id={{ r.id }}">{{ t('common.edit') }}</a>
             <form class="inlineForm" method="post" action="/app/posts/delete" onsubmit="return deleteRequestFromList(event,this)">
               <input type="hidden" name="id" value="{{ r.id }}">
-              <button class="danger" type="submit">Supprimer</button>
+              <button class="danger" type="submit">{{ t('common.delete') }}</button>
             </form>
           </div>
         </td>
       </tr>
     {% else %}
-      <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">Aucun sujet pour le moment.</td></tr>
+      <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">{{ t('posts.list.empty') }}</td></tr>
     {% endfor %}
     </tbody>
   </table>
 </div>
-<div id="postRequestLoadState" style="padding:14px 16px;text-align:center;color:var(--muted);font-size:13px;display:{{ 'block' if has_more else 'none' }}">Fais défiler pour charger plus de sujets.</div>
+<div id="postRequestLoadState" style="padding:14px 16px;text-align:center;color:var(--muted);font-size:13px;display:{{ 'block' if has_more else 'none' }}">{{ t('posts.list.scroll_more') }}</div>
 <div id="postRequestSentinel" style="height:1px"></div>
 {% endblock %}
 {% block scripts %}
 <script>
+window.__I18N_POSTS_LIST = {{ {
+  'deleteConfirm': t('posts.list.delete_confirm'),
+  'deleted': t('posts.list.deleted'),
+  'deleteError': t('posts.list.delete_error'),
+  'loading': t('common.loading'),
+  'scrollMore': t('posts.list.scroll_more'),
+  'allLoaded': t('posts.list.all_loaded'),
+  'loadError': t('posts.list.load_error'),
+} | tojson }};
 /* Port du comportement de suppression en liste (toast + suppression de ligne sans reload) */
 function showListToast(message, type){
   var existing=document.getElementById('listToast');
@@ -98,7 +107,7 @@ function showListToast(message, type){
 }
 async function deleteRequestFromList(event, form){
   event.preventDefault();
-  if(!confirm('Supprimer ce sujet et ses idées ?')) return false;
+  if(!confirm(window.__I18N_POSTS_LIST.deleteConfirm)) return false;
   var id = form.querySelector('input[name=id]').value;
   try{
     var resp = await fetch('/app/posts/delete', {method:'POST', headers:{'Content-Type':'application/json'},
@@ -106,11 +115,11 @@ async function deleteRequestFromList(event, form){
     var data = await resp.json();
     if(data.success){
       document.getElementById('request-row-'+id)?.remove();
-      showListToast('Supprimé.');
+      showListToast(window.__I18N_POSTS_LIST.deleted);
     } else {
-      showListToast(data.message || 'Suppression impossible.', 'error');
+      showListToast(data.message || window.__I18N_POSTS_LIST.deleteError, 'error');
     }
-  }catch(e){ showListToast('Suppression impossible.', 'error'); }
+  }catch(e){ showListToast(window.__I18N_POSTS_LIST.deleteError, 'error'); }
   return false;
 }
 (function initPostsInfiniteScroll(){
@@ -121,7 +130,7 @@ async function deleteRequestFromList(event, form){
   var page={{ next_page }};var hasMore={{ 'true' if has_more else 'false' }};var loading=false;
   if(!hasMore){state.style.display='none';return;}
   async function loadMore(){
-    if(loading||!hasMore)return;loading=true;state.style.display='block';state.textContent='Chargement…';
+    if(loading||!hasMore)return;loading=true;state.style.display='block';state.textContent=window.__I18N_POSTS_LIST.loading;
     try{
       var url=new URL('/app/posts/list-page',location.origin);url.searchParams.set('page',String(page));
       {% if status %}url.searchParams.set('status',{{ status|tojson }});{% endif %}
@@ -130,8 +139,8 @@ async function deleteRequestFromList(event, form){
       var empty=tbody.querySelector('tr td[colspan="8"]');if(empty&&empty.parentElement)empty.parentElement.remove();
       if(data.rows_html)tbody.insertAdjacentHTML('beforeend',data.rows_html);
       page=Number(data.next_page||page+1);hasMore=Boolean(data.has_more);
-      state.style.display=hasMore?'block':'none';state.textContent=hasMore?'Fais défiler pour charger plus de sujets.':'Toutes les lignes sont affichées.';
-    }catch(e){state.style.display='block';state.textContent='Chargement impossible. Réessaie en faisant défiler.';}finally{loading=false;}
+      state.style.display=hasMore?'block':'none';state.textContent=hasMore?window.__I18N_POSTS_LIST.scrollMore:window.__I18N_POSTS_LIST.allLoaded;
+    }catch(e){state.style.display='block';state.textContent=window.__I18N_POSTS_LIST.loadError;}finally{loading=false;}
   }
   new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting)loadMore();});},{rootMargin:'240px'}).observe(sentinel);
 })();

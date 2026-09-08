@@ -19,7 +19,7 @@ from app.services.copy_ready import build_copy_ready_text
 from app.user_timezone import format_user_datetime
 
 router = APIRouter(tags=["Posts"])
-templates = Jinja2Templates(directory="templates")
+from app.templating import templates, render_fragment
 
 URL_RE = re.compile(r"https?://[^\s]+")
 
@@ -954,7 +954,7 @@ async def get_posts_list_page(request: Request, page: int = 1, status: str | Non
         d["status_label"] = _status_label(d["status"], d["ideas_count"])
         out.append(d)
 
-    html = templates.get_template("posts/_list_rows.html").render(requests=out)
+    html = render_fragment(request, "posts/_list_rows.html", requests=out)
     loaded = max(0, page - 1) * 20 + len(out)
     return JSONResponse({"success": True, "data": {
         "rows_html": html, "has_more": loaded < total, "next_page": page + 1, "total": total,

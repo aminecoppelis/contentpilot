@@ -31,7 +31,7 @@ from app.services.mailer import send_workspace_invite_email
 from app.user_timezone import format_user_value
 
 router = APIRouter(tags=["Workspace"])
-templates = Jinja2Templates(directory="templates")
+from app.templating import templates
 
 ROLE_LABELS = {
     "super_admin": "Super administrateur",

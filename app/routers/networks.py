@@ -41,7 +41,7 @@ def _session_hash(request: Request) -> str:
 
 
 router = APIRouter(tags=["Networks"])
-templates = Jinja2Templates(directory="templates")
+from app.templating import templates, render_fragment
 logger = logging.getLogger("routers.networks")
 
 
@@ -1068,7 +1068,7 @@ async def get_publishable_accounts(user=Depends(require_auth)):
 
 
 @router.get("/networks/list-page")
-async def get_networks_list_page(limit: int = 20, cursor_at: str = "", cursor_id: str = "",
+async def get_networks_list_page(request: Request, limit: int = 20, cursor_at: str = "", cursor_id: str = "",
                                   user=Depends(require_auth)):
     """Pagination des comptes visibles dans le workspace actif."""
     pool = get_pool()
@@ -1082,7 +1082,7 @@ async def get_networks_list_page(limit: int = 20, cursor_at: str = "", cursor_id
     has_more = len(rows) > limit
     page = rows[:limit]
     accounts = _decorate_network_rows(page, user.timezone)
-    rows_html = templates.get_template("networks/_account_rows.html").render(accounts=accounts)
+    rows_html = render_fragment(request, "networks/_account_rows.html", accounts=accounts)
     next_at = page[-1]["updated_at"].isoformat() if page and page[-1]["updated_at"] else ""
     next_id = page[-1]["id"] if page else ""
     return JSONResponse({

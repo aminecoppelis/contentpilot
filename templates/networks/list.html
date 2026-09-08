@@ -4,11 +4,11 @@
 {% block content %}
 <section class="hero">
   <div>
-    <div class="eyebrow">Connexions</div>
+    <div class="eyebrow">{{ t('net.eyebrow') }}</div>
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-      <h1 style="margin:0">Mes réseaux</h1>
-      <span data-total class="countPill" title="Nombre total de lignes"
-            aria-label="Nombre total de lignes : {{ total }}">{{ total }}</span>
+      <h1 style="margin:0">{{ t('nav.networks') }}</h1>
+      <span data-total class="countPill" title="{{ t('net.total_rows') }}"
+            aria-label="{{ t('net.total_rows') }} : {{ total }}">{{ total }}</span>
     </div>
   </div>
   <div class="channelConnectors">
@@ -17,26 +17,26 @@
       <span class="channelIcon metaChannelIcon" aria-label="Meta">
         <img src="/static/img/meta.svg" alt="" width="30" height="24" aria-hidden="true">
       </span>
-      <span><b>Configurer Meta</b><small>App ID, secrets et permissions OAuth.</small></span>
+      <span><b>{{ t('net.configure_meta') }}</b><small>{{ t('net.configure_meta_sub') }}</small></span>
     </a>
     {% endif %}
     <a class="channelCard facebookCard" href="/app/networks/facebook/connect">
       <span class="channelIcon facebookChannelIcon" aria-label="Facebook">
         <img src="/static/img/facebook.svg" alt="" width="30" height="30" aria-hidden="true">
       </span>
-      <span><b>Connecter Facebook via Meta</b><small>Facebook Login : Pages Facebook uniquement.</small></span>
+      <span><b>{{ t('net.connect_facebook') }}</b><small>{{ t('net.connect_facebook_sub') }}</small></span>
     </a>
     <a class="channelCard instagramCard" href="/app/networks/instagram/connect">
       <span class="channelIcon instagramChannelIcon" aria-label="Instagram">
         <img src="/static/img/instagram.svg" alt="" width="30" height="30" aria-hidden="true">
       </span>
-      <span><b>Connecter Instagram directement</b><small>Instagram Login : Pages Instagram uniquement.</small></span>
+      <span><b>{{ t('net.connect_instagram') }}</b><small>{{ t('net.connect_instagram_sub') }}</small></span>
     </a>
     <button type="button" class="channelCard bufferCard" onclick="window.openBufferModal();return false">
       <span class="channelIcon bufferChannelIcon" aria-label="Buffer">
         <img src="/static/img/buffer.svg" alt="" width="30" height="30" aria-hidden="true">
       </span>
-      <span><b>Ajouter Buffer</b><small>Enregistrer une clé API Buffer et connecter le canal de votre choix.</small></span>
+      <span><b>{{ t('net.add_buffer') }}</b><small>{{ t('net.add_buffer_sub') }}</small></span>
     </button>
   </div>
 </section>
@@ -46,40 +46,40 @@
 <div class="tableWrap">
   <table>
     <thead><tr>
-      <th>Nom</th><th>Réseau</th><th>Compte</th><th>Organisation / Page liée</th>
-      <th>Statut</th><th>Publications restantes</th><th>Modifié</th><th>Actions</th>
+      <th>{{ t('net.table.name') }}</th><th>{{ t('strat.table.network') }}</th><th>{{ t('strat.table.account') }}</th><th>{{ t('net.table.linked_page') }}</th>
+      <th>{{ t('common.status') }}</th><th>{{ t('net.table.remaining_posts') }}</th><th>{{ t('net.table.modified') }}</th><th>{{ t('common.actions') }}</th>
     </tr></thead>
     <tbody id="networkRows">
     {% include "networks/_account_rows.html" %}
-    {% if not accounts %}<tr id="emptyNetworks"><td colspan="8">Aucun compte connecté.</td></tr>{% endif %}
+    {% if not accounts %}<tr id="emptyNetworks"><td colspan="8">{{ t('net.empty') }}</td></tr>{% endif %}
     </tbody>
   </table>
 </div>
-<div id="networkLoader" class="loader" style="display:{{ 'block' if has_more else 'none' }}">Fais défiler pour charger plus de comptes.</div>
+<div id="networkLoader" class="loader" style="display:{{ 'block' if has_more else 'none' }}">{{ t('net.scroll_more') }}</div>
 <div id="networkSentinel" style="height:1px"></div>
 
 <div class="shareModalOverlay" id="editNetworkModal" aria-hidden="true">
   <div class="shareModal" role="dialog" aria-modal="true" aria-labelledby="editNetworkTitle">
-    <h2 id="editNetworkTitle">Modifier le compte réseau</h2>
-    <p>Renomme l'affichage de cette connexion dans ce workspace.</p>
-    <label for="editNetworkDisplayName">Nom affiché</label>
+    <h2 id="editNetworkTitle">{{ t('net.edit_modal.title') }}</h2>
+    <p>{{ t('net.edit_modal.subtitle') }}</p>
+    <label for="editNetworkDisplayName">{{ t('net.edit_modal.label') }}</label>
     <input id="editNetworkDisplayName" type="text" maxlength="120">
     <div class="shareModalActions">
-      <button type="button" class="bufferCancel" id="cancelEditNetworkBtn">Annuler</button>
-      <button type="button" class="bufferSave" id="confirmEditNetworkBtn">Enregistrer</button>
+      <button type="button" class="bufferCancel" id="cancelEditNetworkBtn">{{ t('common.cancel') }}</button>
+      <button type="button" class="bufferSave" id="confirmEditNetworkBtn">{{ t('common.save') }}</button>
     </div>
   </div>
 </div>
 
 <div class="shareModalOverlay" id="shareNetworkModal" aria-hidden="true">
   <div class="shareModal" role="dialog" aria-modal="true" aria-labelledby="shareNetworkTitle">
-    <h2 id="shareNetworkTitle">Partager le compte réseau</h2>
-    <p id="shareNetworkSubtitle">Choisis le workspace qui pourra utiliser cette connexion.</p>
-    <label for="shareNetworkWorkspaceSelect">Workspace cible</label>
+    <h2 id="shareNetworkTitle">{{ t('net.share_modal.title') }}</h2>
+    <p id="shareNetworkSubtitle">{{ t('net.share_modal.subtitle') }}</p>
+    <label for="shareNetworkWorkspaceSelect">{{ t('net.share_modal.label') }}</label>
     <select id="shareNetworkWorkspaceSelect"></select>
     <div class="shareModalActions">
-      <button type="button" class="bufferCancel" id="cancelShareNetworkBtn">Annuler</button>
-      <button type="button" class="bufferSave" id="confirmShareNetworkBtn">Partager</button>
+      <button type="button" class="bufferCancel" id="cancelShareNetworkBtn">{{ t('common.cancel') }}</button>
+      <button type="button" class="bufferSave" id="confirmShareNetworkBtn">{{ t('net.share_modal.submit') }}</button>
     </div>
   </div>
 </div>
@@ -88,25 +88,24 @@
   <div class="bufferModal">
     <div class="bufferModalTop">
       <div>
-        <h2>Ajouter un accès Buffer</h2>
-        <p class="muted">La clé API sera testée puis chiffrée en base. Elle ne sera jamais renvoyée au navigateur.</p>
+        <h2>{{ t('net.buffer_modal.title') }}</h2>
+        <p class="muted">{{ t('net.buffer_modal.subtitle') }}</p>
       </div>
       <button type="button" class="bufferModalClose" onclick="window.closeBufferModal();return false">×</button>
     </div>
     <form id="bufferForm" class="bufferForm" onsubmit="return window.saveBufferAccount(event)">
       <input type="hidden" id="bufferAccountId" name="account_id">
-      <label>Nom interne<input id="bufferDisplayName" name="display_name" required maxlength="120"
-             placeholder="Ex : LinkedIn société Coppelis"></label>
-      <label>Clé API Buffer<input id="bufferApiKey" name="api_key" type="password" required
-             autocomplete="new-password" placeholder="Clé créée dans Buffer > Settings > API"></label>
-      <label>Channel ID Buffer<input id="bufferChannelId" name="channel_id" required maxlength="250"
-             placeholder="Identifiant du canal Buffer"></label>
-      <div class="bufferHelp">Le Channel ID identifie exactement un canal Buffer (LinkedIn, Instagram ou Facebook).
-        Le service est vérifié par l'API Buffer avant l'enregistrement.</div>
+      <label>{{ t('net.buffer_modal.internal_name') }}<input id="bufferDisplayName" name="display_name" required maxlength="120"
+             placeholder="{{ t('net.buffer_modal.internal_name_placeholder') }}"></label>
+      <label>{{ t('net.buffer_modal.api_key') }}<input id="bufferApiKey" name="api_key" type="password" required
+             autocomplete="new-password" placeholder="{{ t('net.buffer_modal.api_key_placeholder') }}"></label>
+      <label>{{ t('net.buffer_modal.channel_id') }}<input id="bufferChannelId" name="channel_id" required maxlength="250"
+             placeholder="{{ t('net.buffer_modal.channel_id_placeholder') }}"></label>
+      <div class="bufferHelp">{{ t('net.buffer_modal.help') }}</div>
       <div id="bufferFormStatus" class="bufferStatus"></div>
       <div class="bufferActions">
-        <button type="button" class="bufferCancel" onclick="window.closeBufferModal();return false">Annuler</button>
-        <button id="bufferSaveBtn" type="submit" class="bufferSave">Tester et enregistrer</button>
+        <button type="button" class="bufferCancel" onclick="window.closeBufferModal();return false">{{ t('common.cancel') }}</button>
+        <button id="bufferSaveBtn" type="submit" class="bufferSave">{{ t('net.buffer_modal.submit') }}</button>
       </div>
     </form>
   </div>

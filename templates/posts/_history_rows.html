@@ -9,6 +9,6 @@
   <td>{% if r.published_by_name %}<span class="personCell" title="{{ r.published_by_name }}"><span class="personAvatar">{{ r.published_by_initials }}</span></span>{% else %}<span class="personEmpty">-</span>{% endif %}</td>
   <td>{{ r.media_count }}</td>
   <td>{{ history_publication_badges(r.publications) }}</td>
-  <td><div class="actions"><a class="btn light" href="/app/posts/view?request_id={{ r.request_id }}&idea_id={{ r.idea_id }}">Ouvrir</a></div></td>
+  <td><div class="actions"><a class="btn light" href="/app/posts/view?request_id={{ r.request_id }}&idea_id={{ r.idea_id }}">{{ t('strat.open') }}</a></div></td>
 </tr>
 {% endfor %}

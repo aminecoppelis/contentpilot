@@ -100,23 +100,29 @@ def get_settings() -> Settings:
     le service tourne sous un autre utilisateur).
     """
     import os
-    import pwd
+    import sys
 
     try:
         return Settings()
     except PermissionError as exc:
         path = os.path.abspath(".env")
         try:
-            owner = pwd.getpwuid(os.stat(path).st_uid).pw_name
-            mode = oct(os.stat(path).st_mode & 0o777)
+            if sys.platform != "win32":
+                import pwd  # noqa: PLC0415
+                owner = pwd.getpwuid(os.stat(path).st_uid).pw_name
+                mode = oct(os.stat(path).st_mode & 0o777)
+                current = pwd.getpwuid(os.getuid()).pw_name
+            else:
+                owner = "inconnu"
+                mode = "inconnu"
+                current = os.environ.get("USERNAME", "inconnu")
         except Exception:  # noqa: BLE001
-            owner, mode = "inconnu", "inconnu"
-        current = pwd.getpwuid(os.getuid()).pw_name
+            owner, mode, current = "inconnu", "inconnu", "inconnu"
         raise RuntimeError(
             f"Impossible de lire {path} : {exc}\n"
             f"  Fichier appartenant à '{owner}' (mode {mode}), "
             f"processus lancé par '{current}'.\n"
-            f"  Correction : sudo chown {current}:{current} {path}"
+            f"  Correction (Linux/Mac) : sudo chown {current}:{current} {path}"
         ) from exc
     except FileNotFoundError as exc:
         raise RuntimeError(

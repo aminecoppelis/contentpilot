@@ -40,31 +40,31 @@
 {% endblock %}
 {% block content %}
 <section class="header">
-  <div class="eyebrow">Collaboration</div>
-  <h1>{{ ws.name or "Workspace" }}</h1>
-  <p class="muted">Les sujets, médias, réseaux sociaux et publications affichés appartiennent uniquement à ce workspace.</p>
+  <div class="eyebrow">{{ t('ws.eyebrow') }}</div>
+  <h1>{{ ws.name or t('ws.default_name') }}</h1>
+  <p class="muted">{{ t('ws.subtitle') }}</p>
 </section>
 
 <div id="flash"></div>
 
 <section class="grid">
   <div class="card">
-    <h2>Workspace actif</h2>
-    {% if is_super_admin %}<p class="muted"><b>Accès global super administrateur</b></p>{% endif %}
+    <h2>{{ t('ws.active.title') }}</h2>
+    {% if is_super_admin %}<p class="muted"><b>{{ t('ws.active.super_admin') }}</b></p>{% endif %}
     {% if can_admin %}
       <form method="post" action="/app/workspace/action">
         <input type="hidden" name="action" value="rename">
-        <div class="field"><label>Nom</label>
+        <div class="field"><label>{{ t('ws.field.name') }}</label>
           <input name="name" value="{{ ws.name or '' }}" required maxlength="150"></div>
-        <button class="secondary">Renommer</button>
+        <button class="secondary">{{ t('ws.rename') }}</button>
       </form>
     {% else %}
-      <p class="muted">Rôle : {{ role_label }}</p>
+      <p class="muted">{{ t('ws.role_prefix', role=role_label) }}</p>
     {% endif %}
     {% if not is_owner and not is_super_admin %}
-      <form method="post" action="/app/workspace/action" onsubmit="return confirm('Quitter ce workspace ?')">
+      <form method="post" action="/app/workspace/action" onsubmit="return confirm('{{ t('ws.leave_confirm') }}')">
         <input type="hidden" name="action" value="leave">
-        <button class="danger">Quitter le workspace</button>
+        <button class="danger">{{ t('ws.leave') }}</button>
       </form>
     {% endif %}
   </div>
@@ -72,24 +72,24 @@
 
 {% if can_admin %}
 <section class="card">
-  <h2>Inviter un utilisateur</h2>
+  <h2>{{ t('ws.invite.title') }}</h2>
   <form method="post" action="/app/workspace/action">
     <input type="hidden" name="action" value="invite">
     <div class="grid">
-      <div class="field"><label>Email</label><input type="email" name="email" required></div>
-      <div class="field"><label>Rôle</label>
-        <select name="role"><option value="member">Membre</option><option value="admin">Administrateur</option></select>
+      <div class="field"><label>{{ t('auth.field.email') }}</label><input type="email" name="email" required></div>
+      <div class="field"><label>{{ t('ws.field.role') }}</label>
+        <select name="role"><option value="member">{{ t('ws.role.member') }}</option><option value="admin">{{ t('ws.role.admin') }}</option></select>
       </div>
     </div>
-    <button>Envoyer l'invitation</button>
+    <button>{{ t('ws.invite.submit') }}</button>
   </form>
 </section>
 {% endif %}
 
 <section class="card">
-  <h2>Membres</h2>
+  <h2>{{ t('ws.members.title') }}</h2>
   <div class="tableWrap"><table>
-    <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Actions</th></tr></thead>
+    <thead><tr><th>{{ t('ws.table.user') }}</th><th>{{ t('ws.table.role') }}</th><th>{{ t('ws.table.actions') }}</th></tr></thead>
     <tbody>
     {% for m in members %}
       <tr>
@@ -102,30 +102,30 @@
               <input type="hidden" name="action" value="member_role">
               <input type="hidden" name="target_user_id" value="{{ m.user_id }}">
               <select name="role">
-                <option value="member" {{ 'selected' if m.role=='member' }}>Membre</option>
-                <option value="admin" {{ 'selected' if m.role=='admin' }}>Administrateur</option>
+                <option value="member" {{ 'selected' if m.role=='member' }}>{{ t('ws.role.member') }}</option>
+                <option value="admin" {{ 'selected' if m.role=='admin' }}>{{ t('ws.role.admin') }}</option>
               </select>
-              <button>Modifier</button>
+              <button>{{ t('ws.edit') }}</button>
             </form>
             <form method="post" action="/app/workspace/action" class="inline"
-                  onsubmit="return confirm('Retirer ce membre du workspace ?')">
+                  onsubmit="return confirm('{{ t('ws.remove_confirm') }}')">
               <input type="hidden" name="action" value="remove_member">
               <input type="hidden" name="target_user_id" value="{{ m.user_id }}">
-              <button class="danger">Retirer</button>
+              <button class="danger">{{ t('ws.remove') }}</button>
             </form>
           {% endif %}
         </td>
       </tr>
-    {% else %}<tr><td colspan="3">Aucun membre.</td></tr>{% endfor %}
+    {% else %}<tr><td colspan="3">{{ t('ws.members.empty') }}</td></tr>{% endfor %}
     </tbody>
   </table></div>
 </section>
 
 {% if can_admin %}
 <section class="card">
-  <h2>Invitations en attente</h2>
+  <h2>{{ t('ws.invites.title') }}</h2>
   <div class="tableWrap"><table>
-    <thead><tr><th>Email</th><th>Rôle</th><th>Expiration</th><th></th></tr></thead>
+    <thead><tr><th>{{ t('ws.table.email') }}</th><th>{{ t('ws.table.role') }}</th><th>{{ t('ws.table.expiration') }}</th><th></th></tr></thead>
     <tbody>
     {% for i in invitations %}
       <tr>
@@ -136,11 +136,11 @@
           <form method="post" action="/app/workspace/action" class="inline">
             <input type="hidden" name="action" value="revoke_invite">
             <input type="hidden" name="invitation_id" value="{{ i.id }}">
-            <button class="danger">Annuler</button>
+            <button class="danger">{{ t('ws.cancel') }}</button>
           </form>
         </td>
       </tr>
-    {% else %}<tr><td colspan="4">Aucune invitation en attente.</td></tr>{% endfor %}
+    {% else %}<tr><td colspan="4">{{ t('ws.invites.empty') }}</td></tr>{% endfor %}
     </tbody>
   </table></div>
 </section>
@@ -148,21 +148,20 @@
 
 {% if can_delete %}
 <section class="card dangerZone">
-  <h2>Supprimer le workspace</h2>
-  <p>Cette action retire immédiatement l'accès à ce workspace pour tous ses membres. Les sujets, médias,
-     comptes sociaux et publications associés ne seront plus accessibles depuis l'application.</p>
-  <form method="post" action="/app/workspace/action" class="deleteWorkspaceForm" data-workspace-name="{{ ws.name or '' }}">
+  <h2>{{ t('ws.delete.title') }}</h2>
+  <p>{{ t('ws.delete.warning') }}</p>
+  <form method="post" action="/app/workspace/action" class="deleteWorkspaceForm" data-workspace-name="{{ ws.name or '' }}"
+        data-mismatch-msg="{{ t('ws.delete.mismatch') }}" data-confirm-msg="{{ t('ws.delete.confirm_prompt', name=(ws.name or '')) }}">
     <input type="hidden" name="action" value="delete">
-    <div class="field"><label>Pour confirmer, saisis exactement <b>{{ ws.name or '' }}</b></label>
-      <input name="name" required autocomplete="off" placeholder="Nom exact du workspace"></div>
-    <button type="submit" class="danger deleteWorkspaceBtn">Supprimer le workspace</button>
+    <div class="field"><label>{{ t('ws.delete.confirm_label', name=('<b>' ~ (ws.name or '') ~ '</b>')) | safe }}</label>
+      <input name="name" required autocomplete="off" placeholder="{{ t('ws.delete.placeholder') }}"></div>
+    <button type="submit" class="danger deleteWorkspaceBtn">{{ t('ws.delete.submit') }}</button>
   </form>
 </section>
 {% elif can_delete_base and not has_alternative_workspace %}
 <section class="card dangerZone">
-  <h2>Supprimer le workspace</h2>
-  <p>Ce workspace est le dernier workspace auquel ton compte a accès. Crée d'abord un autre workspace depuis
-     la liste déroulante en haut de page avant de pouvoir supprimer celui-ci.</p>
+  <h2>{{ t('ws.delete.title') }}</h2>
+  <p>{{ t('ws.delete.last_workspace') }}</p>
 </section>
 {% endif %}
 {% endblock %}
@@ -177,10 +176,10 @@
       var actual=String(input&&input.value||'').trim();
       if(!expected||actual!==expected){
         event.preventDefault();
-        alert('Le nom saisi ne correspond pas exactement au nom du workspace.');
+        alert(form.getAttribute('data-mismatch-msg')||'');
         if(input)input.focus();return;
       }
-      if(!confirm('Supprimer définitivement le workspace « '+expected+' » ?'))event.preventDefault();
+      if(!confirm(form.getAttribute('data-confirm-msg')||''))event.preventDefault();
     });
   });
   try{
@@ -189,8 +188,8 @@
     const link=u.searchParams.get('invite_link');const f=document.getElementById('flash');
     if(ok||err||link){
       f.className='notice'+(err?' error':'');
-      f.textContent=err||ok||(link?'Invitation créée : '+link:'');
-      if(link){const a=document.createElement('a');a.href=link;a.textContent=' Ouvrir le lien';a.style.marginLeft='8px';f.appendChild(a);}
+      f.textContent=err||ok||(link?{{ t('ws.invite.created') | tojson }}:'');
+      if(link){const a=document.createElement('a');a.href=link;a.textContent={{ (' ' ~ t('ws.invite.open_link')) | tojson }};a.style.marginLeft='8px';f.appendChild(a);}
       u.searchParams.delete('success');u.searchParams.delete('error');u.searchParams.delete('invite_link');
       history.replaceState({},'',u.pathname+(u.searchParams.toString()?'?'+u.searchParams.toString():''));
     }

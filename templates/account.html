@@ -45,9 +45,9 @@
 {% endblock %}
 {% block content %}
 <section class="header">
-  <div class="eyebrow">Compte</div>
-  <h1>Mon compte</h1>
-  <p>Consulte tes informations personnelles et ouvre les formulaires uniquement lorsque tu souhaites les modifier.</p>
+  <div class="eyebrow">{{ t('acc.eyebrow') }}</div>
+  <h1>{{ t('acc.title') }}</h1>
+  <p>{{ t('acc.subtitle') }}</p>
 </section>
 
 {% if banner_message %}<div class="banner {{ banner_type }}">{{ banner_message }}</div>{% endif %}
@@ -61,64 +61,64 @@
     </div>
   </div>
   <div class="grid2">
-    <div class="info"><span>Prénom</span><b>{{ auth_user.first_name or "—" }}</b></div>
-    <div class="info"><span>Nom</span><b>{{ auth_user.last_name or "—" }}</b></div>
-    <div class="info"><span>Email</span><b>{{ auth_user.email }}</b></div>
-    <div class="info"><span>Compte activé</span><b>{{ activated_at or "—" }}</b></div>
-    <div class="info"><span>Fuseau horaire</span><b>{{ auth_user.timezone }}</b></div>
+    <div class="info"><span>{{ t('auth.field.firstname') }}</span><b>{{ auth_user.first_name or "—" }}</b></div>
+    <div class="info"><span>{{ t('auth.field.lastname') }}</span><b>{{ auth_user.last_name or "—" }}</b></div>
+    <div class="info"><span>{{ t('auth.field.email') }}</span><b>{{ auth_user.email }}</b></div>
+    <div class="info"><span>{{ t('acc.info.activated') }}</span><b>{{ activated_at or "—" }}</b></div>
+    <div class="info"><span>{{ t('acc.info.timezone') }}</span><b>{{ auth_user.timezone }}</b></div>
   </div>
   <div class="actions">
-    <button class="btn primary" type="button" data-toggle-panel="profilePanel">Modifier</button>
-    <button class="btn secondary" type="button" data-toggle-panel="passwordPanel">Modifier le mot de passe</button>
+    <button class="btn primary" type="button" data-toggle-panel="profilePanel">{{ t('acc.edit') }}</button>
+    <button class="btn secondary" type="button" data-toggle-panel="passwordPanel">{{ t('acc.edit_password') }}</button>
   </div>
 </section>
 
 <section class="card editPanel" id="profilePanel" hidden>
-  <h2 class="sectionTitle">Modifier mes informations</h2>
+  <h2 class="sectionTitle">{{ t('acc.profile.title') }}</h2>
   <form method="post" action="/app/account">
     <input type="hidden" name="action" value="profile">
     <div class="formGrid">
-      <div class="field"><label>Prénom <span class="req">*</span></label>
+      <div class="field"><label>{{ t('auth.field.firstname') }} <span class="req">*</span></label>
         <input name="first_name" value="{{ auth_user.first_name }}" required></div>
-      <div class="field"><label>Nom <span class="req">*</span></label>
+      <div class="field"><label>{{ t('auth.field.lastname') }} <span class="req">*</span></label>
         <input name="last_name" value="{{ auth_user.last_name }}" required></div>
-      <div class="field full"><label>Email <span class="req">*</span></label>
+      <div class="field full"><label>{{ t('auth.field.email') }} <span class="req">*</span></label>
         <input name="email" type="email" value="{{ auth_user.email }}" required>
-        <div class="hint">Si tu modifies ton email, le compte sera désactivé et un nouveau lien d'activation sera envoyé à la nouvelle adresse.</div>
+        <div class="hint">{{ t('acc.field.email_hint') }}</div>
       </div>
-      <div class="field full"><label>Mot de passe actuel</label>
+      <div class="field full"><label>{{ t('acc.field.current_password') }}</label>
         <input name="current_password" type="password" autocomplete="current-password">
-        <div class="hint">Obligatoire uniquement si tu changes l'email.</div>
+        <div class="hint">{{ t('acc.field.current_password_hint') }}</div>
       </div>
     </div>
     <div class="actions">
-      <button class="btn save" type="submit">Enregistrer</button>
-      <button class="btn secondary" type="button" data-close-panel="profilePanel">Annuler</button>
+      <button class="btn save" type="submit">{{ t('acc.save') }}</button>
+      <button class="btn secondary" type="button" data-close-panel="profilePanel">{{ t('acc.cancel') }}</button>
     </div>
   </form>
 </section>
 
 <section class="card editPanel" id="passwordPanel" hidden>
-  <h2 class="sectionTitle">Modifier mon mot de passe</h2>
+  <h2 class="sectionTitle">{{ t('acc.password.title') }}</h2>
   <form method="post" action="/app/account">
     <input type="hidden" name="action" value="password">
     <div class="formGrid">
-      <div class="field full"><label>Mot de passe actuel <span class="req">*</span></label>
+      <div class="field full"><label>{{ t('acc.field.current_password') }} <span class="req">*</span></label>
         <input name="current_password" type="password" autocomplete="current-password" required></div>
-      <div class="field"><label>Nouveau mot de passe <span class="req">*</span></label>
+      <div class="field"><label>{{ t('acc.field.new_password') }} <span class="req">*</span></label>
         <input name="new_password" type="password" autocomplete="new-password" required minlength="10"></div>
-      <div class="field"><label>Confirmer <span class="req">*</span></label>
+      <div class="field"><label>{{ t('auth.field.confirm_password') }} <span class="req">*</span></label>
         <input name="confirm_password" type="password" autocomplete="new-password" required minlength="10"></div>
     </div>
-    <div class="warning">Le nouveau mot de passe doit contenir au moins 10 caractères.</div>
+    <div class="warning">{{ t('acc.password.warning') }}</div>
     <div class="actions">
-      <button class="btn save" type="submit">Modifier le mot de passe</button>
-      <button class="btn secondary" type="button" data-close-panel="passwordPanel">Annuler</button>
+      <button class="btn save" type="submit">{{ t('acc.edit_password') }}</button>
+      <button class="btn secondary" type="button" data-close-panel="passwordPanel">{{ t('acc.cancel') }}</button>
     </div>
   </form>
 </section>
 
-<section class="actions"><a class="btn primary" href="/app/posts">Retour aux sujets</a></section>
+<section class="actions"><a class="btn primary" href="/app/posts">{{ t('acc.back_to_subjects') }}</a></section>
 {% endblock %}
 {% block scripts %}
 <script>

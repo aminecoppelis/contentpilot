@@ -24,7 +24,7 @@ from app.services.mailer import send_activation_email, send_account_change_email
 from app.user_timezone import valid_timezone_name, format_user_datetime
 
 router = APIRouter(tags=["Auth"])
-templates = Jinja2Templates(directory="templates")
+from app.templating import templates
 
 
 def _client_ip(request: Request) -> str:
@@ -235,6 +235,36 @@ async def get_logout(request: Request, user=Depends(get_current_user)):
             await conn.execute(sql("auth/revoke_session.sql"), user.session_id)
     response = RedirectResponse("/app/login", status_code=302)
     response.delete_cookie(settings.session_cookie_name, path="/")
+    return response
+
+
+# ---------------------------------------------------------------------------
+# GET /locale — change de langue (cookie + persistance BDD si connecté)
+# ---------------------------------------------------------------------------
+
+@router.get("/locale")
+async def set_locale(request: Request, to: str = "", next: str = "/app/dashboard",
+                     user=Depends(get_current_user)):
+    from app.i18n import COOKIE_NAME, COOKIE_MAX_AGE, is_supported, normalize_locale
+
+    target = safe_redirect(next)
+    response = RedirectResponse(target, status_code=302)
+    if is_supported(to):
+        locale = normalize_locale(to)
+        response.set_cookie(
+            COOKIE_NAME, locale, max_age=COOKIE_MAX_AGE, path="/", samesite="lax",
+            secure=get_settings().session_cookie_secure,
+        )
+        if user and getattr(user, "id", None):
+            try:
+                pool = get_pool()
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        "UPDATE public.app_users SET locale = $2 WHERE id = $1",
+                        user.id, locale,
+                    )
+            except Exception:  # noqa: BLE001 — la préférence cookie suffit
+                pass
     return response
 
 
