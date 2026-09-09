@@ -2,32 +2,11 @@
 {% block title %}Mes sujets · Post Generator{% endblock %}
 {% block extra_style %}
 <style>
-  .hero{background:rgba(255,255,255,.92);border:1px solid var(--line);border-radius:22px;
-    box-shadow:0 16px 44px rgba(15,23,42,.07);padding:22px;margin-bottom:18px}
-  .hero h1{margin:0 0 6px;font-size:34px;letter-spacing:-.04em}
-  .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
-  .btn,button{border:0;border-radius:13px;padding:10px 13px;font-weight:900;cursor:pointer;
-    text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:inherit}
-  .btn.primary,button.primary{background:linear-gradient(135deg,var(--primary),#06b6d4);color:#fff}
-  .btn.light,button.light{background:#f1f5f9;color:#0f172a}
-  .btn.danger,button.danger{background:#dc2626;color:#fff}
-  .tableWrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:18px}
-  table{width:100%;border-collapse:collapse;min-width:960px}
-  th,td{text-align:left;padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:middle;
-    font-size:14px;line-height:1.35}
-  thead th{white-space:nowrap;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
-  tbody td:nth-child(3),tbody td:nth-child(4),tbody td:nth-child(5){text-align:center}
-  .mini{font-size:11px;color:var(--muted);margin-top:3px}
-  .status{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:900;
-    text-transform:uppercase;letter-spacing:.03em}
-  .status.generated,.status.approved{background:#dcfce7;color:#166534}
-  .status.generating,.status.generating_more{background:#fef3c7;color:#92400e}
-  .status.pending_review,.status.ready_for_review,.status.needs_changes{background:#e0e7ff;color:#3730a3}
-  .status.error{background:#fee2e2;color:#991b1b}
-  .status.draft,.status.no_ideas{background:#f1f5f9;color:#475569}
-  .status.published{background:#dbeafe;color:#1e40af}
-  .inlineForm{margin:0;display:inline}
-  .tableWrap tbody .actions{margin-top:0;align-items:center;justify-content:flex-start;flex-wrap:nowrap;gap:10px}
+  /* Tout le reste (hero, boutons, table, statuts, actions) vient d'ui-kit.css.
+     Ici : seulement le centrage des colonnes numériques de CETTE table. */
+  #postRequestRows td:nth-child(3),
+  #postRequestRows td:nth-child(4),
+  #postRequestRows td:nth-child(5) { text-align: center; }
 </style>
 {% endblock %}
 {% block content %}
@@ -87,23 +66,22 @@ window.__I18N_POSTS_LIST = {{ {
 } | tojson }};
 /* Port du comportement de suppression en liste (toast + suppression de ligne sans reload) */
 function showListToast(message, type){
-  var existing=document.getElementById('listToast');
-  if(!existing){
-    existing=document.createElement('div');
-    existing.id='listToast';
-    existing.style.position='fixed';existing.style.right='18px';existing.style.bottom='18px';
-    existing.style.zIndex='9999';existing.style.maxWidth='360px';existing.style.borderRadius='14px';
-    existing.style.padding='12px 14px';existing.style.fontWeight='900';
-    existing.style.boxShadow='0 18px 44px rgba(15,23,42,.18)';
-    document.body.appendChild(existing);
+  var el=document.getElementById('listToast');
+  if(!el){
+    el=document.createElement('div');
+    el.id='listToast';
+    el.className='pgToast';
+    el.setAttribute('role','status');
+    document.body.appendChild(el);
   }
-  existing.textContent=message||'';
-  existing.style.background=type==='error' ? '#fee2e2' : '#dcfce7';
-  existing.style.color=type==='error' ? '#991b1b' : '#166534';
-  existing.style.border=type==='error' ? '1px solid #fecaca' : '1px solid #bbf7d0';
-  existing.style.display='block';
-  clearTimeout(existing.__timer);
-  existing.__timer=setTimeout(function(){ existing.style.display='none'; }, 3500);
+  el.textContent=message||'';
+  el.classList.toggle('isError', type==='error');
+  el.classList.toggle('isOk', type!=='error');
+  // reflow pour rejouer la transition
+  void el.offsetWidth;
+  el.classList.add('isVisible');
+  clearTimeout(el.__timer);
+  el.__timer=setTimeout(function(){ el.classList.remove('isVisible'); }, 3500);
 }
 async function deleteRequestFromList(event, form){
   event.preventDefault();

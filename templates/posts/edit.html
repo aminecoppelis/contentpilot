@@ -13,7 +13,7 @@
   <form class="form editRequestForm" method="post" action="/app/posts/edit">
     <input type="hidden" name="id" value="{{ r.id }}">
     <div class="row editRequestRow">
-      <div class="field"><label>Sujet <span style="color:#dc2626">*</span></label>
+      <div class="field"><label>Sujet <span style="color:var(--danger)">*</span></label>
         <textarea name="subject" required maxlength="300" data-char-limit="300" class="editSubjectInput">{{ r.subject or '' }}</textarea></div>
       <div class="field"><label>Nombre d'idées</label>
         <input name="post_count" type="number" min="1" max="8" value="{{ r.post_count or 3 }}"></div>

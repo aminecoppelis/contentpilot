@@ -2,45 +2,45 @@
 {% block title %}Configuration Meta · Administration{% endblock %}
 {% block extra_style %}
 <style>
-  .hero{background:rgba(255,255,255,.9);border:1px solid rgba(148,163,184,.28);border-radius:26px;
-    padding:26px 28px;margin-bottom:18px;box-shadow:0 16px 44px rgba(15,23,42,.07)}
-  .eyebrow{font-size:13px;font-weight:900;color:var(--primary);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px}
+  /* Couleurs tokenisées (clair + sombre), accent unique #3b82f6. */
   .titleLine{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .hero h1{margin:0;font-size:30px;letter-spacing:-.035em}
-  .hero p.muted{color:var(--muted);line-height:1.55;margin:12px 0 0;font-size:14px}
   .metaInfo{position:relative;display:inline-flex}
-  .metaInfo>summary{list-style:none;width:28px;height:28px;border-radius:999px;background:#eef2ff;
-    color:#4338ca;border:1px solid #c7d2fe;display:inline-flex;align-items:center;justify-content:center;
-    font-weight:950;cursor:pointer;font-size:14px}
+  .metaInfo>summary{list-style:none;width:28px;height:28px;border-radius:999px;background:var(--brand-tint);
+    color:var(--brand);border:1px solid var(--brand-tint-2);display:inline-flex;align-items:center;justify-content:center;
+    font-weight:800;cursor:pointer;font-size:14px}
   .metaInfo>summary::-webkit-details-marker{display:none}
-  .metaInfoBubble{position:absolute;left:0;top:calc(100% + 10px);width:min(460px,80vw);background:#fff;
+  .metaInfoBubble{position:absolute;left:0;top:calc(100% + 10px);width:min(460px,80vw);background:var(--surface);
     border:1px solid var(--line);border-radius:18px;padding:18px;z-index:900;
-    box-shadow:0 24px 60px rgba(15,23,42,.18);font-size:13px;line-height:1.55;color:#334155}
+    box-shadow:var(--shadow-pop);font-size:13px;line-height:1.55;color:var(--ink-2)}
+  .metaInfoBubble b,.metaInfoBubble strong{color:var(--ink)}
   .metaInfoBubble p{margin:10px 0 0}
-  .notice{border-radius:14px;padding:13px 15px;margin-bottom:16px;font-size:13px;line-height:1.5;font-weight:750}
-  .notice.success{background:#ecfdf5;border:1px solid #bbf7d0;color:#047857}
-  .notice.error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
-  .panel{background:#fff;border:1px solid var(--line);border-radius:22px;padding:24px;
-    box-shadow:0 12px 34px rgba(15,23,42,.05)}
+  .notice{border-radius:14px;padding:13px 15px;margin-bottom:16px;font-size:13px;line-height:1.5;font-weight:700;
+    border:1px solid transparent}
+  .notice.success{background:var(--success-tint);border-color:transparent;color:var(--success-ink)}
+  .notice.error{background:var(--danger-tint);border-color:transparent;color:var(--danger-ink)}
+  .notice.warn{background:var(--warn-tint);border-color:transparent;color:var(--warn-ink)}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card);padding:24px;
+    box-shadow:var(--shadow-card)}
   .globalGrid{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:22px}
   .providerGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   @media(max-width:900px){.globalGrid,.providerGrid{grid-template-columns:1fr}}
-  .provider{border:1px solid var(--line);border-radius:18px;padding:20px;background:#fbfcfe}
-  .provider h2{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 16px;font-size:19px}
+  .provider{border:1px solid var(--line);border-radius:18px;padding:20px;background:var(--surface-2)}
+  .provider h2{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 16px;font-size:19px;color:var(--ink)}
   .field{margin-bottom:14px}
-  .field label{display:block;font-weight:900;font-size:13px;color:#334155;margin-bottom:7px}
-  .field input,.field textarea{width:100%;border:1px solid #cbd5e1;border-radius:13px;padding:11px 13px;font:inherit;font-size:14px}
+  .field label{display:block;font-weight:700;font-size:13px;color:var(--ink-2);margin-bottom:7px}
+  .field input,.field textarea{width:100%;border:1px solid var(--line-2);border-radius:12px;padding:11px 13px;font:inherit;font-size:14px;
+    background:var(--surface);color:var(--ink)}
   .field textarea{min-height:88px;resize:vertical}
-  .hint{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.45}
-  .toggle{display:flex;align-items:center;gap:9px;font-weight:850;font-size:13px;margin:14px 0}
+  .hint{margin-top:6px;color:var(--ink-2);font-size:12px;line-height:1.45}
+  .toggle{display:flex;align-items:center;gap:9px;font-weight:700;font-size:13px;margin:14px 0;color:var(--ink)}
   .toggle input{width:auto}
   .actions{margin-top:14px}
-  .btn.primary{border:0;border-radius:13px;padding:12px 16px;font-weight:900;cursor:pointer;font:inherit;
-    background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;width:100%}
-  .statusPill{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
+  .btn.primary{border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer;font:inherit;
+    background:var(--brand);color:#fff;width:100%}
+  .statusPill{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
     border-radius:999px;padding:4px 10px}
-  .statusPill.on{background:#dcfce7;color:#166534}
-  .statusPill.off{background:#f1f5f9;color:#64748b}
+  .statusPill.on{background:var(--success-tint);color:var(--success-ink)}
+  .statusPill.off{background:var(--neutral-tint);color:var(--neutral-ink)}
 </style>
 {% endblock %}
 {% block content %}
@@ -67,7 +67,7 @@
 
 {% if notice %}<div class="notice {{ 'error' if notice_error else 'success' }}">{{ notice }}</div>{% endif %}
 
-<div class="notice" style="background:#fff7ed;border:1px solid #fed7aa;color:#9a3412">
+<div class="notice warn">
   <b>Accès aux comptes externes</b><br>Pour connecter des personnes qui ne sont ni développeurs ni testeurs de
   l'application, les applications Facebook et Instagram doivent être en mode Live avec les accès avancés approuvés.
   Cette contrainte vient de Meta et ne peut pas être contournée par le workflow.

@@ -28,17 +28,47 @@
   --brand-tint: #eaf2ff;
   --brand-tint-2: #d8e8ff;
   --brand-grad: #3b82f6;
+  --brand-surface: #eef4ff;   /* fond OPAQUE (icônes, pastilles) — jamais translucide */
+  --brand-ring: rgba(59, 130, 246, .35);
 
   --danger: #e5484d;
   --danger-tint: #fdecec;
+  --danger-ink: #b42318;
   --success: #16a34a;
   --success-tint: #e9f7ef;
+  --success-ink: #0f7a37;
   --warn: #d97706;
+  --warn-tint: #fef3e2;
+  --warn-ink: #b45309;
+  --neutral-tint: #eef1f5;
+  --neutral-ink: #5b6472;
+
+  /* Échelle d'espacement — un seul rythme partout. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+
+  /* Échelle typographique. */
+  --text-xs: 11.5px;
+  --text-sm: 12.5px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-display: clamp(1.7rem, 1.2rem + 2vw, 2rem);
 
   --radius-card: 16px;
   --radius-md: 12px;
   --radius-sm: 10px;
   --radius-pill: 999px;
+
+  --dur: .15s;
+  --lift: -2px;
 
   --shadow-card: 0 1px 2px rgba(16, 24, 40, .04), 0 1px 3px rgba(16, 24, 40, .06);
   --shadow-pop: 0 12px 32px rgba(16, 24, 40, .14);
@@ -80,14 +110,22 @@
   --line-2: #363b45;
 
   --ink: #e7e9ee;
-  --ink-2: #a3abb8;
-  --ink-3: #6b7280;
+  --ink-2: #a9b1be;
+  --ink-3: #7d8694;   /* remonté pour le contraste des labels 11px sur fond sombre */
 
   --brand-tint: rgba(59, 130, 246, .18);
   --brand-tint-2: rgba(59, 130, 246, .34);
+  --brand-surface: #1e2b40;   /* fond opaque sombre à teinte bleue */
+  --brand-ring: rgba(96, 165, 250, .5);
 
-  --danger-tint: rgba(229, 72, 77, .16);
-  --success-tint: rgba(22, 163, 74, .16);
+  --danger-tint: rgba(229, 72, 77, .18);
+  --danger-ink: #ff8b8b;
+  --success-tint: rgba(22, 163, 74, .18);
+  --success-ink: #5fd08a;
+  --warn-tint: rgba(217, 119, 6, .18);
+  --warn-ink: #f0b366;
+  --neutral-tint: #262b34;
+  --neutral-ink: #a9b1be;
 
   --shadow-card: 0 1px 2px rgba(0, 0, 0, .4), 0 1px 3px rgba(0, 0, 0, .3);
   --shadow-pop: 0 16px 40px rgba(0, 0, 0, .55);
@@ -121,6 +159,102 @@ body {
 }
 
 .app-layout { display: flex; min-height: 100vh; width: 100%; }
+
+/* =====================================================================
+   RESET + CONTENEUR DE PAGE  (absorbés de layout.css)
+   ui-kit devient autosuffisant pour la structure : plus besoin de
+   layout.css sur les pages internes. Règles alignées sur l'existant
+   → aucun changement visuel, juste la source de vérité qui bouge.
+   ===================================================================== */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }            /* reset repris de theme.css */
+html, body { overflow-x: hidden; }
+body { margin: 0; min-height: 100vh; }
+a { text-decoration: none; color: inherit; }
+/* garde anti-clip de dégradé sur les paragraphes (reprise de theme.css) */
+p { background: none; -webkit-text-fill-color: currentColor; }
+
+.wrap, .app, .app-content-wrapper {
+  max-width: 1540px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-5) 70px;
+}
+@media (max-width: 900px) {
+  .wrap, .app, .app-content-wrapper { padding: var(--space-4) var(--space-4) 60px; }
+}
+
+/* Grille utilitaire (cartes auto-remplissantes) */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+.grid.one { grid-template-columns: 1fr; }
+
+/* Garde anti-étirement des boutons en flex/grid (absorbée de layout.css) :
+   sans elle, « Modifier », « Nouveau sujet », « Retour »… prennent toute
+   la largeur de leur conteneur. */
+.btn, .btn-primary, a.btn, button.btn,
+.rowActions .btn, .actions .btn, .strategyTableActions .btn {
+  width: auto;
+  max-width: max-content;
+  flex: 0 0 auto;
+}
+/* Exceptions : boutons pleine largeur assumés */
+.auth-shell .btn,
+.select2Button,
+.pgWorkspaceAddButton,
+.networkKebabMenu .btn,
+.publishedBulkDeleteBtn,
+.has-sidebar .btn.block,
+.has-sidebar .btn-cta,
+.has-sidebar .btn.newSubjectSubmit,
+.has-sidebar .newSubjectSubmit {
+  width: 100%;
+  max-width: none;
+}
+
+/* Base de modale (fallback à spécificité nulle : toute page qui la
+   restyle l'emporte). Absorbée de layout.css. */
+:where(.modalOverlay) {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, .55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 10000;
+}
+:where(.modalOverlay.show, .modalOverlay.isVisible, .modalOverlay.isOpen) { display: flex; }
+
+/* =====================================================================
+   ACCESSIBILITÉ — anneau de focus unique + mouvement réduit
+   Non limité à .has-sidebar : couvre aussi les pages login / register.
+   ===================================================================== */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+.btn:focus-visible,
+.sidebar-item:focus-visible {
+  outline: 2px solid var(--brand, #3b82f6);
+  outline-offset: 2px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .has-sidebar *:hover { transform: none !important; }
+}
 
 /* =====================================================================
    SIDEBAR
@@ -598,7 +732,7 @@ body {
 .has-sidebar .pageHeader .h1,
 .has-sidebar .page-head h1 {
   margin: 2px 0 6px !important;
-  font-size: 32px !important;
+  font-size: clamp(1.6rem, 1.15rem + 1.8vw, 2rem) !important;
   line-height: 1.15 !important;
   font-weight: 800 !important;
   letter-spacing: -.03em !important;
@@ -674,10 +808,130 @@ body {
   color: #fff;
 }
 .cardHead .cardIcon svg { width: 22px; height: 22px; }
-.cardHead .cardIcon.is-danger { background: linear-gradient(135deg, #fb7185, #ef4444); }
-.cardHead .cardIcon.is-green { background: linear-gradient(135deg, #34d399, #10b981); }
+.cardHead .cardIcon.is-danger { background: var(--danger) !important; background-image: none !important; }
+.cardHead .cardIcon.is-green { background: var(--success) !important; background-image: none !important; }
 .cardHead h2, .cardHead h3 { margin: 0; font-size: 17px; font-weight: 800; }
 .cardHead p { margin: 3px 0 0; color: var(--ink-2); font-size: 13px; }
+
+/* =====================================================================
+   TABLEAU DE BORD & PANNEAUX (composants réutilisables)
+   Auparavant définis en <style> inline dans posts/dashboard.html.
+   ===================================================================== */
+.dashWrap { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.kpiGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
+.kpiCard {
+  display: flex; flex-direction: column; gap: var(--space-1);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-card);
+  transition: border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.kpiCard:hover { border-color: var(--brand-tint-2); box-shadow: var(--shadow-pop); }
+.kpiTop { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); }
+.kpiLabel {
+  font-size: var(--text-xs); font-weight: 800; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--ink-3); line-height: 1.35; padding-top: 2px;
+}
+.kpiIcon {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: var(--radius-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--brand-surface); color: var(--brand);
+}
+.kpiIcon svg { width: 18px; height: 18px; }
+.kpiValue {
+  font-size: 32px; font-weight: 800; letter-spacing: -.03em; line-height: 1;
+  color: var(--ink); margin-top: var(--space-2);
+}
+.kpiHint { display: flex; align-items: center; gap: 7px; font-size: var(--text-sm); color: var(--ink-2); margin-top: var(--space-1); }
+.kpiHint::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--brand); opacity: .55; flex: 0 0 auto; }
+.kpiHint.is-alert { color: var(--danger-ink); }
+.kpiHint.is-alert::before { background: var(--danger); opacity: 1; }
+
+.dashMain { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); align-items: start; }
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-card);
+}
+.panelHead { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.panelIcon {
+  flex: 0 0 auto; width: 36px; height: 36px; border-radius: var(--radius-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--brand-surface); color: var(--brand);
+}
+.panelIcon svg { width: 18px; height: 18px; }
+.panelHead h2 { flex: 1; min-width: 0; margin: 0; font-size: var(--text-lg); font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
+
+.dashRetryBtn {
+  flex: 0 0 auto;
+  border: 1px solid var(--line-2); background: var(--surface);
+  border-radius: 999px; padding: 7px 13px;
+  font-size: 12px; font-weight: 700; color: var(--ink-2); cursor: pointer;
+  transition: border-color var(--dur) ease, color var(--dur) ease, background var(--dur) ease;
+}
+.dashRetryBtn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-tint); }
+.dashRetryBtn:disabled { opacity: .6; cursor: not-allowed; }
+
+.nextActionsList { display: grid; gap: var(--space-2); }
+.nextCard {
+  display: block;
+  border: 1px solid var(--brand-tint-2);
+  background: var(--brand-tint);
+  border-radius: 14px; padding: 13px 14px;
+  text-decoration: none; color: inherit;
+  transition: transform var(--dur) ease, border-color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.nextActionLink:hover { transform: translateY(-1px); border-color: var(--brand); box-shadow: var(--shadow-card); }
+.nextCardItem { display: flex; align-items: center; gap: var(--space-3); }
+.nextActionRank {
+  flex: 0 0 30px; width: 30px; height: 30px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface); border: 1px solid var(--brand-tint-2);
+  color: var(--brand); font-size: 12px; font-weight: 800;
+}
+.nextActionText { min-width: 0; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.nextActionText b { font-size: var(--text-md); line-height: 1.3; color: var(--ink); }
+.nextActionText small { color: var(--ink-2); font-size: 12px; line-height: 1.4; }
+.nextActionArrow { flex: 0 0 auto; color: var(--brand); font-size: 20px; line-height: 1; }
+
+.recentList, .todoList { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.recentList li, .todoList li {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  border: 1px solid var(--line); border-radius: var(--radius-md);
+  padding: 11px 13px; font-size: 13px; color: var(--ink-2);
+}
+
+/* ---- État vide UNIFIÉ : icône en cercle teinté + titre + texte + CTA ---- */
+.emptyState {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-2); padding: var(--space-8) var(--space-4); text-align: center;
+  color: var(--ink-2); font-size: 13px; line-height: 1.55;
+}
+.emptyState > svg,
+.emptyState .emptyIcon {
+  width: 46px; height: 46px; flex: 0 0 auto;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px;
+  background: var(--brand-surface); color: var(--brand);
+  margin-bottom: var(--space-1);
+}
+.emptyState .emptyIcon svg { width: 22px; height: 22px; }
+.emptyState > svg { padding: 12px; }
+.emptyState .emptyTitle { font-size: var(--text-md); font-weight: 700; color: var(--ink); }
+.emptyState .btn { margin-top: var(--space-2); }
+
+@media (max-width: 1100px) {
+  .kpiGrid { grid-template-columns: repeat(2, 1fr); }
+  .dashMain { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .kpiGrid { grid-template-columns: 1fr; }
+}
 
 /* =====================================================================
    BOUTONS
@@ -765,6 +1019,35 @@ body {
   border-radius: 14px;
 }
 
+/* Variantes de gabarit / de ton — formalisées (avant : `.tiny` au cas par cas) */
+.has-sidebar .btn.sm,
+.has-sidebar .btn.tiny { padding: 6px 12px; font-size: var(--text-sm); border-radius: var(--radius-sm); }
+.has-sidebar .btn.lg { padding: 12px 22px; font-size: 15px; border-radius: 14px; }
+.has-sidebar .btn.ghost {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--ink-2) !important;
+}
+.has-sidebar .btn.ghost:hover {
+  background: var(--surface-2) !important;
+  border-color: var(--line-2) !important;
+  color: var(--ink) !important;
+}
+.has-sidebar .btn.icon,
+.has-sidebar .iconBtn {
+  width: 36px; height: 36px;
+  padding: 0 !important;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink-2);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.has-sidebar .btn.icon svg,
+.has-sidebar .iconBtn svg { width: 17px; height: 17px; }
+.has-sidebar .btn.icon:hover,
+.has-sidebar .iconBtn:hover { background: var(--brand-tint); color: var(--brand); border-color: var(--brand-tint-2); }
+
 /* =====================================================================
    CHAMPS
    ===================================================================== */
@@ -796,7 +1079,7 @@ body {
   border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
 }
-.has-sidebar label { font-weight: 700; font-size: 12.5px; color: var(--ink-2); }
+.has-sidebar label { display: block; font-weight: 700; font-size: 12.5px; color: var(--ink-2); }
 
 /* Interrupteur (switch) */
 .switch,
@@ -921,26 +1204,28 @@ body {
 [dir="rtl"] .has-sidebar table:has(td .rowActions) thead th:last-child,
 [dir="rtl"] .has-sidebar table:has(td .strategyTableActions) thead th:last-child { text-align: left; }
 
-/* Le <form> inline qui enveloppe « Supprimer » ne doit pas casser le flex */
-.has-sidebar td .actions .inlineForm,
-.has-sidebar td .rowActions .inlineForm {
+/* NB : `.actions.networkActions` (colonne « Mes réseaux ») est exclue —
+   elle a son propre menu kebab qu'il ne faut pas transformer en boutons. */
+
+/* Tout <form> d'une cellule d'action reste un maillon du flex, sans
+   hauteur ni marge propre. */
+.has-sidebar td .actions:not(.networkActions) form,
+.has-sidebar td .rowActions form,
+.has-sidebar td .strategyTableActions form {
   margin: 0 !important;
+  padding: 0 !important;
   display: inline-flex !important;
   align-items: center;
 }
 
-/* Style unifié de tous les boutons/liens d'action de tableau */
-.has-sidebar td .actions .btn,
-.has-sidebar td .actions > a,
-.has-sidebar td .actions > button,
-.has-sidebar td .actions .inlineForm > button,
-.has-sidebar td .rowActions .btn,
-.has-sidebar td .rowActions > a,
-.has-sidebar td .rowActions > button,
-.has-sidebar td .rowActions .inlineForm > button,
-.has-sidebar td .strategyTableActions .btn,
-.has-sidebar td .strategyTableActions > a,
-.has-sidebar td .strategyTableActions > button {
+/* Style unifié de TOUS les boutons/liens d'action de tableau, quel que
+   soit leur emballage (lien direct, <button>, <form><button>). */
+.has-sidebar td .actions:not(.networkActions) a,
+.has-sidebar td .actions:not(.networkActions) button,
+.has-sidebar td .rowActions a,
+.has-sidebar td .rowActions button,
+.has-sidebar td .strategyTableActions a,
+.has-sidebar td .strategyTableActions button {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
@@ -964,55 +1249,61 @@ body {
   background-image: none !important;
   transition: background .15s ease, border-color .15s ease, color .15s ease;
 }
-.has-sidebar td .actions .btn:hover,
-.has-sidebar td .actions > a:hover,
-.has-sidebar td .actions > button:hover:not(:disabled),
-.has-sidebar td .actions .inlineForm > button:hover:not(:disabled),
-.has-sidebar td .rowActions .btn:hover,
-.has-sidebar td .rowActions > button:hover:not(:disabled),
-.has-sidebar td .strategyTableActions .btn:hover,
-.has-sidebar td .strategyTableActions > a:hover,
-.has-sidebar td .strategyTableActions > button:hover:not(:disabled) {
+.has-sidebar td .actions:not(.networkActions) a:hover,
+.has-sidebar td .actions:not(.networkActions) button:hover:not(:disabled),
+.has-sidebar td .rowActions a:hover,
+.has-sidebar td .rowActions button:hover:not(:disabled),
+.has-sidebar td .strategyTableActions a:hover,
+.has-sidebar td .strategyTableActions button:hover:not(:disabled) {
   background: var(--surface-2) !important;
   border-color: var(--ink-3) !important;
 }
 
 /* Variante primaire / « ouvrir » */
 .has-sidebar td .actions .btn.primary,
-.has-sidebar td .strategyTableActions .btn.primary {
+.has-sidebar td .rowActions .btn.primary,
+.has-sidebar td .strategyTableActions .btn.primary,
+.has-sidebar td .actions .primary,
+.has-sidebar td .rowActions .primary {
   background: var(--brand) !important;
   border-color: var(--brand) !important;
   color: #fff !important;
 }
 
-/* Variante destructive : rouge plein, même gabarit que les autres */
+/* Variante destructive : rouge plein, même gabarit */
 .has-sidebar td .actions .danger,
-.has-sidebar td .actions .btn.danger,
-.has-sidebar td .actions .inlineForm > button.danger,
 .has-sidebar td .rowActions .danger,
-.has-sidebar td .rowActions .btn.danger,
-.has-sidebar td .rowActions .inlineForm > button.danger,
-.has-sidebar td .strategyTableActions .danger,
-.has-sidebar td .strategyTableActions .btn.danger {
+.has-sidebar td .strategyTableActions .danger {
   background: var(--danger) !important;
   border-color: var(--danger) !important;
   color: #fff !important;
 }
 .has-sidebar td .actions .danger:hover:not(:disabled),
-.has-sidebar td .actions .inlineForm > button.danger:hover:not(:disabled),
 .has-sidebar td .rowActions .danger:hover:not(:disabled),
 .has-sidebar td .strategyTableActions .danger:hover:not(:disabled) {
-  background: var(--danger) !important;
-  border-color: var(--danger) !important;
   filter: brightness(.92);
 }
 
-/* État désactivé (ex. « Idées » quand il n'y a pas d'idées) */
+/* Variantes douces (admin : activer / désactiver) */
+.has-sidebar td .rowActions .warn {
+  background: var(--warn-tint) !important;
+  border-color: transparent !important;
+  color: var(--warn-ink) !important;
+}
+.has-sidebar td .rowActions .success {
+  background: var(--success-tint) !important;
+  border-color: transparent !important;
+  color: var(--success-ink) !important;
+}
+
+/* État désactivé */
 .has-sidebar td .actions button:disabled,
-.has-sidebar td .actions .btn:disabled {
+.has-sidebar td .actions .btn:disabled,
+.has-sidebar td .rowActions button:disabled,
+.has-sidebar td .strategyTableActions button:disabled {
   opacity: .5;
   cursor: not-allowed;
-  background: var(--surface-2) !important;
+  filter: none !important;
 }
 
 /* Avatars dans les cellules "Créée par / Publié par" */
@@ -1044,6 +1335,7 @@ body {
 .has-sidebar .alert,
 .has-sidebar .notice {
   border-radius: var(--radius-sm);
+  margin: 0 0 16px;
   padding: 11px 14px;
   font-size: 13px;
   font-weight: 600;
@@ -1059,6 +1351,44 @@ body {
 .has-sidebar .alert-error,
 .has-sidebar .notice.error,
 .has-sidebar .notice.err { background: var(--danger-tint); color: var(--danger); border-color: var(--danger-tint); }
+
+/* =====================================================================
+   TOAST — notification flottante unifiée (remplace les toasts ad hoc
+   construits en JS avec des couleurs codées en dur, cassés en sombre).
+   Usage : <div class="pgToast" role="status"></div> + .isVisible / .isError.
+   ===================================================================== */
+.pgToast {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9999;
+  max-width: 360px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--line-2);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: var(--shadow-pop);
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity .2s ease, transform .2s ease;
+}
+.pgToast.isVisible { opacity: 1; transform: translateY(0); }
+.pgToast.isOk { background: var(--success-tint); border-color: transparent; color: var(--success-ink); }
+.pgToast.isError { background: var(--danger-tint); border-color: transparent; color: var(--danger-ink); }
+[dir="rtl"] .pgToast { right: auto; left: 18px; }
+@media (prefers-reduced-motion: reduce) {
+  .pgToast { transition: opacity .2s ease; transform: none; }
+}
+
+/* Toasts historiques ré-alignés sur le même rendu */
+.dashboardToast { border-radius: var(--radius-md); }
 
 /* =====================================================================
    MOBILE — sidebar en tiroir
@@ -1128,15 +1458,10 @@ body {
 .has-sidebar .pgWorkspaceAddText small { color: #3b82f6 !important; }
 .has-sidebar .pgWorkspaceCreateSubmit { border-color: #3b82f6 !important; background: #3b82f6 !important; }
 
-/* Pastilles / chips / statuts "en attente" (tables.css, dashboard) */
+/* Chips réellement "marque" (compteurs, tags, sélections) — restent bleus.
+   Les statuts, eux, sont désormais sémantiques : voir bloc STATUTS plus bas. */
 .has-sidebar .countPill,
 .has-sidebar .select2Chip,
-.has-sidebar .status.pending_review,
-.has-sidebar .status.ready_for_review,
-.has-sidebar .status.needs_changes,
-.has-sidebar .status.pending,
-.has-sidebar .status.updated,
-.has-sidebar .status-badge,
 .has-sidebar .badge.admin,
 .has-sidebar .tag,
 .has-sidebar .num,
@@ -1145,6 +1470,73 @@ body {
   color: #3b82f6 !important;
   border-color: var(--brand-tint-2) !important;
   box-shadow: none !important;
+}
+
+/* =====================================================================
+   STATUTS — couleurs SÉMANTIQUES (vert / bleu / ambre / rouge / gris).
+   Un seul jeu de règles pour .status, .statusPill, .status-badge, .badge.
+   Placé après le bloc de neutralisation pour l'emporter.
+   ===================================================================== */
+.has-sidebar .status,
+.has-sidebar .statusPill,
+.has-sidebar .status-badge {
+  border: 1px solid transparent !important;
+  background: var(--neutral-tint) !important;
+  color: var(--neutral-ink) !important;
+}
+/* Succès / terminé / actif */
+.has-sidebar .status.published,   .has-sidebar .statusPill.published,
+.has-sidebar .status.approved,    .has-sidebar .statusPill.approved,
+.has-sidebar .status.generated,   .has-sidebar .statusPill.generated,
+.has-sidebar .status.completed,   .has-sidebar .statusPill.completed,
+.has-sidebar .status.done,        .has-sidebar .statusPill.done,
+.has-sidebar .status.active,      .has-sidebar .statusPill.active,
+.has-sidebar .status.on,          .has-sidebar .statusPill.on,
+.has-sidebar .badge.active {
+  background: var(--success-tint) !important;
+  color: var(--success-ink) !important;
+  border-color: color-mix(in srgb, var(--success) 30%, transparent) !important;
+}
+/* En cours / information */
+.has-sidebar .status.generating,      .has-sidebar .statusPill.generating,
+.has-sidebar .status.generating_more, .has-sidebar .statusPill.generating_more,
+.has-sidebar .status.processing,      .has-sidebar .statusPill.processing,
+.has-sidebar .status.running,         .has-sidebar .statusPill.running,
+.has-sidebar .status.queued,          .has-sidebar .statusPill.queued,
+.has-sidebar .status.publishing,      .has-sidebar .statusPill.publishing,
+.has-sidebar .status.scheduled,       .has-sidebar .statusPill.scheduled,
+.has-sidebar .status-badge {
+  background: var(--brand-tint) !important;
+  color: var(--brand) !important;
+  border-color: var(--brand-tint-2) !important;
+}
+/* En attente / à valider / attention */
+.has-sidebar .status.pending,         .has-sidebar .statusPill.pending,
+.has-sidebar .status.pending_review,  .has-sidebar .statusPill.pending_review,
+.has-sidebar .status.ready_for_review,.has-sidebar .statusPill.ready_for_review,
+.has-sidebar .status.needs_changes,   .has-sidebar .statusPill.needs_changes,
+.has-sidebar .status.updated,         .has-sidebar .statusPill.updated {
+  background: var(--warn-tint) !important;
+  color: var(--warn-ink) !important;
+  border-color: color-mix(in srgb, var(--warn) 30%, transparent) !important;
+}
+/* Échec / erreur */
+.has-sidebar .status.failed,   .has-sidebar .statusPill.failed,
+.has-sidebar .status.error,    .has-sidebar .statusPill.error,
+.has-sidebar .status.rejected, .has-sidebar .statusPill.rejected {
+  background: var(--danger-tint) !important;
+  color: var(--danger-ink) !important;
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent) !important;
+}
+/* Inactif / désactivé */
+.has-sidebar .status.off,      .has-sidebar .statusPill.off,
+.has-sidebar .status.inactive, .has-sidebar .statusPill.inactive,
+.has-sidebar .status.paused,   .has-sidebar .statusPill.paused,
+.has-sidebar .status.draft,    .has-sidebar .statusPill.draft,
+.has-sidebar .badge.inactive {
+  background: var(--neutral-tint) !important;
+  color: var(--neutral-ink) !important;
+  border-color: var(--line-2) !important;
 }
 
 /* select2 / filtres ouverts */
@@ -1182,6 +1574,114 @@ body {
 }
 .has-sidebar .nextActionArrow,
 .has-sidebar .nextActionLink:hover { border-color: var(--brand-tint-2) !important; color: #3b82f6 !important; }
+
+/* ---- Consultation (posts/view) & formulaire (posts/new) : hex indigo
+   codés en dur dans consultation.css / form.css → ramenés au bleu unique
+   et au thème sombre. ---- */
+.has-sidebar .num,
+.has-sidebar .tag,
+.has-sidebar .label,
+.has-sidebar .publishAccountTag,
+.has-sidebar .newSubjectCard .msTag,
+.has-sidebar .promptBtn {
+  background: var(--brand-tint) !important;
+  color: var(--brand) !important;
+  border-color: var(--brand-tint-2) !important;
+}
+.has-sidebar .publishAccountTag button,
+.has-sidebar .newSubjectCard .msTag button,
+.has-sidebar .promptBtn:hover { color: var(--brand) !important; background: var(--brand-tint) !important; }
+.has-sidebar .kw {
+  background: var(--success-tint) !important;
+  color: var(--success-ink) !important;
+}
+.has-sidebar .format,
+.has-sidebar .mediaLabel {
+  background: var(--brand-tint) !important;
+  color: var(--brand) !important;
+}
+/* Toolbar de mise en forme + onglets actifs */
+.has-sidebar .formatToolbar button.active,
+.has-sidebar .publishChoice input,
+.has-sidebar .newSubjectCard .msOptionAdd { color: var(--brand) !important; }
+.has-sidebar .formatToolbar button.active {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+  color: #fff !important;
+}
+.has-sidebar .formatToolbar button:hover { border-color: var(--brand-tint-2) !important; background: var(--brand-tint) !important; }
+/* Boutons "média" cyan → bleu, aucun dégradé */
+.has-sidebar .mediaBtn,
+.has-sidebar .mediaHeaderActions .mediaBtn,
+.has-sidebar .mediaPlaceholder .mediaLoadBtn {
+  background: var(--brand) !important;
+  background-image: none !important;
+  color: #fff !important;
+}
+/* Blocs "post prêt" / média : surfaces & bordures tokenisées, zéro dégradé */
+.has-sidebar .postReady,
+.has-sidebar .mediaSection,
+.has-sidebar .block,
+.has-sidebar .reviewNote,
+.has-sidebar .modalIdea,
+.has-sidebar .ideaDetails summary {
+  background: var(--surface-2) !important;
+  background-image: none !important;
+  border-color: var(--line) !important;
+  color: var(--ink-2) !important;
+}
+.has-sidebar .postReady h2,
+.has-sidebar .block p,
+.has-sidebar .ideaTitle { color: var(--ink) !important; }
+.has-sidebar .postReady::before,
+.has-sidebar .card::before { content: none !important; }
+/* Modales de consultation (fond blanc dur → thème) */
+.has-sidebar .modal,
+.has-sidebar .mediaLoaderCard,
+.has-sidebar .publishAccountDropdown,
+.has-sidebar .newSubjectCard .msOptions {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--ink) !important;
+}
+.has-sidebar .modal p,
+.has-sidebar .modalIdea,
+.has-sidebar .publishAccountGroupTitle,
+.has-sidebar .newSubjectCard .msEmpty { color: var(--ink-2) !important; }
+.has-sidebar .modalClose,
+.has-sidebar .modalCancel,
+.has-sidebar .mediaDownload {
+  background: var(--surface-2) !important;
+  color: var(--ink-2) !important;
+  border: 1px solid var(--line-2) !important;
+}
+.has-sidebar .modalConfirm,
+.has-sidebar .copyBtn,
+.has-sidebar .addIdeasControls button {
+  background: var(--brand) !important;
+  background-image: none !important;
+  color: #fff !important;
+  border: 0 !important;
+}
+.has-sidebar .copyBtn.done,
+.has-sidebar .modalConfirm.ok { background: var(--success) !important; }
+.has-sidebar .publishAccountOption.selected,
+.has-sidebar .newSubjectCard .msOption:hover,
+.has-sidebar .publishAccountOption:hover {
+  background: var(--brand-tint) !important;
+  color: var(--brand) !important;
+}
+.has-sidebar .publishAccountOption.selected .publishAccountOptionMark {
+  background: var(--brand) !important;
+  background-image: none !important;
+  color: #fff !important;
+  border-color: transparent !important;
+}
+.has-sidebar .publishChoice:hover { border-color: var(--brand-tint-2) !important; background: var(--surface-2) !important; }
+.has-sidebar .publishRequiredMark,
+.has-sidebar .mediaRemove { color: var(--danger) !important; }
+.has-sidebar .mediaRemove { border-color: var(--danger-tint) !important; background: var(--surface) !important; }
+.has-sidebar .mediaImg { border-color: var(--line-2) !important; background: var(--surface-2) !important; }
 
 /* ---- Topbar : dégraissage responsive ---- */
 @media (max-width: 980px) {
@@ -1242,10 +1742,90 @@ body {
 .has-sidebar .pgWorkspaceAddButton { color: var(--brand) !important; }
 
 /* =====================================================================
-   MODALE "Ajouter un workspace" (créée par topbar.js, stylée par
-   topbar.css en dur). On centre le bouton de fermeture et on rend la
-   boîte compatible thème sombre.
+   ABSORPTION DE topbar.css — structure du sélecteur de workspace.
+   ui-kit portait déjà les couleurs/tailles ; ici on ajoute la STRUCTURE
+   restante (overlay de la modale « ajouter un workspace », grille des
+   champs, actions, spinner de changement de workspace) pour que
+   topbar.css puisse être retiré de base.html.
    ===================================================================== */
+.pgWorkspaceCreateOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10050;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, .45);
+}
+.pgWorkspaceCreateOverlay.isOpen { display: flex; }
+.pgWorkspaceCreateDialog {
+  width: min(460px, calc(100vw - 28px));
+  padding: 20px;
+  border-radius: var(--radius-card);
+}
+.pgWorkspaceCreateHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.pgWorkspaceCreateHeader h3 { margin: 0; font-size: 20px; letter-spacing: -.025em; }
+.pgWorkspaceCreateHeader p { margin: 5px 0 0; font-size: 12px; line-height: 1.45; }
+.pgWorkspaceCreateClose {
+  appearance: none;
+  width: 36px; height: 36px; flex: 0 0 36px;
+  border-radius: var(--radius-sm);
+  font-size: 21px;
+  cursor: pointer;
+}
+.pgWorkspaceCreateField { display: grid; gap: 7px; }
+.pgWorkspaceCreateField span { font-size: 12px; font-weight: 700; }
+.pgWorkspaceCreateField input {
+  width: 100%;
+  height: 46px;
+  border-radius: var(--radius-md);
+  padding: 0 13px;
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+}
+.pgWorkspaceCreateStatus { min-height: 18px; margin-top: 9px; font-size: 12px; font-weight: 600; }
+.pgWorkspaceCreateStatus.isError { color: var(--danger) !important; }
+.pgWorkspaceCreateActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 16px;
+}
+.pgWorkspaceCreateActions button {
+  appearance: none;
+  min-height: 40px;
+  border-radius: var(--radius-md);
+  padding: 0 14px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pgWorkspaceCreateSubmit:disabled { opacity: .65; cursor: wait; }
+
+/* Spinner pendant le changement de workspace */
+.has-sidebar .pgWorkspaceItem.isLoading .pgWorkspaceCheck {
+  width: 16px; height: 16px; margin: 2px;
+  border: 2px solid var(--brand-tint-2);
+  border-top-color: var(--brand);
+  border-radius: 999px;
+  color: transparent;
+  animation: pgWorkspaceSpin .7s linear infinite;
+}
+@keyframes pgWorkspaceSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .has-sidebar .pgWorkspaceItem.isLoading .pgWorkspaceCheck { animation: none; }
+}
+
+/* --- Ajustements couleurs / thème sombre de la modale --- */
 .pgWorkspaceCreateClose {
   display: inline-flex !important;
   align-items: center !important;
@@ -1336,3 +1916,126 @@ body {
   [dir="rtl"] .has-sidebar .main-content { margin-right: 0 !important; }
   [dir="rtl"] .has-sidebar .nav { right: 0 !important; width: 100% !important; }
 }
+
+/* =====================================================================
+   ABSORPTION DE tables.css
+   `tables.css` est retiré de base.html : ses règles utiles (filtres
+   select2, pastilles de publication, badges réseau, état "charger plus")
+   sont portées ici, tokenisées (clair + sombre, bleu unique, zéro
+   dégradé sur les éléments d'UI). Les tableaux / statuts / boutons /
+   avatars étaient déjà couverts plus haut.
+   ===================================================================== */
+
+/* Défilement horizontal des grandes tables */
+.has-sidebar .tableWrap table,
+.has-sidebar .table-container table { min-width: 720px; }
+
+/* --- Filtre multi-sélection (select2-like) --- */
+.has-sidebar .filterPanel { margin-top: 14px; }
+.has-sidebar .filterField { display: inline-block; min-width: 260px; max-width: 100%; }
+.has-sidebar .select2Like { position: relative; }
+.has-sidebar .select2Button {
+  width: 100%; min-height: 44px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--surface); border: 1px solid var(--line-2);
+  border-radius: var(--radius-md); padding: 7px 12px;
+  font: inherit; color: var(--ink); cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.has-sidebar .select2Button.open {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px var(--brand-tint);
+}
+.has-sidebar .select2Chips { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.has-sidebar .select2Chip {
+  background: var(--brand-tint); color: var(--brand);
+  border-radius: var(--radius-pill); padding: 3px 9px;
+  font-size: 12px; font-weight: 700;
+}
+.has-sidebar .select2Placeholder { color: var(--ink-3); font-weight: 600; font-size: 13px; }
+.has-sidebar .select2Arrow { color: var(--ink-3); font-size: 12px; }
+.has-sidebar .select2Menu {
+  display: none; position: absolute; left: 0; top: calc(100% + 8px);
+  width: 100%; max-height: 320px; overflow: auto; z-index: 900;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius-md); padding: 6px; box-shadow: var(--shadow-pop);
+}
+.has-sidebar .select2Menu.open { display: block; }
+.has-sidebar .select2Option {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink);
+}
+.has-sidebar .select2Option:hover { background: var(--surface-2); }
+.has-sidebar .select2Option input { width: auto; }
+.has-sidebar .filterHelp { margin-top: 6px; color: var(--ink-2); font-size: 12px; }
+
+/* --- État "charger plus" en bas des tables infinies --- */
+.has-sidebar .tableLoadState,
+.has-sidebar .loader {
+  padding: 14px 16px; text-align: center;
+  color: var(--ink-3); font-size: 13px; font-weight: 600;
+}
+.has-sidebar .tableLoadState::after {
+  content: ""; display: inline-block; vertical-align: middle;
+  width: 6px; height: 6px; margin-left: 8px; border-radius: 999px;
+  background: var(--brand);
+  animation: pgLoadPulse 1s ease-in-out infinite;
+}
+@keyframes pgLoadPulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .has-sidebar .tableLoadState::after { animation: none; opacity: .6; }
+}
+
+/* --- Groupes de publication (colonne "Publication") --- */
+.has-sidebar .pubGroup {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 0 6px 4px 0; padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-2); border: 1px solid var(--line);
+  font-size: 12px; font-weight: 700; color: var(--ink-2);
+}
+.has-sidebar .pubGroup svg { display: block; }
+.has-sidebar .pubGroup.published {
+  background: var(--success-tint); border-color: transparent; color: var(--success-ink);
+}
+.has-sidebar .pubGroup.failed {
+  background: var(--danger-tint); border-color: transparent; color: var(--danger-ink);
+}
+.has-sidebar .pubGroup.scheduled {
+  background: var(--warn-tint); border-color: transparent; color: var(--warn-ink);
+}
+
+/* --- Badges réseau (couleurs de marque des plateformes conservées,
+       Instagram aplati pour rester cohérent "sans dégradé") --- */
+.has-sidebar .publicationNetworkList { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.has-sidebar .publicationNetworkIcon,
+.has-sidebar .networkLogo {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px; color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14);
+  flex: 0 0 auto;
+}
+.has-sidebar .publicationNetworkIcon { width: 30px; height: 30px; }
+.has-sidebar .networkLogo { width: 32px; height: 32px; }
+.has-sidebar .publicationNetworkIcon svg,
+.has-sidebar .networkLogo svg { display: block; }
+.has-sidebar .publicationNetworkIcon--linkedin,
+.has-sidebar .networkLogo--linkedin { background: #0a66c2; }
+.has-sidebar .publicationNetworkIcon--facebook,
+.has-sidebar .networkLogo--facebook { background: #1877f2; }
+.has-sidebar .publicationNetworkIcon--instagram,
+.has-sidebar .networkLogo--instagram { background: #dd2a7b; }
+.has-sidebar .publicationNetworkIcon--buffer,
+.has-sidebar .networkLogo--buffer,
+.has-sidebar .publicationNetworkIcon--other,
+.has-sidebar .networkLogo--other { background: var(--ink); }
+.has-sidebar .networkBadgeLetter { font-size: 12px; font-weight: 800; line-height: 1; }
+.has-sidebar .publicationStatusDot {
+  position: absolute; right: -1px; bottom: -1px;
+  width: 9px; height: 9px; border-radius: 999px;
+  border: 2px solid var(--surface); background: var(--ink);
+}
+.has-sidebar .publicationStatusDot--published { background: var(--success); }
+.has-sidebar .publicationStatusDot--error { background: var(--danger); }
+.has-sidebar .publicationStatusDot--pending { background: var(--ink-3); }

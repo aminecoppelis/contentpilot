@@ -1,133 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Accueil · Post Generator{% endblock %}
-{% block extra_style %}
-<style>
-  /* Dashboard — cartes tokenisées (clair + sombre), accent unique #3b82f6. */
-  .dashWrap { display: flex; flex-direction: column; gap: 20px; }
-
-  /* --- KPI --- */
-  .kpiGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-  .kpiCard {
-    display: flex; flex-direction: column; gap: 4px;
-    background: var(--surface, #fff);
-    border: 1px solid var(--line, #e9ebf0);
-    border-radius: 16px;
-    padding: 18px;
-    box-shadow: var(--shadow-card, 0 1px 3px rgba(16, 24, 40, .06));
-    transition: border-color .15s ease, transform .15s ease;
-  }
-  .kpiCard:hover { border-color: var(--brand-tint-2, #d8e8ff); transform: translateY(-2px); }
-  .kpiTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-  .kpiLabel {
-    font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em;
-    color: var(--ink-3, #9aa3b2); line-height: 1.35; padding-top: 2px;
-  }
-  .kpiIcon {
-    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--brand-tint, #eaf2ff); color: var(--brand, #3b82f6);
-  }
-  .kpiIcon svg { width: 18px; height: 18px; }
-  .kpiValue {
-    font-size: 34px; font-weight: 800; letter-spacing: -.03em; line-height: 1;
-    color: var(--ink, #1f2430); margin-top: 8px;
-  }
-  .kpiHint { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2, #5b6472); margin-top: 4px; }
-  .kpiHint::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: var(--brand, #3b82f6); opacity: .55; }
-
-  /* --- Panneaux --- */
-  .dashMain { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
-  .panel {
-    background: var(--surface, #fff);
-    border: 1px solid var(--line, #e9ebf0);
-    border-radius: 16px;
-    padding: 22px;
-    box-shadow: var(--shadow-card, 0 1px 3px rgba(16, 24, 40, .06));
-  }
-  .panelHead { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .panelIcon {
-    flex: 0 0 auto; width: 36px; height: 36px; border-radius: 10px;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--brand-tint, #eaf2ff); color: var(--brand, #3b82f6);
-  }
-  .panelIcon svg { width: 18px; height: 18px; }
-  .panelHead h2 { flex: 1; min-width: 0; margin: 0; font-size: 16px; font-weight: 800; letter-spacing: -.02em; color: var(--ink, #1f2430); }
-
-  .dashRetryBtn {
-    flex: 0 0 auto;
-    border: 1px solid var(--line-2, #e2e5ea); background: var(--surface, #fff);
-    border-radius: 999px; padding: 7px 13px;
-    font-size: 12px; font-weight: 700; color: var(--ink-2, #5b6472); cursor: pointer;
-    transition: border-color .15s ease, color .15s ease, background .15s ease;
-  }
-  .dashRetryBtn:hover { border-color: var(--brand, #3b82f6); color: var(--brand, #3b82f6); background: var(--brand-tint, #eaf2ff); }
-  .dashRetryBtn:disabled { opacity: .6; cursor: not-allowed; }
-
-  .nextActionsList { display: grid; gap: 10px; }
-  .nextCard {
-    display: block;
-    border: 1px solid var(--brand-tint-2, #d8e8ff);
-    background: var(--brand-tint, #f4f8ff);
-    border-radius: 14px; padding: 13px 14px;
-    text-decoration: none; color: inherit;
-    transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
-  }
-  .nextActionLink:hover { transform: translateY(-1px); border-color: var(--brand, #3b82f6); box-shadow: 0 8px 22px rgba(59, 130, 246, .12); }
-  .nextCardItem { display: flex; align-items: center; gap: 12px; }
-  .nextActionRank {
-    flex: 0 0 30px; width: 30px; height: 30px; border-radius: 999px;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--surface, #fff); border: 1px solid var(--brand-tint-2, #d8e8ff);
-    color: var(--brand, #3b82f6); font-size: 12px; font-weight: 800;
-  }
-  .nextActionText { min-width: 0; display: flex; flex-direction: column; gap: 2px; flex: 1; }
-  .nextActionText b { font-size: 14px; line-height: 1.3; color: var(--ink, #1f2430); }
-  .nextActionText small { color: var(--ink-2, #5b6472); font-size: 12px; line-height: 1.4; }
-  .nextActionArrow { flex: 0 0 auto; color: var(--brand, #3b82f6); font-size: 20px; line-height: 1; }
-
-  .recentList { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-  .recentList li {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    border: 1px solid var(--line, #e9ebf0); border-radius: 12px;
-    padding: 11px 13px; font-size: 13px; color: var(--ink-2, #5b6472);
-  }
-  .status-badge {
-    display: inline-flex; padding: 3px 9px; border-radius: 999px;
-    background: var(--brand-tint, #eaf2ff); color: var(--brand, #3b82f6);
-    font-size: 11px; font-weight: 700;
-  }
-  .todoList { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-  .todoList li { border: 1px solid var(--line, #e9ebf0); border-radius: 12px; padding: 11px 13px; font-size: 13px; color: var(--ink-2, #5b6472); }
-
-  .emptyState {
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 9px; padding: 30px 16px; text-align: center;
-    color: var(--ink-2, #5b6472); font-size: 13px; line-height: 1.5;
-  }
-  .emptyState svg { width: 26px; height: 26px; color: var(--ink-3, #9aa3b2); }
-
-  .dashboardToast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: #111827; color: #fff; padding: 12px 18px; border-radius: 12px;
-    font-size: 13px; font-weight: 700; opacity: 0; pointer-events: none; transition: .2s ease; z-index: 4000;
-  }
-  .dashboardToast.isVisible { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .dashboardToast.isError { background: #991b1b; }
-
-  @media (max-width: 1100px) {
-    .kpiGrid { grid-template-columns: repeat(2, 1fr); }
-    .dashMain { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 560px) {
-    .kpiGrid { grid-template-columns: 1fr; }
-  }
-</style>
-{% endblock %}
+{# Aucune CSS de page : dashboard est entièrement piloté par ui-kit.css
+   (.kpiCard, .panel, .nextCard, .emptyState, .pgToast…). #}
 {% block content %}
 <div class="dashWrap">
 <section class="hero dashboardHero">
   <div class="eyebrow">{{ t('dash.eyebrow') }}</div>
-  <h1 style="color: var(--primary-blue); font-size: 2.2rem; font-weight: 900;">{{ t('dash.title') }}</h1>
+  <h1>{{ t('dash.title') }}</h1>
   <p class="muted">{{ t('dash.subtitle') }}</p>
 </section>
 
@@ -162,7 +41,7 @@
       <span class="kpiIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></span>
     </div>
     <b class="kpiValue">{{ published_posts }}</b>
-    <span class="kpiHint">{{ t('dash.kpi.posts.alerts', count=failed_items) if failed_items else t('dash.kpi.posts.none') }}</span>
+    <span class="kpiHint {{ 'is-alert' if failed_items }}">{{ t('dash.kpi.posts.alerts', count=failed_items) if failed_items else t('dash.kpi.posts.none') }}</span>
   </article>
 </section>
 
@@ -222,7 +101,7 @@
 </section>
 </div>
 
-<div class="dashboardToast" id="dashboardToast" role="status" aria-live="polite"></div>
+<div class="pgToast" id="dashboardToast" role="status" aria-live="polite"></div>
 {% endblock %}
 {% block scripts %}
 <script>

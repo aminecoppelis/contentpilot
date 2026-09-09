@@ -4,21 +4,68 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{{ "Compte activé" if activated else "Activation impossible" }} · Post Generator</title>
-  <link rel="stylesheet" href="/static/css/layout.css">
-  <link rel="stylesheet" href="/static/css/app.css">
+  <script>
+    (function(){ try { document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'); } catch(e){ document.documentElement.setAttribute('data-theme','light'); } })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="/static/css/app.css?v=17">
   <style>
-    .activateBadge{display:inline-flex;border:1px solid;border-radius:999px;padding:6px 11px;
-      font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;
-      {% if activated %}background:#ecfdf5;color:#047857;border-color:#bbf7d0
-      {% else %}background:#fef2f2;color:#991b1b;border-color:#fecaca{% endif %}}
-    .authCard h1{font-size:30px;line-height:1.15;letter-spacing:-.04em;margin:0 0 10px}
-    .secondaryLink{display:block;margin-top:14px;text-align:center;color:#475569;font-size:14px}
-    .secondaryLink:hover{color:var(--accent)}
+    /* ===== Activation — autonome, aligné sur login / register ===== */
+    :root {
+      --a-bg: #f6f7f9; --a-surface: #ffffff; --a-line: #e9ebf0; --a-line-2: #e2e5ea;
+      --a-ink: #1f2430; --a-ink-2: #5b6472; --a-ink-3: #9aa3b2;
+      --a-brand: #3b82f6; --a-brand-tint: #eaf2ff;
+      --a-shadow: 0 12px 44px rgba(16, 24, 40, .07);
+      --a-ok: #0f7a37; --a-ok-tint: #e9f7ef;
+      --a-err: #b42318; --a-err-tint: #fdecec;
+    }
+    :root[data-theme="dark"] {
+      --a-bg: #0e1014; --a-surface: #191c22; --a-line: #2a2e37; --a-line-2: #363b45;
+      --a-ink: #e7e9ee; --a-ink-2: #a3abb8; --a-ink-3: #6b7280;
+      --a-brand: #3b82f6; --a-brand-tint: rgba(59,130,246,.18);
+      --a-shadow: 0 16px 44px rgba(0, 0, 0, .55);
+      --a-ok: #5fd08a; --a-ok-tint: rgba(22,163,74,.18);
+      --a-err: #ff8b8b; --a-err-tint: rgba(229,72,77,.18);
+    }
+
+    body { background: var(--a-bg) !important; color: var(--a-ink); }
+    .auth-shell { background: var(--a-bg) !important; background-image: none !important; }
+    .auth-shell::before, .auth-shell::after { display: none !important; }
+
+    .authCard {
+      width: 100%; max-width: 440px; padding: 40px 36px; text-align: center;
+      background: var(--a-surface) !important; background-image: none !important;
+      border: 1px solid var(--a-line) !important; border-radius: 18px !important;
+      box-shadow: var(--a-shadow) !important; backdrop-filter: none !important;
+    }
+    .activateBadge {
+      display: inline-flex; border-radius: 999px; padding: 6px 12px; margin-bottom: 16px;
+      font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em;
+      background: {% if activated %}var(--a-ok-tint); color: var(--a-ok){% else %}var(--a-err-tint); color: var(--a-err){% endif %};
+    }
+    .authCard h1 {
+      margin: 0 0 10px; font-size: 26px; font-weight: 800; letter-spacing: -.02em;
+      color: var(--a-ink); -webkit-text-fill-color: var(--a-ink); line-height: 1.15;
+    }
+    .authCard .sub { margin: 0 0 24px !important; color: var(--a-ink-2) !important; font-size: 14px; line-height: 1.55; }
+
+    .authBtn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 100%; padding: 13px 18px;
+      background: #3b82f6; border: 0; border-radius: 12px;
+      color: #fff; font: inherit; font-size: 15px; font-weight: 700;
+      text-decoration: none; cursor: pointer;
+    }
+    .authBtn:hover { background: #2f74e6; }
+    .secondaryLink { display: block; margin-top: 14px; color: var(--a-brand); font-size: 14px; text-decoration: none; }
+    .secondaryLink:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 <div class="auth-shell">
-  <main class="card authCard">
+  <main class="authCard">
     <span class="activateBadge">{{ "Activé" if activated else "Lien invalide" }}</span>
     <h1>{{ "Compte activé" if activated else "Activation impossible" }}</h1>
     <p class="sub">
@@ -29,7 +76,7 @@
         ou demande un nouveau lien d'activation.
       {% endif %}
     </p>
-    <a class="btn" href="/app/login?redirect={{ redirect }}">Se connecter</a>
+    <a class="authBtn" href="/app/login?redirect={{ redirect }}">Se connecter</a>
     <a class="secondaryLink" href="/app/register?redirect={{ redirect }}">Créer un autre compte</a>
   </main>
 </div>

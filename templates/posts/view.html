@@ -144,7 +144,7 @@
           {% else %}<span></span>{% endif %}
         </div>
       {% elif idea.media_count %}
-        <div class="mediaPlaceholder" style="border:2px solid #93c5fd;background:linear-gradient(180deg,#eff6ff,#ffffff);padding:24px">
+        <div class="mediaPlaceholder" style="border:1px solid var(--brand-tint-2);background:var(--brand-tint);padding:24px">
           <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:14px">
             <b style="font-size:16px">{{ idea.media_count }} média(s) disponible(s)</b>
             <button type="button" class="mediaBtn mediaLoadBtn" data-load-idea-media="{{ i }}"
