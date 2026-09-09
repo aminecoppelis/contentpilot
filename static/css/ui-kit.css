@@ -1707,6 +1707,190 @@ summary:focus-visible,
 .has-sidebar .mediaRemove { border-color: var(--danger-tint) !important; background: var(--surface) !important; }
 .has-sidebar .mediaImg { border-color: var(--line-2) !important; background: var(--surface-2) !important; }
 
+/* =====================================================================
+   VUE IDÉES (posts/view) — refonte de la mise en page
+   consultation.css impose : grille 2 colonnes fixes (cartes étriquées,
+   titres qui cassent tous les 2 mots), boutons énormes (padding 11-15px,
+   font-weight 950, dégradés, grosses ombres). Ici on élargit la grille
+   et on ramène TOUS les boutons de la vue à l'échelle standard.
+   ===================================================================== */
+
+/* --- Grille : 1 colonne large par défaut, 2 seulement s'il y a la place --- */
+.has-sidebar #posts-view-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)) !important;
+  gap: var(--space-5) !important;
+  align-items: start;
+}
+.has-sidebar #posts-view-grid.one {
+  grid-template-columns: 1fr !important;
+  max-width: 780px;
+}
+
+/* --- Carte idée : rayon & rembourrage plus sobres --- */
+.has-sidebar #posts-view-grid .card { padding: 20px !important; }
+.has-sidebar .postReady {
+  border-width: 1px !important;
+  border-radius: var(--radius-md) !important;
+  padding: 16px !important;
+  margin: 12px 0 16px !important;
+}
+.has-sidebar .postReady h2 {
+  font-size: 18px !important;
+  line-height: 1.3 !important;
+  margin: 10px 0 4px !important;
+  color: var(--ink) !important;
+}
+.has-sidebar .label {
+  background: var(--brand-tint) !important;
+  color: var(--brand) !important;
+  padding: 4px 9px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+}
+.has-sidebar #posts-view-grid .num,
+.has-sidebar #posts-view-grid .format {
+  padding: 3px 9px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+}
+.has-sidebar .copyBox {
+  border-radius: var(--radius-md) !important;
+  border-color: var(--line-2) !important;
+  background: var(--surface) !important;
+  color: var(--ink) !important;
+  font: 400 14px/1.6 var(--ui-font) !important;
+  min-height: 200px !important;
+}
+
+/* --- Barre de mise en forme (B / I / U / copier) --- */
+.has-sidebar .formatToolbar { gap: 6px !important; margin: 10px 0 !important; }
+.has-sidebar .formatToolbar button {
+  min-width: 32px; height: 32px;
+  padding: 0 10px !important;
+  border: 1px solid var(--line-2) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--surface) !important;
+  color: var(--ink-2) !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+.has-sidebar .formatToolbar button:hover { background: var(--surface-2) !important; border-color: var(--ink-3) !important; }
+.has-sidebar .formatToolbar button.active {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+.has-sidebar .formatToolbar .copyIconBtn,
+.has-sidebar .copyBtn {
+  margin-left: auto;
+  min-width: 32px !important; height: 32px !important;
+  padding: 0 10px !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--ink) !important;
+  color: var(--surface) !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+.has-sidebar .copyBtn.done,
+.has-sidebar .formatToolbar .copyIconBtn.done { background: var(--success) !important; color: #fff !important; border-color: var(--success) !important; }
+
+/* --- TOUS les boutons d'action de la vue : même gabarit compact --- */
+.has-sidebar .buttons button,
+.has-sidebar .validationActions button,
+.has-sidebar .mediaHeaderActions .mediaBtn,
+.has-sidebar .mediaHeaderActions .mediaDownload,
+.has-sidebar .mediaPlaceholder .mediaLoadBtn,
+.has-sidebar .ideaDetails > summary {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 14px !important;
+  border-radius: var(--radius-md) !important;
+  border: 1px solid transparent !important;
+  font-family: var(--ui-font) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  cursor: pointer;
+  transition: filter .15s ease, background .15s ease, border-color .15s ease;
+}
+/* couleurs sémantiques, aplats */
+.has-sidebar .buttons button.ok,
+.has-sidebar .validationActions button.ok { background: var(--success) !important; color: #fff !important; }
+.has-sidebar .buttons button.reject,
+.has-sidebar .validationActions button.reject { background: var(--danger) !important; color: #fff !important; }
+.has-sidebar .buttons button.warn,
+.has-sidebar .validationActions button.warn { background: var(--warn-tint) !important; color: var(--warn-ink) !important; border-color: transparent !important; }
+.has-sidebar .buttons button.regen {
+  background: var(--surface) !important;
+  color: var(--ink-2) !important;
+  border-color: var(--line-2) !important;
+}
+.has-sidebar .buttons button.regen:hover { background: var(--surface-2) !important; border-color: var(--ink-3) !important; }
+.has-sidebar .buttons button.edit {
+  background: var(--brand-tint) !important;
+  color: var(--brand) !important;
+  border-color: var(--brand-tint-2) !important;
+}
+.has-sidebar .buttons button:hover:not(:disabled) { filter: brightness(.96); }
+.has-sidebar .buttons button:disabled { opacity: .5 !important; cursor: not-allowed; filter: none !important; }
+.has-sidebar .buttons { gap: 8px !important; }
+
+.has-sidebar .mediaHeaderActions .mediaBtn { background: var(--brand) !important; color: #fff !important; }
+.has-sidebar .mediaHeaderActions .mediaDownload {
+  background: var(--surface) !important; color: var(--ink-2) !important; border-color: var(--line-2) !important;
+}
+.has-sidebar .mediaPlaceholder .mediaLoadBtn { background: var(--brand) !important; color: #fff !important; }
+
+.has-sidebar .mediaLabel {
+  background: var(--brand-tint) !important; color: var(--brand) !important;
+  padding: 4px 9px !important; font-size: 10px !important; font-weight: 700 !important;
+}
+.has-sidebar .mediaSection {
+  border-radius: var(--radius-md) !important;
+  padding: 14px !important;
+  background: var(--surface-2) !important;
+  background-image: none !important;
+  border-color: var(--line) !important;
+}
+.has-sidebar .ideaDetails > summary {
+  justify-content: flex-start !important;
+  background: var(--surface-2) !important;
+  color: var(--ink-2) !important;
+  border-color: var(--line) !important;
+  font-weight: 600 !important;
+}
+.has-sidebar .actions { border-top-color: var(--line) !important; }
+
+/* --- « Générer plus d'idées » : encadré et bouton allégés --- */
+.has-sidebar .moreIdeasFooter {
+  margin-top: var(--space-6) !important;
+  padding: 22px !important;
+  border: 1px dashed var(--line-2) !important;
+  border-radius: var(--radius-card) !important;
+  background: var(--surface) !important;
+  box-shadow: none !important;
+}
+.has-sidebar .moreIdeasFooter p { color: var(--ink-2) !important; font-size: 13px !important; }
+.has-sidebar .moreIdeasBtn {
+  min-height: 40px;
+  padding: 0 20px !important;
+  border-radius: var(--radius-md) !important;
+  background: var(--brand) !important;
+  background-image: none !important;
+  color: #fff !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+.has-sidebar .moreIdeasBtn:hover { filter: brightness(.96); transform: none !important; box-shadow: none !important; }
+
 /* ---- Topbar : dégraissage responsive ---- */
 @media (max-width: 980px) {
   .has-sidebar .pgWorkspaceCurrentText b { max-width: 120px; }
