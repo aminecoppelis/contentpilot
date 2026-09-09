@@ -50,24 +50,32 @@
     <div class="panelHead">
       <span class="panelIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></svg></span>
       <h2>{{ t('dash.next.title') }}</h2>
-      <button type="button" class="dashRetryBtn" id="retryOverdueBtn">{{ t('dash.next.retry') }}</button>
+      {% if next_actions %}<span class="panelCount">{{ next_actions | length }}</span>{% endif %}
     </div>
-    <div class="nextActionsList">
+    {% if next_actions %}
+    <ol class="nextList">
       {% for a in next_actions %}
-        <a class="nextCard nextActionLink" href="{{ a.url }}">
-          <div class="nextCardItem">
-            <span class="nextActionRank">{{ loop.index }}</span>
-            <span class="nextActionText"><b>{{ a.title }}</b><small>{{ a.meta }}</small></span>
-            <span class="nextActionArrow">›</span>
-          </div>
-        </a>
-      {% else %}
-        <div class="emptyState">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
-          {{ t('dash.next.empty') }}
-        </div>
+        <li>
+          <a class="nextCard" href="{{ a.url }}">
+            <span class="nextRank">{{ loop.index }}</span>
+            <span class="nextBody">
+              <b class="nextWhen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                {{ a.meta }}
+              </b>
+              <small class="nextWhat">{{ a.title }}</small>
+            </span>
+            <svg class="nextArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          </a>
+        </li>
       {% endfor %}
+    </ol>
+    {% else %}
+    <div class="emptyState">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <span class="emptyTitle">{{ t('dash.next.empty') }}</span>
     </div>
+    {% endif %}
   </article>
 
   <article class="panel">
@@ -76,13 +84,22 @@
       <h2>{{ t('dash.activity.title') }}</h2>
     </div>
     {% if recent_activity %}
-    <ul class="recentList">
-      {% for item in recent_activity %}<li>{{ item.title }} <span class="status-badge">{{ item.status }}</span></li>{% endfor %}
+    <ul class="activityList">
+      {% for item in recent_activity %}
+      <li class="activityRow">
+        <span class="activityDot is-{{ item.action | lower }}" aria-hidden="true"></span>
+        <span class="activityMain">
+          <b>{{ item.entity or '—' }}</b>
+          {% if item.action %}<span class="activityAction">{{ item.action }}</span>{% endif %}
+        </span>
+        <time class="activityAt">{{ item.at }}</time>
+      </li>
+      {% endfor %}
     </ul>
     {% else %}
     <div class="emptyState">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      {{ t('dash.activity.empty') }}
+      <span class="emptyTitle">{{ t('dash.activity.empty') }}</span>
     </div>
     {% endif %}
   </article>
@@ -100,56 +117,4 @@
   {% endif %}
 </section>
 </div>
-
-<div class="pgToast" id="dashboardToast" role="status" aria-live="polite"></div>
-{% endblock %}
-{% block scripts %}
-<script>
-/* Port exact du bouton "Nettoyer et relancer" (RETRY_OVERDUE_DASHBOARD_SCRIPT) */
-(function(){
-  'use strict';
-  var retryButton = document.getElementById('retryOverdueBtn');
-  var toast = document.getElementById('dashboardToast');
-  var toastTimer = null;
-  function showDashToast(message, isError){
-    if(!toast)return;
-    toast.textContent = String(message || '');
-    toast.classList.toggle('isError', Boolean(isError));
-    toast.classList.add('isVisible');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function(){toast.classList.remove('isVisible');}, 4200);
-  }
-  async function retryOverdueActions(){
-    if(!retryButton)return;
-    var previousText = retryButton.textContent;
-    retryButton.disabled = true;
-    retryButton.textContent = "{{ t('dash.next.retrying') }}";
-    try{
-      var response = await fetch('/app/strategies/overdue/retry', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        credentials:'same-origin', body:JSON.stringify({source:'dashboard'})
-      });
-      var data = await response.json().catch(function(){return {};});
-      if(!response.ok || data.success === false){
-        throw new Error(data.message || 'Relance impossible.');
-      }
-      showDashToast(data.message || 'Vérification terminée.');
-      if(Number(data.queued_count || 0) > 0){
-        setTimeout(function(){window.location.reload();}, 1400);
-      }
-    }catch(error){
-      showDashToast(error.message || 'Relance impossible.', true);
-    }finally{
-      retryButton.disabled = false;
-      retryButton.textContent = previousText || "{{ t('dash.next.retry') }}";
-    }
-  }
-  if(retryButton){
-    retryButton.addEventListener('click', function(event){
-      event.preventDefault();
-      retryOverdueActions();
-    });
-  }
-})();
-</script>
 {% endblock %}

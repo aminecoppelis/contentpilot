@@ -26,11 +26,11 @@
 
   <!-- layout.css / topbar.css / tables.css / theme.css absorbés dans ui-kit.css.
        app.css : reste utilitaire partagé (login/register le chargent aussi). -->
-  <link rel="stylesheet" href="/static/css/app.css?v={{ request.query_params.get('v', '17') }}">
-  <link rel="stylesheet" href="/static/css/toast.css?v={{ request.query_params.get('v', '17') }}">
+  <link rel="stylesheet" href="/static/css/app.css?v={{ request.query_params.get('v', '18') }}">
+  <link rel="stylesheet" href="/static/css/toast.css?v={{ request.query_params.get('v', '18') }}">
   {% block extra_style %}{% endblock %}
   <!-- ui-kit.css : système visuel unifié, doit rester le DERNIER pour l'emporter -->
-  <link rel="stylesheet" href="/static/css/ui-kit.css?v={{ request.query_params.get('v', '17') }}">
+  <link rel="stylesheet" href="/static/css/ui-kit.css?v={{ request.query_params.get('v', '18') }}">
 </head>
 <body class="{% if auth_user %}has-sidebar{% endif %}">
 <div class="app-layout">

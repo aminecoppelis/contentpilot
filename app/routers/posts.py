@@ -688,7 +688,14 @@ async def get_dashboard(request: Request, user=Depends(require_auth)):
          "meta": format_user_datetime(r["planned_for"], user.timezone)}
         for r in next_actions_rows if r["strategy_id"]
     ]
-    recent_activity = [{"title": f"{r['entity_type']} · {r['action']}", "status": format_user_datetime(r["created_at"], user.timezone, "%d/%m %H:%M")} for r in recent_rows]
+    recent_activity = [
+        {
+            "entity": (r["entity_type"] or "").replace("_", " ").strip(),
+            "action": r["action"] or "",
+            "at": format_user_datetime(r["created_at"], user.timezone, "%d/%m %H:%M"),
+        }
+        for r in recent_rows
+    ]
 
     return templates.TemplateResponse(request, "posts/dashboard.html", {
         "auth_user": user, "active_nav": "dashboard",

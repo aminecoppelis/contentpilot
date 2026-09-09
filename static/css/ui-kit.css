@@ -866,42 +866,74 @@ summary:focus-visible,
 }
 .panelIcon svg { width: 18px; height: 18px; }
 .panelHead h2 { flex: 1; min-width: 0; margin: 0; font-size: var(--text-lg); font-weight: 800; letter-spacing: -.02em; color: var(--ink); }
-
-.dashRetryBtn {
+.panelCount {
   flex: 0 0 auto;
-  border: 1px solid var(--line-2); background: var(--surface);
-  border-radius: 999px; padding: 7px 13px;
-  font-size: 12px; font-weight: 700; color: var(--ink-2); cursor: pointer;
-  transition: border-color var(--dur) ease, color var(--dur) ease, background var(--dur) ease;
-}
-.dashRetryBtn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-tint); }
-.dashRetryBtn:disabled { opacity: .6; cursor: not-allowed; }
-
-.nextActionsList { display: grid; gap: var(--space-2); }
-.nextCard {
-  display: block;
-  border: 1px solid var(--brand-tint-2);
-  background: var(--brand-tint);
-  border-radius: 14px; padding: 13px 14px;
-  text-decoration: none; color: inherit;
-  transition: transform var(--dur) ease, border-color var(--dur) ease, box-shadow var(--dur) ease;
-}
-.nextActionLink:hover { transform: translateY(-1px); border-color: var(--brand); box-shadow: var(--shadow-card); }
-.nextCardItem { display: flex; align-items: center; gap: var(--space-3); }
-.nextActionRank {
-  flex: 0 0 30px; width: 30px; height: 30px; border-radius: 999px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: var(--surface); border: 1px solid var(--brand-tint-2);
-  color: var(--brand); font-size: 12px; font-weight: 800;
+  min-width: 22px; height: 22px; padding: 0 7px;
+  border-radius: 999px;
+  background: var(--brand-tint); color: var(--brand);
+  font-size: 11px; font-weight: 800;
 }
-.nextActionText { min-width: 0; display: flex; flex-direction: column; gap: 2px; flex: 1; }
-.nextActionText b { font-size: var(--text-md); line-height: 1.3; color: var(--ink); }
-.nextActionText small { color: var(--ink-2); font-size: 12px; line-height: 1.4; }
-.nextActionArrow { flex: 0 0 auto; color: var(--brand); font-size: 20px; line-height: 1; }
 
-.recentList, .todoList { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
-.recentList li, .todoList li {
-  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+/* ---- Prochaines actions : liste ordonnée compacte ---- */
+.nextList { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.nextCard {
+  display: flex; align-items: center; gap: var(--space-3);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  text-decoration: none; color: inherit;
+  transition: border-color var(--dur) ease, background var(--dur) ease;
+}
+.nextCard:hover { border-color: var(--brand-tint-2); background: var(--surface-2); }
+.nextRank {
+  flex: 0 0 24px; width: 24px; height: 24px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--brand-surface); color: var(--brand);
+  font-size: 11px; font-weight: 800;
+}
+.nextBody { min-width: 0; display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.nextWhen {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--text-sm); font-weight: 700; color: var(--ink); line-height: 1.3;
+}
+.nextWhen svg { width: 13px; height: 13px; flex: 0 0 auto; color: var(--brand); }
+.nextWhat {
+  min-width: 0; color: var(--ink-3); font-size: 11.5px; line-height: 1.35;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.nextArrow { flex: 0 0 auto; width: 16px; height: 16px; color: var(--ink-3); }
+.nextCard:hover .nextArrow { color: var(--brand); }
+
+/* ---- Activité récente : timeline légère, pastille sémantique ---- */
+.activityList { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.activityRow {
+  display: flex; align-items: center; gap: var(--space-3);
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.activityRow:last-child { border-bottom: 0; }
+.activityDot {
+  flex: 0 0 8px; width: 8px; height: 8px; border-radius: 999px;
+  background: var(--ink-3);
+}
+.activityDot.is-published,
+.activityDot.is-posted,
+.activityDot.is-approved { background: var(--success); }
+.activityDot.is-failed,
+.activityDot.is-error,
+.activityDot.is-rejected { background: var(--danger); }
+.activityDot.is-scheduled,
+.activityDot.is-pending,
+.activityDot.is-updated { background: var(--brand); }
+.activityMain { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.activityMain b { font-weight: 700; color: var(--ink); text-transform: capitalize; }
+.activityAction { color: var(--ink-2); font-size: 12px; }
+.activityAt { flex: 0 0 auto; color: var(--ink-3); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+.todoList { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.todoList li {
   border: 1px solid var(--line); border-radius: var(--radius-md);
   padding: 11px 13px; font-size: 13px; color: var(--ink-2);
 }
@@ -1562,18 +1594,10 @@ summary:focus-visible,
 
 /* Encadrés "post prêt" / notices indigo */
 .has-sidebar .postReady,
-.has-sidebar .aiGenerationNotice,
-.has-sidebar .nextCard {
+.has-sidebar .aiGenerationNotice {
   border-color: #d8e8ff !important;
   background: var(--surface-2) !important;
 }
-.has-sidebar .nextActionRank {
-  background: #eaf2ff !important;
-  border-color: #d8e8ff !important;
-  color: #3b82f6 !important;
-}
-.has-sidebar .nextActionArrow,
-.has-sidebar .nextActionLink:hover { border-color: var(--brand-tint-2) !important; color: #3b82f6 !important; }
 
 /* ---- Consultation (posts/view) & formulaire (posts/new) : hex indigo
    codés en dur dans consultation.css / form.css → ramenés au bleu unique
