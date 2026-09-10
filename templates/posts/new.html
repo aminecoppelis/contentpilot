@@ -1,125 +1,128 @@
 {% extends "base.html" %}
-{% block title %}Nouveau sujet · Post Generator{% endblock %}
+{% block title %}{{ t('pn.title') }} · {{ t('app.name') }}{% endblock %}
 {% block extra_style %}<link rel="stylesheet" href="/static/css/form.css?v=20260902-v90-new-subject-overflow-2">{% endblock %}
 {% block content %}
 <a class="pageBack" href="/app/posts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>{{ t('nav.subjects') }}</a>
 <section class="card newSubjectCard">
   <div class="head">
-    <h2>Paramètres du sujet</h2>
-    <p class="subtitle">Complète les champs ci-dessous pour générer des idées de post prêtes à publier.</p>
+    <h2>{{ t('pn.card.title') }}</h2>
+    <p class="subtitle">{{ t('pn.card.subtitle') }}</p>
   </div>
   <form id="ideasForm" method="post" action="/app/post-ideas-generate">
     <div class="field" data-field="subject">
-      <label>Sujet<span class="req">*</span></label>
+      <label>{{ t('pn.f.subject') }}<span class="req">*</span></label>
       <div class="subjectSuggestWrap">
         <input id="subjectInput" name="subject" required autocomplete="off" aria-autocomplete="list"
                aria-expanded="false" aria-controls="subjectSuggestions"
-               placeholder="Ex : agents IA pour PME, automatisation RH, BI, analyse vidéo par IA">
-        <div id="subjectSuggestions" class="subjectSuggestions" role="listbox" aria-label="Suggestions de sujets"></div>
+               placeholder="{{ t('pn.f.subject.ph') }}">
+        <div id="subjectSuggestions" class="subjectSuggestions" role="listbox" aria-label="{{ t('pn.f.subject.suggestions') }}"></div>
       </div>
-      <div class="hint">Commence à saisir un sujet : des propositions apparaissent automatiquement si Serper est configuré côté admin.</div>
-      <div class="error">Indique un sujet.</div>
+      <div class="hint">{{ t('pn.f.subject.hint') }}</div>
+      <div class="error">{{ t('pn.f.subject.err') }}</div>
     </div>
 
     <div class="field" data-field="content_domains">
-      <label>Domaines à couvrir<span class="req">*</span></label>
+      <label>{{ t('pn.f.domains') }}<span class="req">*</span></label>
       <div id="contentDomainsSelect" class="multiSelect"></div>
-      <div class="hint">Sélectionne un ou plusieurs domaines. Tu peux rechercher ou ajouter une nouvelle valeur avec Entrée.</div>
-      <div class="error">Sélectionne au moins un domaine à couvrir.</div>
+      <div class="hint">{{ t('pn.f.domains.hint') }}</div>
+      <div class="error">{{ t('pn.f.domains.err') }}</div>
     </div>
 
     <div class="grid">
       <div class="field" data-field="commercial_objective">
-        <label>Objectif commercial<span class="req">*</span></label>
+        <label>{{ t('pn.f.objective') }}<span class="req">*</span></label>
         <select name="commercial_objective" required>
-          <option>génération de leads</option><option>visibilité</option><option>éducation marché</option>
-          <option>démonstration produit</option><option>autorité/expertise</option>
+          <option value="génération de leads">{{ t('pn.obj.leads') }}</option>
+          <option value="visibilité">{{ t('pn.obj.visibility') }}</option>
+          <option value="éducation marché">{{ t('pn.obj.education') }}</option>
+          <option value="démonstration produit">{{ t('pn.obj.demo') }}</option>
+          <option value="autorité/expertise">{{ t('pn.obj.authority') }}</option>
         </select>
       </div>
       <div class="field" data-field="language">
-        <label>Langue<span class="req">*</span></label>
-        <select name="language" required><option>français</option><option>anglais</option></select>
+        <label>{{ t('pn.f.language') }}<span class="req">*</span></label>
+        <select name="language" required>
+          <option value="français">{{ t('pn.lang.fr') }}</option>
+          <option value="anglais">{{ t('pn.lang.en') }}</option>
+        </select>
       </div>
     </div>
 
     <div class="grid">
       <div class="field" data-field="post_count">
-        <label>Nombre de posts à générer<span class="req">*</span></label>
+        <label>{{ t('pn.f.count') }}<span class="req">*</span></label>
         <input name="post_count" type="number" min="1" max="8" value="5" required>
-        <div class="hint">Choisis entre 1 et 8 posts. Recommandé : 3 à 5 pour une génération plus rapide.</div>
+        <div class="hint">{{ t('pn.f.count.hint') }}</div>
       </div>
       <div class="field" data-field="target_sector">
-        <label>Secteur cible</label>
-        <input name="target_sector" placeholder="Optionnel : PME, industrie, retail, cabinets comptables">
-        <div class="hint">Optionnel. Laisse vide si tu veux des idées plus générales.</div>
+        <label>{{ t('pn.f.sector') }}</label>
+        <input name="target_sector" placeholder="{{ t('pn.f.sector.ph') }}">
+        <div class="hint">{{ t('pn.f.sector.hint') }}</div>
       </div>
     </div>
 
     <div class="grid">
-      <div class="field"><label>Entreprise</label>
-        <input name="company" placeholder="Optionnel : nom de l'entreprise"></div>
-      <div class="field"><label>Site web</label>
-        <input name="website" placeholder="Optionnel : https://..."></div>
+      <div class="field"><label>{{ t('pn.f.company') }}</label>
+        <input name="company" placeholder="{{ t('pn.f.company.ph') }}"></div>
+      <div class="field"><label>{{ t('pn.f.website') }}</label>
+        <input name="website" placeholder="{{ t('pn.f.website.ph') }}"></div>
     </div>
 
     <div class="grid">
-      <div class="field"><label>Solution</label>
-        <input name="solution" placeholder="Optionnel : nom ou description de la solution"></div>
-      <div class="field"><label>Tags par défaut</label>
-        <input name="default_tags" placeholder="Optionnel : #IA #SaaS #Automatisation">
-        <div class="hint">Sépare les tags par espace, virgule ou point-virgule. Ils seront proposés à l'IA.</div>
+      <div class="field"><label>{{ t('pn.f.solution') }}</label>
+        <input name="solution" placeholder="{{ t('pn.f.solution.ph') }}"></div>
+      <div class="field"><label>{{ t('pn.f.tags') }}</label>
+        <input name="default_tags" placeholder="{{ t('pn.f.tags.ph') }}">
+        <div class="hint">{{ t('pn.f.tags.hint') }}</div>
       </div>
     </div>
 
     <div class="field" data-field="target_audience">
-      <label>Public cible</label>
+      <label>{{ t('pn.f.audience') }}</label>
       <div id="targetAudienceSelect" class="multiSelect"></div>
-      <div class="hint">Optionnel. Sélectionne un ou plusieurs publics, ou laisse vide pour laisser l'IA proposer une cible pertinente.</div>
+      <div class="hint">{{ t('pn.f.audience.hint') }}</div>
     </div>
 
     <div class="field" data-field="preferred_formats">
-      <label>Formats de publication à privilégier<span class="req">*</span></label>
+      <label>{{ t('pn.f.formats') }}<span class="req">*</span></label>
       <div id="preferredFormatsSelect" class="multiSelect"></div>
-      <div class="hint">Choisis les formats de publication à préparer. Les dimensions image/vidéo se règlent ensuite dans Générer un média.</div>
-      <div class="error">Sélectionne au moins un format.</div>
+      <div class="hint">{{ t('pn.f.formats.hint') }}</div>
+      <div class="error">{{ t('pn.f.formats.err') }}</div>
     </div>
 
-    <div class="field"><label>Contraintes</label>
+    <div class="field"><label>{{ t('pn.f.constraints') }}</label>
       <textarea name="constraints" maxlength="900" data-char-limit="900"
-        placeholder="Ex : éviter les sujets trop génériques, ne pas citer de chiffres non vérifiés">Évite les sujets génériques ou déjà surutilisés, ne pas citer de chiffres non vérifiés</textarea>
+        placeholder="{{ t('pn.f.constraints.ph') }}">{{ t('pn.f.constraints.default') }}</textarea>
     </div>
 
     <div class="field promptField" data-field="theme">
       <div class="labelRow">
-        <label for="themeInput">Prompt enrichi</label>
-        <button type="button" id="reformulateBtn" class="promptBtn">Générer avec l'IA</button>
+        <label for="themeInput">{{ t('pn.f.prompt') }}</label>
+        <button type="button" id="reformulateBtn" class="promptBtn">{{ t('pn.f.prompt.generate') }}</button>
       </div>
       <textarea id="themeInput" name="theme" maxlength="3500" data-char-limit="3500"
-        placeholder="Après avoir rempli les champs ci-dessus, clique sur « Générer avec l'IA » pour créer un prompt structuré avec titres de sections et retours à la ligne. Tu peux aussi coller une ou plusieurs URL ici si elles doivent servir d'inspiration."></textarea>
-      <div class="hint">Ce prompt est optionnel : si tu le laisses vide, le workflow utilisera le sujet et les champs
-        du formulaire. Le bouton de reformulation tient compte des champs remplis et ajoute un cadre complet :
-        domaines IA/SaaS, tendances marché, besoins entreprises, problèmes métiers et opportunités business.</div>
+        placeholder="{{ t('pn.f.prompt.ph') }}"></textarea>
+      <div class="hint">{{ t('pn.f.prompt.hint') }}</div>
       <div id="promptAssistStatus" class="assistStatus"></div>
-      <div class="error">Renseigne un sujet ou un prompt.</div>
+      <div class="error">{{ t('pn.f.prompt.err') }}</div>
     </div>
 
-    <button id="submitBtn" class="btn-primary newSubjectSubmit" type="submit">Générer les idées</button>
+    <button id="submitBtn" class="btn-primary newSubjectSubmit" type="submit">{{ t('pn.submit') }}</button>
   </form>
 </section>
 
 <div id="loaderOverlay" class="loaderOverlay" aria-live="polite" aria-busy="true">
   <div class="loaderBox">
     <div class="spinner"></div>
-    <p class="loaderTitle">Génération en cours</p>
-    <p class="loaderText">L'IA analyse tes critères, génère les idées, prépare les posts prêts à publier
-      et construit la page de consultation.</p>
+    <p class="loaderTitle">{{ t('pn.loader.title') }}</p>
+    <p class="loaderText">{{ t('pn.loader.text') }}</p>
     <div class="loaderSteps">
-      <div class="loaderStep">1. Analyse du sujet et des contraintes</div>
-      <div class="loaderStep">2. Génération du nombre de posts demandé</div>
-      <div class="loaderStep">3. Création des posts prêts à publier</div>
-      <div class="loaderStep">4. Préparation de la page de consultation</div>
+      <div class="loaderStep">{{ t('pn.loader.step1') }}</div>
+      <div class="loaderStep">{{ t('pn.loader.step2') }}</div>
+      <div class="loaderStep">{{ t('pn.loader.step3') }}</div>
+      <div class="loaderStep">{{ t('pn.loader.step4') }}</div>
     </div>
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/form.js"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/form.js?v=21"></script>{% endblock %}

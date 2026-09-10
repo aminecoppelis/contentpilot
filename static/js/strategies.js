@@ -13,7 +13,7 @@
   var modal=document.getElementById('strategyModal');
 
   function toast(msg,type){
-    if(window.pgToast) window.pgToast(msg,type||'success'); else alert(msg);
+    window.pgToast(msg,type||'success');
   }
   function closeModal(){
     if(!modal)return;
@@ -44,7 +44,7 @@
   if(aiBtn)aiBtn.addEventListener('click',async function(){
     if(!form)return;
     var previous=aiBtn.textContent;
-    aiBtn.disabled=true; aiBtn.textContent='Génération…';
+    aiBtn.disabled=true; aiBtn.textContent=window.t('js.generating');
     try{
       var r=await fetch(WEBHOOK_BASE+'/strategies/instructions/generate',{
         method:'POST',headers:{'Content-Type':'application/json'},
@@ -57,8 +57,8 @@
       if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
       var text=(d.data&&d.data.instructions)||d.instructions||'';
       if(text){ form.instructions.value=text; syncFormState(); }
-      else toast('Aucune instruction générée.','error');
-    }catch(e){ toast('Génération impossible : '+e.message,'error'); }
+      else toast(window.t('js.strat.no_instructions'),'error');
+    }catch(e){ toast(e.message||window.t('js.strat.gen_failed'),'error'); }
     finally{ aiBtn.textContent=previous; syncFormState(); }
   });
 
@@ -66,7 +66,7 @@
     event.preventDefault();
     if(submitBtn&&submitBtn.disabled)return;
     var previous=submitBtn?submitBtn.textContent:'';
-    if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent='Analyse en cours…'; }
+    if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent=window.t('js.strat.analyzing'); }
     if(loader)loader.classList.add('show');
     try{
       var payload={
@@ -83,7 +83,7 @@
       var d=await r.json().catch(function(){return {};});
       if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
       var strategyId=(d.data&&d.data.strategy_id)||d.strategy_id||'';
-      if(window.pgFlash)window.pgFlash('Stratégie créée.','success');
+      window.pgToast(window.t('js.strat.created'),'success');
       window.location.href=WEBHOOK_BASE+'/strategies'+(strategyId?('?strategy_id='+encodeURIComponent(strategyId)):'');
     }catch(e){
       toast('Analyse impossible : '+e.message,'error');
@@ -98,8 +98,8 @@
     if(!btn)return;
     event.preventDefault();
     var id=btn.getAttribute('data-strategy-id');
-    var title=btn.getAttribute('data-strategy-title')||'cette stratégie';
-    if(!confirm('Supprimer définitivement « '+title+' » ? Les actions planifiées associées seront annulées.'))return;
+    var title=btn.getAttribute('data-strategy-title')||window.t('js.strat.this_one');
+    if(!(await window.pgConfirm(window.t('js.strat.confirm_delete',{title:title}),{danger:true,confirmText:window.t('js.delete')})))return;
     btn.disabled=true;
     try{
       var r=await fetch(WEBHOOK_BASE+'/strategies/action',{
@@ -108,8 +108,8 @@
       var d=await r.json().catch(function(){return {};});
       if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
       var row=btn.closest('tr'); if(row)row.remove();
-      toast('Stratégie supprimée.');
-    }catch(e){ toast('Suppression impossible : '+e.message,'error'); btn.disabled=false; }
+      toast(window.t('js.strat.deleted'));
+    }catch(e){ toast(e.message||window.t('js.delete_failed'),'error'); btn.disabled=false; }
   });
 
   /* Modale d'édition d'un créneau de calendrier */
@@ -151,14 +151,14 @@
   if(calSave)calSave.addEventListener('click',async function(){
     var dateEl=document.getElementById('calendarTaskDate');
     var timeEl=document.getElementById('calendarTaskTime');
-    if(!dateEl||!timeEl||!dateEl.value||!timeEl.value){toast('Choisis une date et une heure.','error');return;}
+    if(!dateEl||!timeEl||!dateEl.value||!timeEl.value){toast(window.t('js.strat.pick_datetime'),'error');return;}
     var now=userNowParts();
     var selectedKey=dateEl.value+'T'+timeEl.value;
     var nowKey=now.date+'T'+now.time;
-    if(selectedKey<=nowKey){toast('La date et l’heure doivent être dans le futur.','error');return;}
+    if(selectedKey<=nowKey){toast(window.t('js.strat.future_datetime'),'error');return;}
     var detailWorkspace=document.querySelector('.strategyWorkspace[data-strategy-id]');
     var detailStrategyId=detailWorkspace?String(detailWorkspace.getAttribute('data-strategy-id')||''):'';
-    if(!detailStrategyId||!currentCalendarId){toast('Tâche calendrier introuvable.','error');return;}
+    if(!detailStrategyId||!currentCalendarId){toast(window.t('js.strat.task_not_found'),'error');return;}
     calSave.disabled=true;
     try{
       // datetime-local n'a pas d'offset : le backend l'interprète dans le fuseau IANA de l'utilisateur.
@@ -175,7 +175,7 @@
       }
       var d=await r.json().catch(function(){return {};});
       if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
-      toast('Créneau mis à jour.');
+      toast(window.t('js.strat.slot_updated'));
       closeCalendarModal();
       setTimeout(function(){location.reload();},250);
     }catch(e){ toast('Modification impossible : '+e.message,'error'); }
@@ -188,7 +188,7 @@
   var workspace=document.querySelector('.strategyWorkspace[data-strategy-id]');
   if(!workspace)return;
   var strategyId=String(workspace.getAttribute('data-strategy-id')||'').trim();
-  function detailToast(msg,type){ if(window.pgToast)window.pgToast(msg,type||'success'); else alert(msg); }
+  function detailToast(msg,type){ window.pgToast(msg,type||'success'); }
   async function detailApi(payload){
     var r=await fetch('/app/strategies/action',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     var d=await r.json().catch(function(){return {};});
@@ -221,20 +221,20 @@
   document.querySelectorAll('.strategyStatusBtn[data-strategy-action],.strategyScheduleBtn[data-strategy-action]').forEach(function(btn){
     btn.addEventListener('click',async function(){
       var action=btn.getAttribute('data-strategy-action');
-      if(action==='archive'&&!confirm('Archiver cette stratégie ?'))return;
+      if(action==='archive'&&!(await window.pgConfirm(window.t('js.strat.confirm_archive'))))return;
       btn.disabled=true;
       try{
         await detailApi({strategy_id:strategyId,action:action});
-        detailToast(action==='archive'?'Stratégie archivée.':(action==='schedule'?'Actions planifiées.':'Stratégie activée.'));
+        detailToast(action==='archive'?window.t('js.strat.archived'):(action==='schedule'?window.t('js.strat.actions_planned'):window.t('js.strat.activated')));
         setTimeout(function(){window.location.reload();},300);
-      }catch(e){detailToast(e.message||'Mise à jour impossible.','error');btn.disabled=false;}
+      }catch(e){detailToast(e.message||window.t('js.update_failed'),'error');btn.disabled=false;}
     });
   });
 
   async function schedulePostsFromActions(actionIds,trigger){
     actionIds=(actionIds||[]).filter(Boolean);
-    if(!strategyId){detailToast('Stratégie introuvable.','error');return;}
-    if(!actionIds.length){detailToast('Sélectionne au moins une action.','error');return;}
+    if(!strategyId){detailToast(window.t('js.strat.not_found'),'error');return;}
+    if(!actionIds.length){detailToast(window.t('js.strat.pick_action'),'error');return;}
     var controls=Array.prototype.slice.call(document.querySelectorAll('.actionBulkBox,.actionRun,#bulkLaunchActions,#selectAllActions,#toggleBulkMode'));
     if(trigger)controls.push(trigger);
     controls.forEach(function(el){if(el){el.disabled=true;el.classList.add('isSaving');}});
@@ -246,11 +246,11 @@
         action_ids:actionIds,
         auto_plan:true
       });
-      detailToast((result&&result.message)||'Génération planifiée.','success');
+      detailToast((result&&result.message)||window.t('js.strat.gen_planned'),'success');
       setTimeout(function(){location.reload();},450);
     }catch(error){
       controls.forEach(function(el){if(el){el.disabled=false;el.classList.remove('isSaving');}});
-      detailToast(error.message||'Planification impossible.','error');
+      detailToast(error.message||window.t('js.strat.plan_failed'),'error');
     }
   }
 
@@ -275,7 +275,7 @@
     if(label){label.textContent=bulk?(count+' sélectionnée'+(count>1?'s':'')):'';label.style.display=bulk?'':'none';}
     if(bulkBtn)bulkBtn.disabled=!bulk||count===0;
     if(selectBtn)selectBtn.disabled=!bulk;
-    if(toggleBtn)toggleBtn.textContent=bulk?'Quitter la sélection':'Sélectionner plusieurs';
+    if(toggleBtn)toggleBtn.textContent=bulk?window.t('js.strat.exit_selection'):window.t('js.strat.select_many');
   }
   function setBulkMode(enabled){
     var list=document.getElementById('actionsList');
@@ -287,13 +287,13 @@
   async function clearPendingCalendarTasks(trigger){
     var button=trigger||document.getElementById('clearPendingCalendarTasks');
     var clearableCount=Math.max(0,Number(button&&button.getAttribute('data-clearable-count')||0));
-    if(!clearableCount){detailToast('Aucune tâche planifiée non générée à effacer.','error');return;}
-    if(!window.confirm('Effacer '+clearableCount+' tâche(s) planifiée(s) non encore générée(s) ?\n\nLes contenus déjà en cours de génération, générés, publiés ou terminés ne seront pas supprimés.'))return;
+    if(!clearableCount){detailToast(window.t('js.strat.no_clearable'),'error');return;}
+    if(!(await window.pgConfirm(window.t('js.strat.confirm_clear',{count:clearableCount}),{danger:true})))return;
     try{
       var result=await detailApi({action:'clear_pending_calendar_tasks',strategy_id:strategyId});
       detailToast((result&&result.message)||(Number(result&&result.cleared_calendar_count||0)+' tâche(s) planifiée(s) effacée(s).'),'success');
       setTimeout(function(){location.reload();},450);
-    }catch(error){detailToast(error&&error.message?error.message:'Suppression des tâches impossible.','error');}
+    }catch(error){detailToast(error&&error.message?error.message:window.t('js.strat.clear_failed'),'error');}
   }
 
   document.addEventListener('change',function(event){
@@ -330,8 +330,8 @@
 
   var deleteBtn=document.querySelector('.strategyDetailDeleteBtn[data-strategy-id]');
   if(deleteBtn)deleteBtn.addEventListener('click',async function(){
-    var title=deleteBtn.getAttribute('data-strategy-title')||'cette stratégie';
-    if(!confirm('Supprimer définitivement « '+title+' » ? Les tâches planifiées associées seront annulées.'))return;
+    var title=deleteBtn.getAttribute('data-strategy-title')||window.t('js.strat.this_one');
+    if(!(await window.pgConfirm(window.t('js.strat.confirm_delete',{title:title}),{danger:true,confirmText:window.t('js.delete')})))return;
     deleteBtn.disabled=true;
     try{
       await detailApi({strategy_id:strategyId,action:'delete'});

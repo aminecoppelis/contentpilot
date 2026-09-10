@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Idées générées{% endblock %}
+{% block title %}{{ t('pip.title') }}{% endblock %}
 {% block content %}
 <a class="pageBack" href="/app/posts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>{{ t('nav.subjects') }}</a>
-<h1>Idées générées</h1>
-<p class="subtitle">{{ ideas|length }} idée(s) pour cette demande.</p>
+<h1>{{ t('pip.title') }}</h1>
+<p class="subtitle">{{ t('pip.count', count=ideas|length) }}</p>
 <div class="grid">
   {% for idea in ideas %}
   <div class="idea-card">
@@ -11,7 +11,7 @@
     <p>{{ idea.post_text }}</p>
     {% for tag in (idea.hashtags or []) %}<span class="tag">{{ tag }}</span>{% endfor %}
     <div style="margin-top:12px">
-      <a class="btn-ghost" href="/app/posts/view?idea_id={{ idea.idea_id }}">Voir / éditer</a>
+      <a class="btn-ghost" href="/app/posts/view?idea_id={{ idea.idea_id }}">{{ t('pip.view_edit') }}</a>
     </div>
   </div>
   {% endfor %}

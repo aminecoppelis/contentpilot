@@ -1,10 +1,69 @@
-/* Port verbatim du composant pgToast/pgFlash/pgConsumeQueryToast partagé. */
-(function(){
-if(window.pgToast)return;
-function getContainer(){var c=document.getElementById('pgToastContainer');if(!c){c=document.createElement('div');c.id='pgToastContainer';c.className='pgToastContainer';c.setAttribute('aria-live','polite');c.setAttribute('aria-atomic','true');document.body.appendChild(c);}return c;}
-window.pgToast=function(message,type){var text=String(message||'').trim();if(!text)return;var c=getContainer();var el=document.createElement('div');el.className='pgToast '+(type||'success');el.textContent=text;c.appendChild(el);requestAnimationFrame(function(){el.classList.add('show');});setTimeout(function(){el.classList.remove('show');setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},220);},3800);};
-window.pgFlash=function(message,type){try{sessionStorage.setItem('pgFlash',JSON.stringify({message:String(message||''),type:type||'success',createdAt:Date.now()}));}catch(e){}};
-window.pgConsumeFlash=function(){try{var raw=sessionStorage.getItem('pgFlash');if(!raw)return;sessionStorage.removeItem('pgFlash');var data=JSON.parse(raw);if(!data||!data.message)return;if(Date.now()-Number(data.createdAt||0)>300000)return;window.pgToast(data.message,data.type||'success');}catch(e){}};
-window.pgConsumeQueryToast=function(){try{var url=new URL(window.location.href);var p=url.searchParams;var message='';var type='success';if(p.get('error')){message=p.get('error');type='error';p.delete('error');}else if(p.get('success')){message=p.get('success');p.delete('success');}else if(p.get('message')){message=p.get('message');p.delete('message');}else if(p.get('updated')==='1'){message='Sujet mis à jour.';p.delete('updated');}else if(p.get('created')==='1'){message='Sujet créé.';p.delete('created');}else if(p.get('deleted')==='1'){message='Sujet supprimé.';p.delete('deleted');}p.delete('t');if(message){window.pgToast(message,type);history.replaceState({},document.title,url.pathname+(p.toString()?'?'+p.toString():'')+url.hash);}}catch(e){}};
-setTimeout(function(){window.pgConsumeFlash();window.pgConsumeQueryToast();},0);
+/* Toasts — notification flottante unifiée (thème clair + sombre via ui-kit).
+   API : window.pgToast(message, type)  où type ∈ success | error | info | warning
+   Empilement, icône par type, fermeture au clic, auto-masquage. */
+(function () {
+  'use strict';
+
+  var ICONS = {
+    success: '<path d="M20 6 9 17l-5-5"/>',
+    error:   '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+    info:    '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+    warning: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>'
+  };
+
+  function getContainer() {
+    var c = document.getElementById('pgToastContainer');
+    if (!c) {
+      c = document.createElement('div');
+      c.id = 'pgToastContainer';
+      c.className = 'pgToastContainer';
+      c.setAttribute('aria-live', 'polite');
+      c.setAttribute('aria-atomic', 'true');
+      document.body.appendChild(c);
+    }
+    return c;
+  }
+
+  window.pgToast = function (message, type) {
+    var text = String(message == null ? '' : message).trim();
+    if (!text) return;
+    var kind = (type === 'error' || type === 'info' || type === 'warning') ? type : 'success';
+    var c = getContainer();
+
+    var el = document.createElement('div');
+    el.className = 'pgToast ' + kind;
+    el.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+
+    var icon = document.createElement('span');
+    icon.className = 'pgToastIcon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[kind] || ICONS.success) + '</svg>';
+
+    var body = document.createElement('span');
+    body.className = 'pgToastBody';
+    body.textContent = text;
+
+    var close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'pgToastClose';
+    close.setAttribute('aria-label', (window.t ? window.t('js.close') : 'Fermer'));
+    close.innerHTML = '&times;';
+
+    el.appendChild(icon);
+    el.appendChild(body);
+    el.appendChild(close);
+    c.appendChild(el);
+
+    requestAnimationFrame(function () { el.classList.add('show'); });
+
+    var timer = setTimeout(dismiss, kind === 'error' ? 6000 : 4000);
+    function dismiss() {
+      clearTimeout(timer);
+      el.classList.remove('show');
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 240);
+    }
+    close.addEventListener('click', dismiss);
+    el.addEventListener('click', function (e) { if (e.target === el || e.target === body) dismiss(); });
+    return dismiss;
+  };
 })();

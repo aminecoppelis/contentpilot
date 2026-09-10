@@ -15,6 +15,7 @@ from app.i18n import (
     LOCALE_NAMES,
     LOCALE_SHORT,
     SUPPORTED_LOCALES,
+    js_catalog,
     resolve_locale,
     text_dir,
     translate,
@@ -34,6 +35,7 @@ def _i18n_context(request) -> dict:
         "supported_locales": SUPPORTED_LOCALES,
         "locale_names": LOCALE_NAMES,
         "locale_short": LOCALE_SHORT,
+        "js_catalog": js_catalog(locale),  # sous-ensemble js.* pour window.__I18N
     }
 
 
@@ -51,6 +53,7 @@ templates.env.globals.setdefault("dir", text_dir(DEFAULT_LOCALE))
 templates.env.globals.setdefault("supported_locales", SUPPORTED_LOCALES)
 templates.env.globals.setdefault("locale_names", LOCALE_NAMES)
 templates.env.globals.setdefault("locale_short", LOCALE_SHORT)
+templates.env.globals.setdefault("js_catalog", js_catalog(DEFAULT_LOCALE))
 
 
 def render_fragment(request, name: str, **context) -> str:

@@ -228,8 +228,7 @@
     }catch(e){
       if(overlay)overlay.classList.remove('isOpen','isVisible');
       if(submitBtn)submitBtn.disabled=false;
-      if(window.pgToast)window.pgToast('Génération impossible : '+e.message,'error');
-      else alert('Génération impossible : '+e.message);
+      window.pgToast(e.message||window.t('js.form.gen_failed'),'error');
     }
   });
 })();

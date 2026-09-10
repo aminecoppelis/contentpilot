@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ page_heading }} · Post Generator{% endblock %}
+{% block title %}{{ page_heading }} · {{ t('app.name') }}{% endblock %}
 {% block extra_style %}<link rel="stylesheet" href="/static/css/consultation.css?v=20260903-video-bg-v90">{% endblock %}
 {% block content %}
 <header class="header" id="posts-view-header">
@@ -9,14 +9,14 @@
     {% else %}
     <a class="pageBack" href="/app/posts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>{{ t('nav.subjects') }}</a>
     {% endif %}
-    <div class="eyebrow" id="posts-view-eyebrow">Sujet</div>
+    <div class="eyebrow" id="posts-view-eyebrow">{{ t('pv.eyebrow') }}</div>
     <h1 class="h1" id="posts-view-heading">{{ page_heading }}</h1>
   </div>
 </header>
 
 {% if request_deleted %}
 <section class="orphanIdeaNotice" role="status">
-  <div><b>Sujet supprimé</b><span>Cette idée est conservée dans l’historique. Elle reste consultable, mais les actions qui nécessitent un sujet actif sont désactivées.</span></div>
+  <div><b>{{ t('pv.orphan.title') }}</b><span>{{ t('pv.orphan.text') }}</span></div>
 </section>
 {% endif %}
 
@@ -24,15 +24,15 @@
 <section class="aiGenerationNotice" id="aiGenerationNotice" data-generation-watch="1">
   <div class="aiNoticeIcon" aria-hidden="true">…</div>
   <div>
-    <h2>Génération en arrière-plan</h2>
-    <p>L’IA prépare les idées et les posts. Tu peux rester sur cette page : elle s’actualisera automatiquement dès que le lot sera prêt.</p>
-    <div class="aiNoticeMeta"><span>{{ generated_count }}/{{ expected_count }} idée(s) disponible(s)</span><span>État : {{ generation_status }}</span></div>
+    <h2>{{ t('pv.gen.title') }}</h2>
+    <p>{{ t('pv.gen.text') }}</p>
+    <div class="aiNoticeMeta"><span>{{ t('pv.gen.available', done=generated_count, total=expected_count) }}</span><span>{{ t('pv.gen.state', state=generation_status) }}</span></div>
   </div>
 </section>
 {% elif generation_failed %}
 <section class="aiGenerationNotice isError" id="aiGenerationNotice">
   <div class="aiNoticeIcon" aria-hidden="true">!</div>
-  <div><h2>Génération en erreur</h2><p>{{ generation_error or "La génération s’est arrêtée côté serveur." }}</p></div>
+  <div><h2>{{ t('pv.gen.failed_title') }}</h2><p>{{ generation_error or t('pv.gen.failed_text') }}</p></div>
 </section>
 {% endif %}
 
@@ -56,17 +56,17 @@
 
     <section class="postReady">
       <div class="postReadyHeader">
-        <div><span class="label">Sujet prêt à copier-coller</span>
+        <div><span class="label">{{ t('pv.ready_label') }}</span>
           <h2 id="post-title-{{ i }}">{{ idea.post_title }}</h2></div>
       </div>
-      {% if not read_only %}<div class="formatToolbar" aria-label="Mise en forme du post">
+      {% if not read_only %}<div class="formatToolbar" aria-label="{{ t('pv.format.aria') }}">
         <button type="button" id="fmt-bold-{{ i }}" class="fmtBold" onmousedown="event.preventDefault()"
                 onclick="formatPostSelection({{ i }}, 'bold')">B</button>
         <button type="button" id="fmt-italic-{{ i }}" class="fmtItalic" onmousedown="event.preventDefault()"
                 onclick="formatPostSelection({{ i }}, 'italic')">I</button>
         <button type="button" id="fmt-underline-{{ i }}" class="fmtUnderline" onmousedown="event.preventDefault()"
                 onclick="formatPostSelection({{ i }}, 'underline')">U</button>
-        <button type="button" class="copyBtn copyIconBtn" title="Copier le post" aria-label="Copier le post"
+        <button type="button" class="copyBtn copyIconBtn" title="{{ t('pv.copy') }}" aria-label="{{ t('pv.copy') }}"
                 onmousedown="event.preventDefault()" onclick="copyPost('copy-{{ i }}', this)">⧉</button>
       </div>{% endif %}
       <textarea id="copy-{{ i }}" class="copyBox" {% if read_only %}readonly aria-readonly="true"{% else %}oninput="markPostEdited({{ i }});updateFormatToolbar({{ i }})"{% endif %}
@@ -74,18 +74,18 @@
                 onmouseup="updateFormatToolbar({{ i }})" onselect="updateFormatToolbar({{ i }})"{% endif %}>{{ idea.full_text }}</textarea>
       {% if not read_only %}<div class="buttons" style="margin-top:10px">
         <button type="button" onclick="openActionModal({{ i }}, 'Régénérer')" class="regen"
-                title="Régénérer un post crée une nouvelle version du post en conservant le format de cette carte.">Régénérer un post</button>
+                title="{{ t('pv.regen.title') }}">{{ t('pv.regen') }}</button>
         <span id="post-edit-status-{{ i }}" class="hint" style="margin:0;align-self:center"></span>
       </div>{% endif %}
     </section>
 
     <section class="mediaSection" id="media-slot-{{ i }}">
       <div class="mediaHeader">
-        <span class="mediaLabel">Médias</span>
+        <span class="mediaLabel">{{ t('pv.media') }}</span>
         {% if not read_only %}<div class="mediaHeaderActions">
           <button type="button" class="mediaBtn" id="media-btn-inline-{{ i }}" data-media-index="{{ i }}"
-                  onclick="return window.openMediaModal({{ i }})">Générer un média</button>
-          <button type="button" class="mediaDownload" onclick="importMedia({{ i }})">Importer image</button>
+                  onclick="return window.openMediaModal({{ i }})">{{ t('pv.media.generate') }}</button>
+          <button type="button" class="mediaDownload" onclick="importMedia({{ i }})">{{ t('pv.media.import') }}</button>
         </div>{% endif %}
       </div>
       {% if false and idea.media %}
@@ -151,26 +151,26 @@
       {% elif idea.media_count %}
         <div class="mediaPlaceholder" style="border:1px solid var(--brand-tint-2);background:var(--brand-tint);padding:24px">
           <div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:14px">
-            <b style="font-size:16px">{{ idea.media_count }} média(s) disponible(s)</b>
+            <b style="font-size:16px">{{ t('pv.media.available', count=idea.media_count) }}</b>
             <button type="button" class="mediaBtn mediaLoadBtn" data-load-idea-media="{{ i }}"
               onclick="event.preventDefault();event.stopPropagation();window.loadIdeaMedia({{ i }},1,this);return false">
-              Voir les médias ({{ idea.media_count }})</button>
+              {{ t('pv.media.see', count=idea.media_count) }}</button>
           </div>
         </div>
       {% else %}
-        <div class="mediaPlaceholder"><div><b>Aucun média généré</b>
-          <span>Génère plusieurs images ou vidéos, compare-les, puis choisis le média à publier.</span></div></div>
+        <div class="mediaPlaceholder"><div><b>{{ t('pv.media.none') }}</b>
+          <span>{{ t('pv.media.none_hint') }}</span></div></div>
       {% endif %}
     </section>
 
     <details class="ideaDetails" id="details-{{ i }}">
-      <summary>Voir l'idée et les scores</summary>
+      <summary>{{ t('pv.details.summary') }}</summary>
       <h3 class="ideaTitle" id="idea-title-{{ i }}">{{ idea.title }}</h3>
       <p class="hook" id="idea-hook-{{ i }}">{{ idea.hook }}</p>
-      <div class="block"><h4>Résumé</h4><p id="idea-summary-{{ i }}">{{ idea.summary }}</p></div>
+      <div class="block"><h4>{{ t('pv.details.summary_h') }}</h4><p id="idea-summary-{{ i }}">{{ idea.summary }}</p></div>
       <div class="twocol">
-        <div class="block"><h4>Problème métier</h4><p id="idea-problem-{{ i }}">{{ idea.business_problem_solved }}</p></div>
-        <div class="block"><h4>Solution</h4><p id="idea-solution-{{ i }}">{{ idea.ai_or_software_solution }}</p></div>
+        <div class="block"><h4>{{ t('pv.details.problem') }}</h4><p id="idea-problem-{{ i }}">{{ idea.business_problem_solved }}</p></div>
+        <div class="block"><h4>{{ t('pv.details.solution') }}</h4><p id="idea-solution-{{ i }}">{{ idea.ai_or_software_solution }}</p></div>
       </div>
       <div class="scores" id="scores-{{ i }}">
         {% for s in idea.scores_list %}
@@ -178,35 +178,35 @@
             <i><em style="width:{{ s.value * 10 }}%"></em></i></div>
         {% endfor %}
       </div>
-      <div class="block"><h4>Pourquoi maintenant</h4><p id="idea-why-{{ i }}">{{ idea.why_interesting_today }}</p></div>
-      <div class="block"><h4>Exemple concret</h4><p id="idea-example-{{ i }}">{{ idea.concrete_application_example }}</p></div>
-      <div class="seo" id="seo-{{ i }}"><b>Mots-clés SEO :</b>
+      <div class="block"><h4>{{ t('pv.details.why') }}</h4><p id="idea-why-{{ i }}">{{ idea.why_interesting_today }}</p></div>
+      <div class="block"><h4>{{ t('pv.details.example') }}</h4><p id="idea-example-{{ i }}">{{ idea.concrete_application_example }}</p></div>
+      <div class="seo" id="seo-{{ i }}"><b>{{ t('pv.details.seo') }}</b>
         {% for kw in idea.seo_keywords %}<span class="tag kw">{{ kw }}</span>{% endfor %}</div>
     </details>
 
     <div class="actions">
       <div class="reviewNote" id="review-note-{{ i }}" {% if not idea.review_note %}style="display:none"{% endif %}>
-        {% if idea.review_note %}<b>{{ 'Note de refus' if idea.review_action == 'Refuser' else 'Note de validation' }}</b>
+        {% if idea.review_note %}<b>{{ t('pv.note.reject') if idea.review_action == 'Refuser' else t('pv.note.approve') }}</b>
         <span>{{ idea.review_note }}</span>{% endif %}
       </div>
       <div class="buttons">
         {% if not read_only and not idea.is_published %}<span id="validation-actions-{{ i }}" class="validationActions">
           {% if idea.is_scheduled %}
-            <button type="button" class="ok" disabled title="Ce post est déjà programmé.">Programmé</button>
+            <button type="button" class="ok" disabled title="{{ t('pv.act.scheduled.title') }}">{{ t('pv.act.scheduled') }}</button>
           {% elif idea.awaiting_validation %}
             <button type="button" onclick="openActionModal({{ i }}, 'Valider')" class="ok"
-                    title="Valider ce post et le marquer prêt à publier.">Valider</button>
+                    title="{{ t('pv.act.approve.title') }}">{{ t('pv.act.approve') }}</button>
             <button type="button" onclick="openActionModal({{ i }}, 'Refuser')" class="reject"
-                    title="Refuser cette validation et marquer le post comme rejeté.">Refuser</button>
+                    title="{{ t('pv.act.reject.title') }}">{{ t('pv.act.reject') }}</button>
           {% else %}
             <button type="button" onclick="openActionModal({{ i }}, 'À valider')" class="warn"
-                    title="Demander une nouvelle validation de ce post.">Demander validation</button>
+                    title="{{ t('pv.act.request.title') }}">{{ t('pv.act.request') }}</button>
           {% endif %}
         </span>{% endif %}
         <button type="button" id="share-btn-{{ i }}" onclick="shareIdea({{ i }}, this)" class="edit"
-                title="Copier l'URL complète contenant request_id et idea_id.">Partager</button>
+                title="{{ t('pv.act.share.title') }}">{{ t('pv.act.share') }}</button>
         {% if not read_only %}<button type="button" id="publish-btn-{{ i }}" onclick="openPublishModal({{ i }})" class="ok"
-                title="Publier directement, quel que soit le statut de validation.">Publier</button>{% endif %}
+                title="{{ t('pv.act.publish.title') }}">{{ t('pv.act.publish') }}</button>{% endif %}
       </div>
     </div>
   </article>
@@ -214,22 +214,22 @@
 </section>
 
 {% if request_id and not read_only %}
-<section class="moreIdeasFooter" aria-label="Générer plus d'idées">
-  <button type="button" class="moreIdeasBtn" {% if generation_in_progress %}disabled title="Une génération est déjà en cours"{% else %}
+<section class="moreIdeasFooter" aria-label="{{ t('pv.more') }}">
+  <button type="button" class="moreIdeasBtn" {% if generation_in_progress %}disabled title="{{ t('pv.more.busy') }}"{% else %}
     onclick="document.getElementById('generateMoreModal').classList.add('isVisible');setTimeout(function(){var i=document.getElementById('generateMoreCount'); if(i){i.focus(); i.select();}},50);"{% endif %}>
-    {{ 'Génération en cours…' if generation_in_progress else "Générer plus d'idées" }}</button>
-  <p>Ajoute de nouvelles idées à la suite, avec le même sujet et les mêmes paramètres.</p>
+    {{ t('pv.more.running') if generation_in_progress else t('pv.more') }}</button>
+  <p>{{ t('pv.more.hint') }}</p>
 </section>
 {% endif %}
 
 <div id="pgAiActivity" class="pgAiActivity" hidden>
   <button type="button" id="pgAiActivityToggle" class="pgAiActivityToggle" aria-expanded="false" aria-controls="pgAiActivityPanel">
     <span class="pgAiActivityIcon" aria-hidden="true">✨</span>
-    <span><b id="pgAiActivityTitle">IA inactive</b><small id="pgAiActivitySubtitle">Aucune tâche en cours</small></span>
+    <span><b id="pgAiActivityTitle">{{ t('pv.ai.idle') }}</b><small id="pgAiActivitySubtitle">{{ t('pv.ai.idle_sub') }}</small></span>
     <i id="pgAiActivityCount">0</i>
   </button>
   <div id="pgAiActivityPanel" class="pgAiActivityPanel" hidden>
-    <div class="pgAiActivityHead"><b>Activité IA</b><button type="button" id="pgAiActivityClose" aria-label="Fermer">×</button></div>
+    <div class="pgAiActivityHead"><b>{{ t('pv.ai.title') }}</b><button type="button" id="pgAiActivityClose" aria-label="{{ t('common.close') }}">×</button></div>
     <div id="pgAiActivityList" class="pgAiActivityList"></div>
   </div>
 </div>
@@ -249,5 +249,5 @@ window.__PG_VIEW = {
   backgroundJobs: {{ background_jobs | tojson }}
 };
 </script>
-<script src="/static/js/consultation.js?v=20260903-video-bg-v90"></script>
+<script src="/static/js/consultation.js?v=21"></script>
 {% endblock %}

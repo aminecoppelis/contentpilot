@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Configuration Meta · Administration{% endblock %}
+{% block title %}{{ t('mc.title') }} · {{ t('nav.admin') }}{% endblock %}
 {% block extra_style %}
 <style>
   /* Couleurs tokenisées (clair + sombre), accent unique #3b82f6. */
@@ -45,45 +45,41 @@
 {% endblock %}
 {% block content %}
 <section class="hero">
-  <div class="eyebrow">Administration</div>
+  <div class="eyebrow">{{ t('nav.admin') }}</div>
   <div class="titleLine">
-    <h1>Configuration OAuth Facebook et Instagram</h1>
+    <h1>{{ t('mc.title') }}</h1>
     <details class="metaInfo">
-      <summary aria-label="Comprendre les identifiants OAuth" title="Comprendre les identifiants OAuth">i</summary>
+      <summary aria-label="{{ t('mc.info.title') }}" title="{{ t('mc.info.title') }}">i</summary>
       <div class="metaInfoBubble">
-        <b>Comprendre les identifiants OAuth</b>
-        <p>La plateforme utilise des identifiants techniques OAuth. Aucun compte Facebook ou Instagram global n'est enregistré ici.</p>
-        <p><strong>Facebook App ID</strong><br>Identifiant technique de l'application OAuth utilisée pour connecter directement les Pages Facebook des utilisateurs.</p>
-        <p><strong>Facebook Configuration ID</strong><br>Identifiant du parcours Facebook Login for Business. Ce n'est pas un App ID et il n'a pas de secret associé.</p>
-        <p><strong>Instagram App ID</strong><br>Identifiant technique utilisé par Instagram Login direct, avec son Instagram App Secret.</p>
-        <p>Pour remplacer un App ID, modifie le champ correspondant. Pour remplacer un App Secret, saisis le nouveau secret dans le champ vide : l'ancien secret n'est jamais affiché dans le navigateur.</p>
+        <b>{{ t('mc.info.title') }}</b>
+        <p>{{ t('mc.info.p1') }}</p>
+        <p><strong>Facebook App ID</strong><br>{{ t('mc.info.fb_app') }}</p>
+        <p><strong>Facebook Configuration ID</strong><br>{{ t('mc.info.fb_cfg') }}</p>
+        <p><strong>Instagram App ID</strong><br>{{ t('mc.info.ig_app') }}</p>
+        <p>{{ t('mc.info.p2') }}</p>
       </div>
     </details>
   </div>
-  <p class="muted">Configure uniquement les applications OAuth techniques. Les utilisateurs se connectent ensuite
-     directement à Facebook ou Instagram dans Mes réseaux ; aucun compte social global n'est utilisé et un jeton
-     chiffré distinct est enregistré pour chaque compte.</p>
+  <p class="muted">{{ t('mc.subtitle') }}</p>
 </section>
 
 {% if notice %}<div class="notice {{ 'error' if notice_error else 'success' }}">{{ notice }}</div>{% endif %}
 
 <div class="notice warn">
-  <b>Accès aux comptes externes</b><br>Pour connecter des personnes qui ne sont ni développeurs ni testeurs de
-  l'application, les applications Facebook et Instagram doivent être en mode Live avec les accès avancés approuvés.
-  Cette contrainte vient de Meta et ne peut pas être contournée par le workflow.
+  <b>{{ t('mc.warn.title') }}</b><br>{{ t('mc.warn.text') }}
 </div>
 
 <form id="metaConfigForm" method="post" action="/app/networks/meta/config/save">
 <section class="panel">
   <div class="globalGrid">
-    <div class="field"><label for="public_app_url">URL publique de l'application</label>
+    <div class="field"><label for="public_app_url">{{ t('mc.public_url') }}</label>
       <input id="public_app_url" name="public_app_url" type="url" required readonly
              value="{{ resolved_public_app_url }}">
-      <div class="hint">Détectée depuis l’instance / APP_BASE_URL. Callbacks :
-        <code>{{ resolved_public_app_url }}/app/networks/facebook/callback</code> et
+      <div class="hint">{{ t('mc.public_url.hint') }}
+        <code>{{ resolved_public_app_url }}/app/networks/facebook/callback</code> ·
         <code>{{ resolved_public_app_url }}/app/networks/instagram/callback</code>.</div>
     </div>
-    <div class="field"><label for="graph_version">Version Graph API</label>
+    <div class="field"><label for="graph_version">{{ t('mc.graph_version') }}</label>
       <input id="graph_version" name="graph_version" required
              value="{{ (facebook.graph_version if facebook else default_graph_version) or default_graph_version }}"
              placeholder="{{ default_graph_version }}">
@@ -94,49 +90,45 @@
     <article class="provider">
       <h2><span>Facebook</span>
         <span class="statusPill {{ 'on' if facebook and facebook.is_enabled else 'off' }}">
-          {{ 'Activé' if facebook and facebook.is_enabled else 'Inactif' }}</span></h2>
-      <div class="field"><label>App ID Facebook</label>
+          {{ t('net.active') if facebook and facebook.is_enabled else t('net.disabled') }}</span></h2>
+      <div class="field"><label>{{ t('mc.fb.app_id') }}</label>
         <input id="facebook_app_id" name="facebook_app_id" inputmode="numeric" autocomplete="off"
                value="{{ (facebook.app_id if facebook else '') or '' }}"></div>
-      <div class="field"><label>App Secret Facebook</label>
+      <div class="field"><label>{{ t('mc.fb.app_secret') }}</label>
         <input id="facebook_app_secret" name="facebook_app_secret" type="password" value="" autocomplete="new-password"
-               placeholder="{{ 'Secret déjà enregistré — laisser vide pour conserver' if facebook and facebook.app_secret else 'Saisir le secret' }}">
-        <div class="hint">Le secret enregistré n'est jamais réaffiché.</div></div>
-      <div class="field"><label>Configuration ID Facebook Login for Business</label>
+               placeholder="{{ t('mc.secret.keep') if facebook and facebook.app_secret else t('mc.secret.enter') }}">
+        <div class="hint">{{ t('mc.secret.hidden') }}</div></div>
+      <div class="field"><label>{{ t('mc.fb.login_cfg') }}</label>
         <input name="facebook_login_config_id" autocomplete="off"
                value="{{ (facebook.login_config_id if facebook else '') or '' }}">
-        <div class="hint">Recommandé pour Facebook Login for Business. Les permissions sont alors définies dans cette configuration.</div></div>
-      <div class="field"><label>Permissions Facebook</label>
+        <div class="hint">{{ t('mc.fb.login_cfg.hint') }}</div></div>
+      <div class="field"><label>{{ t('mc.fb.scopes') }}</label>
         <textarea name="facebook_scopes">{{ (facebook.scopes if facebook and facebook.scopes else 'pages_show_list,pages_read_engagement,pages_manage_posts') }}</textarea></div>
       <label class="toggle"><input type="checkbox" name="facebook_enabled" value="1"
-             {{ 'checked' if facebook and facebook.is_enabled }}> Activer Facebook</label>
-      <div class="actions"><button class="btn primary" type="submit" name="after_save" value="facebook">Enregistrer et tester Facebook</button></div>
-      <div class="hint">Le bouton enregistre toute la configuration, puis lance le parcours OAuth Facebook pour vérifier
-        les identifiants, l'URI de redirection, les permissions et l'accès aux Pages.</div>
+             {{ 'checked' if facebook and facebook.is_enabled }}> {{ t('mc.fb.enable') }}</label>
+      <div class="actions"><button class="btn primary" type="submit" name="after_save" value="facebook">{{ t('mc.fb.save_test') }}</button></div>
+      <div class="hint">{{ t('mc.fb.save_test.hint') }}</div>
     </article>
 
     <article class="provider">
       <h2><span>Instagram</span>
         <span class="statusPill {{ 'on' if instagram and instagram.is_enabled else 'off' }}">
-          {{ 'Activé' if instagram and instagram.is_enabled else 'Inactif' }}</span></h2>
+          {{ t('net.active') if instagram and instagram.is_enabled else t('net.disabled') }}</span></h2>
       <div class="field"><label>Instagram App ID</label>
         <input id="instagram_app_id" name="instagram_app_id" inputmode="numeric" autocomplete="off"
                value="{{ (instagram.app_id if instagram else '') or '' }}"></div>
       <div class="field"><label>Instagram App Secret</label>
         <input id="instagram_app_secret" name="instagram_app_secret" type="password" value="" autocomplete="new-password"
-               placeholder="{{ 'Secret déjà enregistré — laisser vide pour conserver' if instagram and instagram.app_secret else 'Saisir le secret' }}">
-        <div class="hint">Le secret enregistré n'est jamais réaffiché.</div></div>
-      <div class="field"><label>Permissions Instagram</label>
+               placeholder="{{ t('mc.secret.keep') if instagram and instagram.app_secret else t('mc.secret.enter') }}">
+        <div class="hint">{{ t('mc.secret.hidden') }}</div></div>
+      <div class="field"><label>{{ t('mc.ig.scopes') }}</label>
         <textarea name="instagram_scopes">{{ (instagram.scopes if instagram and instagram.scopes else 'instagram_business_basic,instagram_business_content_publish') }}</textarea>
-        <div class="hint">Permissions minimales requises :
-          <code>instagram_business_basic</code> et <code>instagram_business_content_publish</code>.
-          Chaque utilisateur autorise ensuite son propre compte ; les jetons sont chiffrés et
-          renouvelés automatiquement.</div></div>
+        <div class="hint">{{ t('mc.ig.scopes.hint') }}
+          <code>instagram_business_basic</code> · <code>instagram_business_content_publish</code>.</div></div>
       <label class="toggle"><input type="checkbox" name="instagram_enabled" value="1"
-             {{ 'checked' if instagram and instagram.is_enabled }}> Activer Instagram</label>
-      <div class="actions"><button class="btn primary" type="submit" name="after_save" value="instagram">Enregistrer et tester Instagram</button></div>
-      <div class="hint">Le bouton enregistre toute la configuration, puis lance le parcours OAuth Instagram pour
-        vérifier les identifiants, l'URI de redirection et les permissions.</div>
+             {{ 'checked' if instagram and instagram.is_enabled }}> {{ t('mc.ig.enable') }}</label>
+      <div class="actions"><button class="btn primary" type="submit" name="after_save" value="instagram">{{ t('mc.ig.save_test') }}</button></div>
+      <div class="hint">{{ t('mc.ig.save_test.hint') }}</div>
     </article>
   </div>
 </section>

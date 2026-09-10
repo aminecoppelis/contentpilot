@@ -122,13 +122,11 @@
     var ids=Array.from(selected).filter(function(id){return uuidPattern.test(id);});
     if(!ids.length)return;
     var count=ids.length;
-    var confirmed=window.confirm(
-      'Supprimer définitivement '+count+' ligne'+(count>1?'s':'')+
-      ' de la vue Posts publiés ?\n\nLes sujets et les idées associés seront conservés.');
+    var confirmed=await window.pgConfirm(window.t('js.pub.bulk_delete',{count:count}),{danger:true,confirmText:window.t('js.delete')});
     if(!confirmed)return;
     var previousLabel=deleteButton.textContent;
     deleteButton.disabled=true;
-    deleteButton.textContent='Suppression…';
+    deleteButton.textContent=window.t('js.deleting');
     try{
       var response=await fetch('/app/published/delete-bulk',{
         method:'POST',
@@ -139,19 +137,16 @@
       var payload={};
       try{payload=JSON.parse(text||'{}');}catch(error){}
       if(!response.ok||payload.success!==true){
-        throw new Error(payload.message||payload.error||('Erreur HTTP '+response.status));
+        throw new Error(payload.message||payload.error||('HTTP '+response.status));
       }
       var deletedCount=Number((payload.data&&payload.data.deleted_count)||payload.deleted_count||0);
-      if(deletedCount<1){ throw new Error('Aucune ligne n\u2019a été supprimée.'); }
-      if(window.pgFlash){
-        window.pgFlash(deletedCount+' publication'+(deletedCount>1?'s supprimées.':' supprimée.'),'success');
-      }
+      if(deletedCount<1){ throw new Error(window.t('js.pub.none_deleted')); }
+      window.pgToast(window.t('js.pub.deleted',{count:deletedCount}),'success');
       window.location.reload();
     }catch(error){
       deleteButton.disabled=false;
       deleteButton.textContent=previousLabel;
-      if(window.pgToast)window.pgToast(error.message||'Suppression impossible.','error');
-      else window.alert(error.message||'Suppression impossible.');
+      window.pgToast(error.message||window.t('js.delete_failed'),'error');
     }
   });
 

@@ -18,7 +18,7 @@ function pgSetMobileNav(open){
   nav.classList.toggle('isOpen',shouldOpen);
   toggle.classList.toggle('isOpen',shouldOpen);
   toggle.setAttribute('aria-expanded',shouldOpen?'true':'false');
-  toggle.setAttribute('aria-label',shouldOpen?'Fermer le menu':'Ouvrir le menu');
+  toggle.setAttribute('aria-label',shouldOpen?window.t('js.close_menu'):window.t('js.open_menu'));
   if(!shouldOpen){
     nav.querySelectorAll('details[open]').forEach(function(details){details.removeAttribute('open');});
   }
@@ -49,13 +49,13 @@ window.pgSwitchWorkspace=async function(workspaceId,trigger){
     var r=await fetch('/app/workspace/switch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workspace_id:workspaceId})});
     var d=await r.json();
     if(!r.ok||!d.success)throw new Error(d.message||'Changement impossible');
-    if(window.pgToast)window.pgToast('Changement de workspace…','info');
+    window.pgToast(window.t('js.tb.switching'),'info');
     location.reload();
   }catch(e){
     buttons.forEach(function(button){button.disabled=button.getAttribute('aria-checked')==='true';});
     if(trigger){trigger.classList.remove('isLoading');trigger.removeAttribute('aria-busy');}
     if(menu)menu.open=true;
-    if(window.pgToast)window.pgToast(e.message||'Changement de workspace impossible.','error');else alert(e.message||'Changement de workspace impossible.');
+    window.pgToast(e.message||window.t('js.tb.switch_failed'),'error');
   }
 };
 var pgWorkspaceCreateTrigger=null;
@@ -69,15 +69,15 @@ function pgEnsureWorkspaceCreateModal(){
   overlay.innerHTML=''
     +'<div class="pgWorkspaceCreateDialog" role="dialog" aria-modal="true" aria-labelledby="pgWorkspaceCreateTitle">'
       +'<div class="pgWorkspaceCreateHeader">'
-        +'<div><h3 id="pgWorkspaceCreateTitle">Ajouter un workspace</h3><p>Le nouveau workspace sera créé et activé immédiatement.</p></div>'
-        +'<button type="button" class="pgWorkspaceCreateClose" aria-label="Fermer">×</button>'
+        +'<div><h3 id="pgWorkspaceCreateTitle">'+window.t('js.tb.create_title')+'</h3><p>'+window.t('js.tb.create_desc')+'</p></div>'
+        +'<button type="button" class="pgWorkspaceCreateClose" aria-label="'+window.t('js.close')+'">×</button>'
       +'</div>'
       +'<form id="pgWorkspaceCreateForm">'
-        +'<label class="pgWorkspaceCreateField"><span>Nom du workspace</span><input id="pgWorkspaceCreateName" name="name" type="text" maxlength="120" autocomplete="organization" placeholder="Ex. Équipe marketing" required></label>'
+        +'<label class="pgWorkspaceCreateField"><span>'+window.t('js.tb.name_label')+'</span><input id="pgWorkspaceCreateName" name="name" type="text" maxlength="120" autocomplete="organization" placeholder="'+window.t('js.tb.name_ph')+'" required></label>'
         +'<div class="pgWorkspaceCreateStatus" id="pgWorkspaceCreateStatus" role="status" aria-live="polite"></div>'
         +'<div class="pgWorkspaceCreateActions">'
-          +'<button type="button" class="pgWorkspaceCreateCancel">Annuler</button>'
-          +'<button type="submit" class="pgWorkspaceCreateSubmit">Créer le workspace</button>'
+          +'<button type="button" class="pgWorkspaceCreateCancel">'+window.t('js.cancel')+'</button>'
+          +'<button type="submit" class="pgWorkspaceCreateSubmit">'+window.t('js.tb.create_btn')+'</button>'
         +'</div>'
       +'</form>'
     +'</div>';
@@ -130,13 +130,13 @@ window.pgCreateWorkspaceFromDropdown=async function(){
   var submit=modal.querySelector('.pgWorkspaceCreateSubmit');
   var name=String(input&&input.value||'').replace(/\s+/g,' ').trim();
   if(!name){
-    if(status){status.textContent='Saisis un nom de workspace.';status.classList.add('isError');}
+    if(status){status.textContent=window.t('js.tb.name_required');status.classList.add('isError');}
     if(input)input.focus();
     return;
   }
   if(submit)submit.disabled=true;
   if(input)input.disabled=true;
-  if(status){status.textContent='Création du workspace…';status.classList.remove('isError');}
+  if(status){status.textContent=window.t('js.tb.creating');status.classList.remove('isError');}
   try{
     var body=new URLSearchParams();
     body.set('action','create');
@@ -155,14 +155,14 @@ window.pgCreateWorkspaceFromDropdown=async function(){
     var errorMessage=finalUrl?String(finalUrl.searchParams.get('error')||'').trim():'';
     var successMessage=finalUrl?String(finalUrl.searchParams.get('success')||'').trim():'';
     if(!response.ok||errorMessage){
-      throw new Error(errorMessage||('Création impossible (HTTP '+response.status+').'));
+      throw new Error(errorMessage||('HTTP '+response.status));
     }
-    if(status)status.textContent=successMessage||'Workspace créé. Activation…';
-    if(window.pgToast)window.pgToast(successMessage||'Workspace créé.','success');
+    if(status)status.textContent=successMessage||window.t('js.tb.created_activating');
+    window.pgToast(successMessage||window.t('js.tb.created'),'success');
     window.setTimeout(function(){window.location.reload();},250);
   }catch(error){
     if(status){
-      status.textContent=error&&error.message?error.message:'Création du workspace impossible.';
+      status.textContent=error&&error.message?error.message:window.t('js.tb.create_failed');
       status.classList.add('isError');
     }
     if(submit)submit.disabled=false;

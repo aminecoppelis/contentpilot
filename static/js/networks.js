@@ -15,7 +15,7 @@
   function toast(message,type){
     if(window.pgToast){ window.pgToast(message,type||'success'); return; }
     var el=document.getElementById('networkToast');
-    if(!el){ alert(message); return; }
+    if(!el){ window.pgToast(message,type); return; }
     el.textContent=message;
     el.style.background=type==='error'?'#fee2e2':'#dcfce7';
     el.style.color=type==='error'?'#991b1b':'#166534';
@@ -98,35 +98,35 @@
       var d=await action({action:'toggle',id:id});
       var tr=document.getElementById('network-'+id);
       var s=tr&&tr.querySelector('[data-status]');
-      if(s){ s.textContent=d.account.is_active?'Actif':'Désactivé';
+      if(s){ s.textContent=d.account.is_active?window.t('js.net.active'):window.t('js.net.disabled');
              s.className='status '+(d.account.is_active?'on':'off'); }
-      btn.textContent=d.account.is_active?'Désactiver':'Activer';
-      toast('Statut mis à jour.');
-    }catch(e){ toast('Modification impossible : '+e.message,'error'); }
+      btn.textContent=d.account.is_active?window.t('js.net.disable'):window.t('js.net.enable');
+      toast(window.t('js.net.status_updated'));
+    }catch(e){ toast(e.message||window.t('js.update_failed'),'error'); }
     finally{ btn.disabled=false; }
   };
 
   window.deleteNetwork=async function(id,btn){
     closeNetworkKebabs();
-    if(!confirm('Supprimer cette connexion ? Les publications existantes restent conservées.'))return;
+    if(!(await window.pgConfirm(window.t('js.net.confirm_delete'),{danger:true,confirmText:window.t('js.delete')})))return;
     btn.disabled=true;
     try{
       await action({action:'delete',id:id});
       var row=document.getElementById('network-'+id); if(row)row.remove();
       adjustNetworkTotal(-1);
-      toast('Connexion supprimée.');
-    }catch(e){ toast('Suppression impossible : '+e.message,'error'); btn.disabled=false; }
+      toast(window.t('js.net.deleted'));
+    }catch(e){ toast(e.message||window.t('js.delete_failed'),'error'); btn.disabled=false; }
   };
 
   window.removeNetworkFromWorkspace=async function(id,btn){
     closeNetworkKebabs();
-    if(!confirm('Retirer ce compte du workspace actif ?'))return;
+    if(!(await window.pgConfirm(window.t('js.net.confirm_remove'),{danger:true})))return;
     btn.disabled=true;
     try{
       var d=await action({action:'remove_workspace',id:id});
-      toast(d.message||'Compte retiré de ce workspace.','success');
+      toast(d.message||window.t('js.net.removed'),'success');
       setTimeout(function(){location.reload();},500);
-    }catch(e){ toast('Retrait impossible : '+e.message,'error'); btn.disabled=false; }
+    }catch(e){ toast(e.message||window.t('js.net.remove_failed'),'error'); btn.disabled=false; }
   };
 
   function adjustNetworkTotal(delta){
@@ -146,7 +146,7 @@
     var subtitle=document.getElementById('shareNetworkSubtitle');
     currentShareNetworkId=String(id||'');
     if(!modal||!select)return;
-    if(!targets.length){ toast('Aucun autre workspace disponible.','error'); return; }
+    if(!targets.length){ toast(window.t('js.net.no_other_ws'),'error'); return; }
     select.innerHTML=targets.map(function(w){
       return '<option value="'+networkClientEsc(w.id)+'">'+networkClientEsc(w.name)+'</option>';}).join('');
     if(subtitle)subtitle.textContent='Partager '+String(label||'ce compte')+' avec un workspace spécifique.';
@@ -166,8 +166,8 @@
       confirmBtn.disabled=true;
       try{
         await action({action:'share',id:currentShareNetworkId,target_workspace_id:select.value});
-        toast('Compte partagé.'); closeShareModal();
-      }catch(e){ toast('Partage impossible : '+e.message,'error'); }
+        toast(window.t('js.net.shared')); closeShareModal();
+      }catch(e){ toast(e.message||window.t('js.net.share_failed'),'error'); }
       finally{ confirmBtn.disabled=false; }
     });
 
@@ -180,16 +180,16 @@
     if(confirmEdit)confirmEdit.addEventListener('click',async function(){
       var input=document.getElementById('editNetworkDisplayName');
       var name=String(input&&input.value||'').trim();
-      if(!name){ toast('Le nom ne peut pas être vide.','error'); return; }
+      if(!name){ toast(window.t('js.net.name_empty'),'error'); return; }
       confirmEdit.disabled=true;
       try{
         await action({action:'rename',id:currentEditNetworkId,display_name:name});
         var row=document.getElementById('network-'+currentEditNetworkId);
         var nameEl=row&&row.querySelector('[data-name]');
         if(nameEl)nameEl.textContent=name;
-        toast('Nom mis à jour.');
+        toast(window.t('js.net.name_updated'));
         closeEditModal();
-      }catch(e){ toast('Modification impossible : '+e.message,'error'); }
+      }catch(e){ toast(e.message||window.t('js.update_failed'),'error'); }
       finally{ confirmEdit.disabled=false; }
     });
   });

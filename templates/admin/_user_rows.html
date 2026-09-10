@@ -1,26 +1,26 @@
 {% for u in users %}
 <tr data-user-row="{{ u.id }}">
   <td><b>{{ u.display_name }}</b><small>{{ u.email }}</small></td>
-  <td><span class="badge {{ 'admin' if u.role=='admin' else 'user' }}">{{ 'Admin' if u.role=='admin' else 'Utilisateur' }}</span></td>
-  <td><span class="badge {{ 'active' if u.is_active else 'inactive' }}">{{ 'Actif' if u.is_active else 'Inactif' }}</span></td>
+  <td><span class="badge {{ 'admin' if u.role=='admin' else 'user' }}">{{ t('adm.usr.role.admin') if u.role=='admin' else t('adm.usr.role.user') }}</span></td>
+  <td><span class="badge {{ 'active' if u.is_active else 'inactive' }}">{{ t('net.active') if u.is_active else t('net.disabled') }}</span></td>
   <td>{{ u.created_label }}</td>
   <td><div class="rowActions">
-    <button type="button" class="btn small" data-user-edit="{{ u.edit_payload }}">Modifier</button>
+    <button type="button" class="btn small" data-user-edit="{{ u.edit_payload }}">{{ t('common.edit') }}</button>
     <form method="post" action="/app/admin/users/action" data-admin-action-form="1"
-          data-confirm-message="{{ 'Désactiver' if u.is_active else 'Activer' }} ce compte ?">
+          data-confirm-message="{{ t('adm.usr.confirm.deactivate') if u.is_active else t('adm.usr.confirm.activate') }}">
       <input type="hidden" name="action" value="{{ 'deactivate' if u.is_active else 'activate' }}">
       <input type="hidden" name="user_id" value="{{ u.id }}">
       <button class="btn small {{ 'warn' if u.is_active else 'success' }}" type="submit"
-        {% if u.is_self and u.is_active %}disabled title="Tu ne peux pas désactiver ton propre compte"{% endif %}>
-        {{ 'Désactiver' if u.is_active else 'Activer' }}
+        {% if u.is_self and u.is_active %}disabled title="{{ t('adm.usr.no_self_deactivate') }}"{% endif %}>
+        {{ t('net.disable') if u.is_active else t('net.enable') }}
       </button>
     </form>
     <form method="post" action="/app/admin/users/action" data-admin-action-form="1"
-          data-confirm-message="Supprimer définitivement ce compte ?">
+          data-confirm-message="{{ t('adm.usr.confirm.delete') }}">
       <input type="hidden" name="action" value="delete">
       <input type="hidden" name="user_id" value="{{ u.id }}">
       <button class="btn small danger" type="submit"
-        {% if u.is_self %}disabled title="Tu ne peux pas supprimer ton propre compte"{% endif %}>Supprimer</button>
+        {% if u.is_self %}disabled title="{{ t('adm.usr.no_self_delete') }}"{% endif %}>{{ t('common.delete') }}</button>
     </form>
   </div></td>
 </tr>

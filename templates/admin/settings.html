@@ -33,62 +33,59 @@
 {% if notice %}<div class="toast {{ 'error' if notice_error else 'success' }}">{{ notice }}</div>{% endif %}
 
 <section class="pageHeader">
-  <div class="eyebrow">Administration</div>
-  <h1>Paramétrage</h1>
-  <p class="subtitle">Configure les intégrations globales utilisées par le workflow de génération. Le token
-     Serper reste côté serveur et n'est jamais renvoyé dans les pages de génération.</p>
+  <div class="eyebrow">{{ t('nav.admin') }}</div>
+  <h1>{{ t('adm.set.title') }}</h1>
+  <p class="subtitle">{{ t('adm.set.subtitle') }}</p>
 </section>
 
-<nav class="pageTabs" aria-label="Administration">
-  <a href="/app/admin/settings" class="is-active" aria-current="page">Paramétrage</a>
-  <a href="/app/admin/users">Utilisateurs</a>
+<nav class="pageTabs" aria-label="{{ t('nav.admin') }}">
+  <a href="/app/admin/settings" class="is-active" aria-current="page">{{ t('adm.tab.settings') }}</a>
+  <a href="/app/admin/users">{{ t('adm.tab.users') }}</a>
 </nav>
 
 <section class="card">
   <div class="head">
     <h2>Serper / Google Search</h2>
-    <p class="subtitle">Serper servira à enrichir la création de sujet avec des résultats Google Search,
-       recherches associées et questions fréquentes.</p>
+    <p class="subtitle">{{ t('adm.set.serper.desc') }}</p>
   </div>
   <form method="post" action="/app/admin/settings/save" autocomplete="off">
     <label class="toggle">
       <input type="checkbox" name="serper_enabled" value="1" {{ 'checked' if cfg.is_enabled }}>
-      Activer l'enrichissement Serper dans la génération de sujets
+      {{ t('adm.set.serper.enable') }}
     </label>
 
     <div class="field">
-      <label>Token API Serper {% if cfg.has_api_key %}<span class="badge">token enregistré</span>{% endif %}</label>
+      <label>{{ t('adm.set.serper.token') }} {% if cfg.has_api_key %}<span class="badge">{{ t('adm.set.token_saved') }}</span>{% endif %}</label>
       <input type="password" name="serper_api_key" autocomplete="new-password"
-             placeholder="{{ 'Laisser vide pour conserver le token actuel' if cfg.has_api_key else 'Colle le token Serper' }}">
-      <div class="hint">Le champ reste vide volontairement. Saisis une nouvelle valeur uniquement pour remplacer le token.</div>
+             placeholder="{{ t('adm.set.serper.token.keep') if cfg.has_api_key else t('adm.set.serper.token.paste') }}">
+      <div class="hint">{{ t('adm.set.serper.token.hint') }}</div>
     </div>
 
     <div class="grid">
-      <div class="field"><label>Pays Google Search</label>
+      <div class="field"><label>{{ t('adm.set.serper.country') }}</label>
         <select name="serper_gl">
           {% for v in gl_options %}
-            <option value="{{ v }}" {{ 'selected' if cfg.gl==v }}>{{ 'Monde' if v=='world' else v|upper }}</option>
+            <option value="{{ v }}" {{ 'selected' if cfg.gl==v }}>{{ t('adm.set.serper.world') if v=='world' else v|upper }}</option>
           {% endfor %}
         </select>
-        <div class="hint">France recommandé pour tes contenus FR. Utilise Monde si tu veux des angles plus génériques.</div>
+        <div class="hint">{{ t('adm.set.serper.country.hint') }}</div>
       </div>
-      <div class="field"><label>Langue</label>
+      <div class="field"><label>{{ t('pn.f.language') }}</label>
         <select name="serper_hl">
           {% for v in hl_options %}<option value="{{ v }}" {{ 'selected' if cfg.hl==v }}>{{ v|upper }}</option>{% endfor %}
         </select>
-        <div class="hint">Langue des résultats demandés à Google Search via Serper.</div>
+        <div class="hint">{{ t('adm.set.serper.lang.hint') }}</div>
       </div>
     </div>
 
-    <div class="field"><label>Nombre de résultats à analyser</label>
+    <div class="field"><label>{{ t('adm.set.serper.num') }}</label>
       <input type="number" name="serper_num" min="3" max="10" value="{{ cfg.num }}">
-      <div class="hint">Recommandé : 6 à 8. Au-dessus, le prompt IA devient plus lourd.</div>
+      <div class="hint">{{ t('adm.set.serper.num.hint') }}</div>
     </div>
 
-    <div class="security"><b>Sécurité :</b> le token est chiffré en base via pgcrypto. Il est déchiffré
-      uniquement côté serveur au moment d'appeler Serper.</div>
+    <div class="security"><b>{{ t('adm.set.security') }} :</b> {{ t('adm.set.security.text') }}</div>
 
-    <button class="btn" type="submit">Enregistrer le paramétrage</button>
+    <button class="btn" type="submit">{{ t('adm.set.save') }}</button>
   </form>
 </section>
 {% endblock %}

@@ -51,52 +51,52 @@
 <div id="adminNotice" class="notice {{ 'show' if notice }}{{ ' error' if notice_error }}" role="status">{{ notice or "" }}</div>
 
 <section class="header">
-  <div class="eyebrow">Administration</div>
+  <div class="eyebrow">{{ t('nav.admin') }}</div>
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <h1 class="h1" style="margin:0">Utilisateurs</h1>
-    <span id="adminUsersPageCount" class="countPill" title="Nombre total de lignes"
-          aria-label="Nombre total de lignes : {{ total_users }}"
+    <h1 class="h1" style="margin:0">{{ t('adm.usr.title') }}</h1>
+    <span id="adminUsersPageCount" class="countPill" title="{{ t('common.filtered_count') }}"
+          aria-label="{{ t('adm.usr.total', n=total_users) }}"
           style="min-width:34px;height:34px;padding:0 12px;font-size:14px;font-weight:800">{{ total_users }}</span>
   </div>
-  <p class="sub">Gère les informations, le rôle et l'état des comptes depuis l'interface.</p>
+  <p class="sub">{{ t('adm.usr.subtitle') }}</p>
 </section>
 
-<nav class="pageTabs" aria-label="Administration">
-  <a href="/app/admin/settings">Paramétrage</a>
-  <a href="/app/admin/users" class="is-active" aria-current="page">Utilisateurs</a>
+<nav class="pageTabs" aria-label="{{ t('nav.admin') }}">
+  <a href="/app/admin/settings">{{ t('adm.tab.settings') }}</a>
+  <a href="/app/admin/users" class="is-active" aria-current="page">{{ t('adm.tab.users') }}</a>
 </nav>
 
 <section class="tableWrap">
   <table>
-    <thead><tr><th>Utilisateur</th><th>Rôle</th><th>Statut</th><th>Créé le</th><th>Actions</th></tr></thead>
+    <thead><tr><th>{{ t('adm.usr.col.user') }}</th><th>{{ t('adm.usr.col.role') }}</th><th>{{ t('common.status') }}</th><th>{{ t('adm.usr.col.created') }}</th><th>{{ t('common.actions') }}</th></tr></thead>
     <tbody id="adminUsersTbody">
     {% include "admin/_user_rows.html" %}
-    {% if not users %}<tr id="adminUsersEmpty"><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">Aucun utilisateur.</td></tr>{% endif %}
+    {% if not users %}<tr id="adminUsersEmpty"><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">{{ t('adm.usr.empty') }}</td></tr>{% endif %}
     </tbody>
   </table>
   <div id="adminUsersLoadState" style="padding:14px 16px;text-align:center;color:var(--ink-2);font-size:13px;
-       display:{{ 'block' if users_has_more else 'none' }}">Fais défiler pour charger plus d'utilisateurs.</div>
+       display:{{ 'block' if users_has_more else 'none' }}">{{ t('adm.usr.scroll_more') }}</div>
   <div id="adminUsersSentinel" style="height:1px"></div>
 </section>
 
 <div id="editUserModal" class="modalOverlay">
   <div class="modal">
-    <h2>Modifier l'utilisateur</h2>
+    <h2>{{ t('adm.usr.edit_title') }}</h2>
     <form method="post" action="/app/admin/users/action" data-admin-action-form="1">
       <input type="hidden" name="action" value="update">
       <input type="hidden" id="editUserId" name="user_id">
       <div class="grid">
-        <div class="field"><label>Prénom <span class="req">*</span></label><input id="editFirstName" name="first_name" required></div>
-        <div class="field"><label>Nom <span class="req">*</span></label><input id="editLastName" name="last_name" required></div>
-        <div class="field full"><label>Email <span class="req">*</span></label><input id="editEmail" name="email" type="email" required></div>
-        <div class="field full"><label>Rôle <span class="req">*</span></label>
+        <div class="field"><label>{{ t('adm.usr.first_name') }} <span class="req">*</span></label><input id="editFirstName" name="first_name" required></div>
+        <div class="field"><label>{{ t('adm.usr.last_name') }} <span class="req">*</span></label><input id="editLastName" name="last_name" required></div>
+        <div class="field full"><label>{{ t('auth.field.email') }} <span class="req">*</span></label><input id="editEmail" name="email" type="email" required></div>
+        <div class="field full"><label>{{ t('adm.usr.col.role') }} <span class="req">*</span></label>
           <select id="editRole" name="role" required>
-            <option value="user">Utilisateur</option><option value="admin">Administrateur</option>
+            <option value="user">{{ t('adm.usr.role.user') }}</option><option value="admin">{{ t('adm.usr.role.admin') }}</option>
           </select></div>
       </div>
       <div class="modalActions">
-        <button type="button" class="btn ghost" onclick="closeUserEdit()">Annuler</button>
-        <button type="submit" class="btn primary">Enregistrer</button>
+        <button type="button" class="btn ghost" onclick="closeUserEdit()">{{ t('common.cancel') }}</button>
+        <button type="submit" class="btn primary">{{ t('common.save') }}</button>
       </div>
     </form>
   </div>

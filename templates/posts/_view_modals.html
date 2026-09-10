@@ -3,20 +3,20 @@
 <div id="actionModal" class="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
     <div class="modalTop">
-      <div><h2 id="modalTitle">Action</h2><p id="modalDescription"></p></div>
+      <div><h2 id="modalTitle">{{ t('pm.action.title') }}</h2><p id="modalDescription"></p></div>
       <button type="button" class="modalClose" onclick="closeActionModal()">×</button>
     </div>
     <div class="modalBody">
       <div id="modalIdea" class="modalIdea"></div>
       <div id="modalInstructionWrap">
-        <label for="modalInstructions"><b id="modalInstructionsLabel">Instructions optionnelles</b></label>
+        <label for="modalInstructions"><b id="modalInstructionsLabel">{{ t('pm.action.instructions') }}</b></label>
         <textarea id="modalInstructions"
-          placeholder="Ex : angle plus concret, ton plus expert, cible PME, post plus court, exemple avant/après..."></textarea>
+          placeholder="{{ t('pm.action.instructions.ph') }}"></textarea>
       </div>
       <div id="modalStatus" class="modalStatus"></div>
       <div class="modalActions">
-        <button type="button" class="modalCancel" onclick="closeActionModal()">Annuler</button>
-        <button type="button" id="modalConfirm" class="modalConfirm" onclick="confirmActionModal()">Confirmer</button>
+        <button type="button" class="modalCancel" onclick="closeActionModal()">{{ t('common.cancel') }}</button>
+        <button type="button" id="modalConfirm" class="modalConfirm" onclick="confirmActionModal()">{{ t('pm.confirm') }}</button>
       </div>
     </div>
   </div>
@@ -25,22 +25,21 @@
 <div class="modalOverlay" id="generateMoreModal" role="dialog" aria-modal="true" aria-labelledby="generateMoreTitle">
   <div class="modal generateMoreModalBox">
     <div class="modalTop">
-      <div><h2 id="generateMoreTitle">Générer plus d'idées</h2>
-        <p>Les nouvelles idées seront ajoutées à la suite de cette demande, sans supprimer les idées existantes.</p></div>
+      <div><h2 id="generateMoreTitle">{{ t('pv.more') }}</h2>
+        <p>{{ t('pm.more.desc') }}</p></div>
       <button class="modalClose" type="button"
         onclick="document.getElementById('generateMoreModal').classList.remove('isVisible')">×</button>
     </div>
     <form class="generateMoreForm" onsubmit="event.preventDefault();window.submitGenerateMoreIdeas(event,this);return false;">
       <input type="hidden" name="request_id" value="{{ request_id }}">
-      <label for="generateMoreCount">Nombre d'idées à ajouter</label>
+      <label for="generateMoreCount">{{ t('pm.more.count') }}</label>
       <input id="generateMoreCount" class="generateMoreQty" type="number" name="post_count" min="1" max="8" value="3" required>
-      <div class="generateMoreHelp">Entre 1 et 8. Le workflow réutilise le même sujet, les mêmes contraintes,
-        la langue, les formats et les inspirations existantes.</div>
+      <div class="generateMoreHelp">{{ t('pm.more.help') }}</div>
       <div id="generateMoreStatus" class="generateMoreStatus"></div>
       <div class="modalActions">
         <button type="button" class="modalCancel"
-          onclick="document.getElementById('generateMoreModal').classList.remove('isVisible')">Annuler</button>
-        <button type="submit" class="modalConfirm">Générer</button>
+          onclick="document.getElementById('generateMoreModal').classList.remove('isVisible')">{{ t('common.cancel') }}</button>
+        <button type="submit" class="modalConfirm">{{ t('pm.generate') }}</button>
       </div>
     </form>
   </div>
@@ -49,15 +48,15 @@
 <div class="modalOverlay" id="mediaModal" role="dialog" aria-modal="true" aria-labelledby="mediaModalTitle">
   <div class="modal mediaModalBox" id="mediaModalBox">
     <div class="modalTop">
-      <div><h2 id="mediaModalTitle">Générer un média</h2>
-        <p id="mediaModalDescription">Création d’un nouveau média : pour une vidéo, écris une instruction simple, un scénario complet, utilise l’aide facultative, ou laisse le champ vide pour partir du post.</p></div>
+      <div><h2 id="mediaModalTitle">{{ t('pv.media.generate') }}</h2>
+        <p id="mediaModalDescription">{{ t('pm.media.desc') }}</p></div>
       <button type="button" class="modalClose" onclick="window.closeMediaModal()">×</button>
     </div>
     <div class="modalBody mediaModalBody">
       <div class="mediaTypeSwitchWrap" id="modalMediaType">
         <div class="mediaTypeSwitch">
-          <label class="mediaTypeOption active"><input type="radio" name="media_type" value="image" checked>Image</label>
-          <label class="mediaTypeOption"><input type="radio" name="media_type" value="video">Vidéo</label>
+          <label class="mediaTypeOption active"><input type="radio" name="media_type" value="image" checked>{{ t('pm.media.image') }}</label>
+          <label class="mediaTypeOption"><input type="radio" name="media_type" value="video">{{ t('pm.media.video') }}</label>
         </div>
       </div>
 
@@ -65,139 +64,139 @@
 
       <div id="mediaInspirationField" class="field mediaInspirationField">
         <div class="mediaInspirationRow">
-          <button type="button" class="mediaDownload" id="mediaInspirationBtn" onclick="window.chooseMediaInspiration()">Importer inspiration</button>
-          <span>Image uniquement. Sert de référence IA, ne remplace pas le média du post.</span>
+          <button type="button" class="mediaDownload" id="mediaInspirationBtn" onclick="window.chooseMediaInspiration()">{{ t('pm.media.inspi.btn') }}</button>
+          <span>{{ t('pm.media.inspi.note') }}</span>
         </div>
         <input type="file" id="mediaInspirationFile" accept="image/*" hidden>
-        <div id="mediaInspirationStatus" class="mediaFieldHelp">Aucune inspiration importée. Clique sur « Importer inspiration » pour ajouter une image de référence à envoyer à l’IA.</div>
+        <div id="mediaInspirationStatus" class="mediaFieldHelp">{{ t('pm.media.inspi.empty') }}</div>
       </div>
 
       <div class="field" id="imageModelField">
-        <label for="imageModel"><b>Modèle image</b></label>
+        <label for="imageModel"><b>{{ t('pm.media.model') }}</b></label>
         <select id="imageModel" class="mediaSelect">
           <option value="openai/gpt-5-image-mini" selected>GPT-5 Image Mini</option>
           <option value="x-ai/grok-imagine-image-quality">Grok Imagine Image Quality</option>
         </select>
-        <div class="mediaFieldHelp">Choisis le modèle utilisé pour générer ou modifier l’image.</div>
+        <div class="mediaFieldHelp">{{ t('pm.media.model.help') }}</div>
       </div>
 
       <div class="field" id="mediaQualityField">
-        <label for="mediaQuality"><b>Qualité</b></label>
+        <label for="mediaQuality"><b>{{ t('pm.media.quality') }}</b></label>
         <select id="mediaQuality" class="mediaSelect">
-          <option value="standard" selected>Standard (1K)</option>
-          <option value="haute">Haute (1K HQ)</option>
+          <option value="standard" selected>{{ t('pm.media.quality.std') }}</option>
+          <option value="haute">{{ t('pm.media.quality.high') }}</option>
         </select>
         <div id="mediaQualityHelp" class="mediaFieldHelp">GPT-5 Image Mini : Standard = 1K ; Haute = 1K HQ.</div>
       </div>
 
       <div class="field" id="imageStyleField">
-        <label><b>Style de l’image <span class="requiredStar">*</span></b></label>
+        <label><b>{{ t('pm.media.img_style') }} <span class="requiredStar">*</span></b></label>
         <div id="imageStyleSelect" class="miniMultiSelect"></div>
-        <div class="mediaFieldHelp">Choisis au moins un style. Aucun style n’est sélectionné automatiquement. Tu peux aussi ajouter un style personnalisé avec Entrée.</div>
+        <div class="mediaFieldHelp">{{ t('pm.media.style.help') }}</div>
       </div>
 
       <div class="field" id="imageAspectField">
-        <label><b>Format</b></label>
+        <label><b>{{ t('pm.media.format') }}</b></label>
         <select id="imageAspect" hidden>
           <option value="1:1">1:1</option><option value="4:5" selected>4:5</option><option value="16:9">16:9</option>
         </select>
         <details class="aspectPicker" data-aspect-select="imageAspect">
-          <summary><span class="aspectShape" data-aspect-current-shape></span><span class="aspectSummaryText"><b data-aspect-current-label>4:5</b><small data-aspect-current-description>Fil LinkedIn / Instagram · recommandé pour les images</small></span><span class="aspectChevron">⌃</span></summary>
+          <summary><span class="aspectShape" data-aspect-current-shape></span><span class="aspectSummaryText"><b data-aspect-current-label>4:5</b><small data-aspect-current-description>{{ t('pm.aspect.4_5') }}</small></span><span class="aspectChevron">⌃</span></summary>
           <div class="aspectOptions">
-            <button type="button" data-aspect-value="4:5"><b>4:5</b><small>Fil LinkedIn / Instagram</small></button>
-            <button type="button" data-aspect-value="1:1"><b>1:1</b><small>Carré polyvalent</small></button>
-            <button type="button" data-aspect-value="16:9"><b>16:9</b><small>Paysage / couverture</small></button>
+            <button type="button" data-aspect-value="4:5"><b>4:5</b><small>{{ t('pm.aspect.4_5.s') }}</small></button>
+            <button type="button" data-aspect-value="1:1"><b>1:1</b><small>{{ t('pm.aspect.1_1.s') }}</small></button>
+            <button type="button" data-aspect-value="16:9"><b>16:9</b><small>{{ t('pm.aspect.16_9.s') }}</small></button>
           </div>
         </details>
-        <div class="mediaFieldHelp">Le format choisi est transmis tel quel au modèle image.</div>
+        <div class="mediaFieldHelp">{{ t('pm.media.format.help') }}</div>
       </div>
 
       <div class="field promptField" id="mediaInstructionsField">
-        <div class="labelRow"><label for="mediaInstructions"><b>Instructions image optionnelles</b></label>
-          <button type="button" id="mediaGeneratePromptBtn" class="promptBtn" onclick="window.generateMediaInstructionsWithAI()">Générer avec l’IA</button></div>
-        <textarea id="mediaInstructions" maxlength="1200" data-char-limit="1200" placeholder="Ex : améliorer le cadrage, conserver le style mais plus premium, changer la couleur ou proposer une autre composition..."></textarea>
+        <div class="labelRow"><label for="mediaInstructions"><b>{{ t('pm.media.img_instr') }}</b></label>
+          <button type="button" id="mediaGeneratePromptBtn" class="promptBtn" onclick="window.generateMediaInstructionsWithAI()">{{ t('pn.f.prompt.generate') }}</button></div>
+        <textarea id="mediaInstructions" maxlength="1200" data-char-limit="1200" placeholder="{{ t('pm.media.img_instr.ph') }}"></textarea>
       </div>
 
       <div id="videoOptions" style="display:none">
         <div class="field" id="videoStyleField">
-          <label><b>Style de vidéo <span class="requiredStar">*</span></b></label>
+          <label><b>{{ t('pm.media.vid_style') }} <span class="requiredStar">*</span></b></label>
           <div id="videoStyleSelect" class="miniMultiSelect"></div>
-          <div class="mediaFieldHelp">Choisis au moins un style. Aucun style n’est sélectionné automatiquement. Tu peux aussi ajouter un style personnalisé avec Entrée.</div>
+          <div class="mediaFieldHelp">{{ t('pm.media.style.help') }}</div>
         </div>
         <div class="mediaTwoCols">
           <div class="field">
-            <label for="videoDuration"><b>Durée</b></label>
+            <label for="videoDuration"><b>{{ t('pm.media.duration') }}</b></label>
             <select id="videoDuration" class="mediaSelect">
-              <option value="4">4 secondes</option><option value="6" selected>6 secondes</option><option value="8">8 secondes</option>
-              <option value="10">10 secondes</option><option value="12">12 secondes</option><option value="15">15 secondes</option>
+              <option value="4">{{ t('pm.media.sec', n=4) }}</option><option value="6" selected>{{ t('pm.media.sec', n=6) }}</option><option value="8">{{ t('pm.media.sec', n=8) }}</option>
+              <option value="10">{{ t('pm.media.sec', n=10) }}</option><option value="12">{{ t('pm.media.sec', n=12) }}</option><option value="15">{{ t('pm.media.sec', n=15) }}</option>
             </select>
           </div>
           <div class="field" id="videoAspectField">
-            <label><b>Format</b></label>
+            <label><b>{{ t('pm.media.format') }}</b></label>
             <select id="videoAspect" hidden><option value="9:16" selected>9:16</option><option value="16:9">16:9</option></select>
             <details class="aspectPicker" data-aspect-select="videoAspect">
-              <summary><span class="aspectShape" data-aspect-current-shape></span><span class="aspectSummaryText"><b data-aspect-current-label>9:16</b><small data-aspect-current-description>Reel / Story · recommandé pour les vidéos verticales</small></span><span class="aspectChevron">⌃</span></summary>
-              <div class="aspectOptions"><button type="button" data-aspect-value="9:16"><b>9:16</b><small>Reel / Story</small></button><button type="button" data-aspect-value="16:9"><b>16:9</b><small>Vidéo horizontale</small></button></div>
+              <summary><span class="aspectShape" data-aspect-current-shape></span><span class="aspectSummaryText"><b data-aspect-current-label>9:16</b><small data-aspect-current-description>{{ t('pm.aspect.9_16') }}</small></span><span class="aspectChevron">⌃</span></summary>
+              <div class="aspectOptions"><button type="button" data-aspect-value="9:16"><b>9:16</b><small>{{ t('pm.aspect.9_16.s') }}</small></button><button type="button" data-aspect-value="16:9"><b>16:9</b><small>{{ t('pm.aspect.16_9v.s') }}</small></button></div>
             </details>
           </div>
         </div>
         <div class="field" id="videoFirstFrameField">
-          <label for="videoFirstFrameSource"><b>Première frame vidéo</b></label>
+          <label for="videoFirstFrameSource"><b>{{ t('pm.media.first_frame') }}</b></label>
           <select id="videoFirstFrameSource" class="mediaSelect">
-            <option value="none">Aucune image d’ancrage</option>
-            <option value="selected_image">Utiliser une image du carrousel</option>
-            <option value="upload">Importer une image dédiée</option>
-            <option value="generate_image">Générer une image</option>
+            <option value="none">{{ t('pm.media.ff.none') }}</option>
+            <option value="selected_image">{{ t('pm.media.ff.carousel') }}</option>
+            <option value="upload">{{ t('pm.media.ff.upload') }}</option>
+            <option value="generate_image">{{ t('pm.media.ff.generate') }}</option>
           </select>
           <div id="videoFirstFrameCarouselPickerWrap" style="display:none;margin-top:10px">
-            <label for="videoFirstFrameCarouselImage"><b>Image du carrousel à utiliser</b></label>
+            <label for="videoFirstFrameCarouselImage"><b>{{ t('pm.media.ff.pick') }}</b></label>
             <select id="videoFirstFrameCarouselImage" class="mediaSelect"></select>
           </div>
-          <div class="mediaFieldHelp">Choisis une image du carrousel, importe une image dédiée, ou génère une image de première frame avec ses propres paramètres. Elle sera utilisée pour stabiliser le décor, le sujet et le style de la vidéo.</div>
-          <button type="button" class="mediaDownload" id="videoFirstFrameUploadBtn" style="display:none;margin-top:8px" onclick="window.importVideoFirstFrame()">Importer première frame</button>
+          <div class="mediaFieldHelp">{{ t('pm.media.ff.help') }}</div>
+          <button type="button" class="mediaDownload" id="videoFirstFrameUploadBtn" style="display:none;margin-top:8px" onclick="window.importVideoFirstFrame()">{{ t('pm.media.ff.import') }}</button>
           <div id="videoFirstFrameGenerateOptions" class="firstFrameGenerateOptions" style="display:none">
-            <div class="firstFrameOptionsTitle">Paramètres de l’image de première frame</div>
+            <div class="firstFrameOptionsTitle">{{ t('pm.media.ff.params') }}</div>
             <div class="mediaTwoCols">
               <div class="field" id="videoFirstFrameModelField">
-                <label for="videoFirstFrameModel"><b>Modèle image</b></label>
+                <label for="videoFirstFrameModel"><b>{{ t('pm.media.model') }}</b></label>
                 <select id="videoFirstFrameModel" class="mediaSelect">
                   <option value="openai/gpt-5-image-mini" selected>GPT-5 Image Mini</option>
                   <option value="x-ai/grok-imagine-image-quality">Grok Imagine Image Quality</option>
                 </select>
-                <div class="mediaFieldHelp">Modèle utilisé uniquement pour générer la première frame.</div>
+                <div class="mediaFieldHelp">{{ t('pm.media.ff.model.help') }}</div>
               </div>
               <div class="field" id="videoFirstFrameQualityField">
-                <label for="videoFirstFrameQuality"><b>Qualité</b></label>
-                <select id="videoFirstFrameQuality" class="mediaSelect"><option value="standard" selected>Standard (1K)</option><option value="haute">Haute (1K HQ)</option></select>
+                <label for="videoFirstFrameQuality"><b>{{ t('pm.media.quality') }}</b></label>
+                <select id="videoFirstFrameQuality" class="mediaSelect"><option value="standard" selected>{{ t('pm.media.quality.std') }}</option><option value="haute">{{ t('pm.media.quality.high') }}</option></select>
                 <div id="videoFirstFrameQualityHelp" class="mediaFieldHelp">GPT-5 Image Mini : Standard = 1K ; Haute = 1K HQ.</div>
               </div>
             </div>
             <div class="field" id="videoFirstFrameStyleField">
-              <label><b>Style de l’image de première frame <span class="requiredStar">*</span></b></label>
+              <label><b>{{ t('pm.media.ff_style') }} <span class="requiredStar">*</span></b></label>
               <div id="videoFirstFrameStyleSelect" class="miniMultiSelect"></div>
-              <div class="mediaFieldHelp">Choisis au moins un style. Aucun style n’est sélectionné automatiquement.</div>
+              <div class="mediaFieldHelp">{{ t('pm.media.ff_style.help') }}</div>
             </div>
             <div class="field" id="videoFirstFrameInstructionsField">
-              <label for="videoFirstFrameInstructions"><b>Instructions image optionnelles</b></label>
-              <textarea id="videoFirstFrameInstructions" maxlength="1200" data-char-limit="1200" placeholder="Ex : conserver un décor de bureau moderne, cadrer le sujet au centre, utiliser une lumière naturelle..."></textarea>
-              <div class="mediaFieldHelp">Ces instructions concernent uniquement l’image de première frame, pas le scénario ni la vidéo.</div>
+              <label for="videoFirstFrameInstructions"><b>{{ t('pm.media.img_instr') }}</b></label>
+              <textarea id="videoFirstFrameInstructions" maxlength="1200" data-char-limit="1200" placeholder="{{ t('pm.media.ff_instr.ph') }}"></textarea>
+              <div class="mediaFieldHelp">{{ t('pm.media.ff_instr.help') }}</div>
             </div>
-            <button type="button" class="mediaBtn" id="videoFirstFrameGenerateBtn" onclick="window.generateVideoFirstFrameImage()">Générer la première frame</button>
+            <button type="button" class="mediaBtn" id="videoFirstFrameGenerateBtn" onclick="window.generateVideoFirstFrameImage()">{{ t('pm.media.ff.gen_btn') }}</button>
           </div>
           <div id="videoFirstFramePreview" class="firstFramePreview"></div>
-          <div id="videoFirstFrameStatus" class="mediaFieldHelp">Aucune première frame active.</div>
+          <div id="videoFirstFrameStatus" class="mediaFieldHelp">{{ t('pm.media.ff.status_none') }}</div>
         </div>
         <div class="field promptField" id="modalVideoScenario">
-          <div class="labelRow"><label for="modalVideoScenarioText"><b>Instructions de la vidéo</b></label>
-            <button type="button" id="modalRegenerateScenarioBtn" class="promptBtn" onclick="window.generateMediaInstructionsWithAI()">Générer avec l’IA</button></div>
-          <textarea id="modalVideoScenarioText" maxlength="3500" data-char-limit="3500" class="copyBox" placeholder="Écris une demande simple, un scénario complet, ou laisse vide pour créer la vidéo directement à partir du post."></textarea>
+          <div class="labelRow"><label for="modalVideoScenarioText"><b>{{ t('pm.media.vid_instr') }}</b></label>
+            <button type="button" id="modalRegenerateScenarioBtn" class="promptBtn" onclick="window.generateMediaInstructionsWithAI()">{{ t('pn.f.prompt.generate') }}</button></div>
+          <textarea id="modalVideoScenarioText" maxlength="3500" data-char-limit="3500" class="copyBox" placeholder="{{ t('pm.media.vid_instr.ph') }}"></textarea>
         </div>
       </div>
 
       <div id="mediaModalStatus" class="modalStatus"></div>
       <div class="modalActions mediaModalActions">
-        <button type="button" class="modalCancel" id="mediaModalCancel" onclick="window.closeMediaModal()">Annuler</button>
-        <button type="button" class="modalConfirm mediaBtn" id="mediaModalConfirm" onclick="window.confirmMediaModal()">Générer l’image</button>
+        <button type="button" class="modalCancel" id="mediaModalCancel" onclick="window.closeMediaModal()">{{ t('common.cancel') }}</button>
+        <button type="button" class="modalConfirm mediaBtn" id="mediaModalConfirm" onclick="window.confirmMediaModal()">{{ t('pm.media.gen_image') }}</button>
       </div>
     </div>
   </div>
@@ -206,75 +205,73 @@
 <div class="modalOverlay" id="publishModal" role="dialog" aria-modal="true" aria-labelledby="publishModalTitle">
   <div class="modal">
     <div class="modalTop">
-      <div><h2 id="publishModalTitle">Publier le sujet</h2>
-        <p id="publishModalDescription">Choisis les comptes à utiliser, le type de publication et le moment d'envoi.</p></div>
+      <div><h2 id="publishModalTitle">{{ t('pm.pub.title') }}</h2>
+        <p id="publishModalDescription">{{ t('pm.pub.desc') }}</p></div>
       <button class="modalClose" type="button" onclick="window.closePublishModal()">×</button>
     </div>
     <div class="modalBody">
       <div id="publishModalIdea" class="modalIdea"></div>
 
       <div class="field publishRequiredField" id="publishAccountSelectorsWrap">
-        <label><b>Comptes à utiliser<span class="publishRequiredMark">*</span></b></label>
+        <label><b>{{ t('pm.pub.accounts') }}<span class="publishRequiredMark">*</span></b></label>
         <div id="publishAccountSelectors" class="publishAccountMultiSelect">
-          <div class="publishAccountEmpty">Chargement des comptes disponibles…</div>
+          <div class="publishAccountEmpty">{{ t('pm.pub.accounts.loading') }}</div>
         </div>
-        <div id="publishAccountsError" class="publishFieldError">Choisis au moins un compte à utiliser.</div>
-        <div style="margin-top:8px;color:#64748b;font-size:13px;line-height:1.45">
-          Les types proposés s’adaptent au média sélectionné : LinkedIn Buffer = Post ;
-          Instagram Buffer = image → Post/Story, vidéo → Post/Reel/Story ; Instagram direct =
-          image → Post/Story, vidéo → Reel/Story. Les comptes se gèrent dans
-          <a href="/app/networks" target="_blank" rel="noopener">Mes réseaux</a>.
+        <div id="publishAccountsError" class="publishFieldError">{{ t('pm.pub.accounts.err') }}</div>
+        <div style="margin-top:8px;color:var(--ink-2);font-size:13px;line-height:1.45">
+          {{ t('pm.pub.accounts.help') }}
+          <a href="/app/networks" target="_blank" rel="noopener">{{ t('nav.networks') }}</a>.
         </div>
       </div>
 
       <div class="field publishRequiredField" id="publishContentTypeWrap" style="display:none;margin-top:14px">
-        <label><b>Type de publication<span class="publishRequiredMark">*</span></b></label>
+        <label><b>{{ t('pm.pub.type') }}<span class="publishRequiredMark">*</span></b></label>
         <div id="publishContentTypes" class="publishChoices"></div>
-        <div id="publishContentTypesError" class="publishFieldError">Choisis au moins un type de publication.</div>
-        <div id="publishContentTypeHint" style="margin-top:8px;color:#64748b;font-size:13px;line-height:1.45">
-          Le type est maintenant déterminé par le compte sélectionné.</div>
+        <div id="publishContentTypesError" class="publishFieldError">{{ t('pm.pub.type.err') }}</div>
+        <div id="publishContentTypeHint" style="margin-top:8px;color:var(--ink-2);font-size:13px;line-height:1.45">
+          {{ t('pm.pub.type.hint') }}</div>
       </div>
 
       <div class="field publishRequiredField" id="publishModeWrap" style="margin-top:14px">
-        <label for="publishMode"><b>Moment de publication<span class="publishRequiredMark">*</span></b></label>
-        <select id="publishMode" required style="width:100%;margin-top:8px;border:1px solid #cbd5e1;border-radius:16px;padding:12px;font:inherit;background:white">
-          <option value="" selected disabled>Choisir le moment de publication</option>
-          <option value="now">Maintenant</option>
-          <option value="scheduled">Programmer</option>
+        <label for="publishMode"><b>{{ t('pm.pub.when') }}<span class="publishRequiredMark">*</span></b></label>
+        <select id="publishMode" required style="width:100%;margin-top:8px">
+          <option value="" selected disabled>{{ t('pm.pub.when.choose') }}</option>
+          <option value="now">{{ t('pm.pub.when.now') }}</option>
+          <option value="scheduled">{{ t('pm.pub.when.schedule') }}</option>
         </select>
-        <div id="publishModeError" class="publishFieldError">Choisis le moment de publication.</div>
+        <div id="publishModeError" class="publishFieldError">{{ t('pm.pub.when.err') }}</div>
       </div>
 
       <div class="field publishRequiredField" id="publishDateWrap" style="display:none;margin-top:14px">
-        <label for="publishDateTime"><b>Date et heure<span class="publishRequiredMark">*</span></b></label>
-        <input id="publishDateTime" type="datetime-local" style="width:100%;margin-top:8px;border:1px solid #cbd5e1;border-radius:16px;padding:12px;font:inherit;background:white">
-        <div id="publishDateError" class="publishFieldError">Choisis une date et une heure futures.</div>
-        <div style="margin-top:8px;color:#64748b;font-size:13px;line-height:1.45">Heure locale de ton compte : <b>{{ auth_user.timezone }}</b>. Elle sera stockée en UTC puis réaffichée dans ce fuseau.</div>
+        <label for="publishDateTime"><b>{{ t('pm.pub.datetime') }}<span class="publishRequiredMark">*</span></b></label>
+        <input id="publishDateTime" type="datetime-local" style="width:100%;margin-top:8px">
+        <div id="publishDateError" class="publishFieldError">{{ t('pm.pub.datetime.err') }}</div>
+        <div style="margin-top:8px;color:var(--ink-2);font-size:13px;line-height:1.45">{{ t('pm.pub.datetime.tz') }} <b>{{ auth_user.timezone }}</b>. {{ t('pm.pub.datetime.tz_note') }}</div>
       </div>
 
       <div class="field" id="publishMediaWrap" style="margin-top:14px">
-        <label><b>Média qui sera publié<span class="publishRequiredMark" id="publishMediaRequiredMark" style="display:none">*</span></b></label>
+        <label><b>{{ t('pm.pub.media') }}<span class="publishRequiredMark" id="publishMediaRequiredMark" style="display:none">*</span></b></label>
         <div id="publishMediaPreview" style="margin-top:8px"></div>
         <div id="publishMediaRequirement" style="margin-top:10px;border-radius:14px;padding:11px 12px;font-size:13px;font-weight:800;line-height:1.4"></div>
-        <div id="publishMediaError" class="publishFieldError">Sélectionne un média avant de publier.</div>
+        <div id="publishMediaError" class="publishFieldError">{{ t('pm.pub.media.err') }}</div>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
           <button type="button" id="publishChooseMediaBtn" class="mediaDownload" style="display:none"
-                  onclick="window.focusMediaSelectionFromPublish()">Choisir un média</button>
-          <label id="publishWithoutMediaWrap" style="display:none;align-items:flex-start;gap:9px;border:1px solid #fcd34d;background:#fffbeb;color:#92400e;border-radius:14px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer">
+                  onclick="window.focusMediaSelectionFromPublish()">{{ t('pm.pub.media.choose') }}</button>
+          <label id="publishWithoutMediaWrap" style="display:none;align-items:flex-start;gap:9px;border:1px solid var(--warn-tint);background:var(--warn-tint);color:var(--warn-ink);border-radius:14px;padding:10px 12px;font-size:13px;font-weight:800;cursor:pointer">
             <input id="publishWithoutMedia" type="checkbox" style="margin-top:2px"
-                   onchange="window.updatePublishMediaRequirement()"> Publier volontairement sans média</label>
+                   onchange="window.updatePublishMediaRequirement()"> {{ t('pm.pub.media.without') }}</label>
         </div>
       </div>
 
       <div class="field" style="margin-top:14px">
-        <label for="publishPostPreview"><b>Sujet qui sera publié</b></label>
+        <label for="publishPostPreview"><b>{{ t('pm.pub.preview') }}</b></label>
         <textarea id="publishPostPreview" class="copyBox" readonly style="min-height:180px;margin-top:8px"></textarea>
       </div>
 
       <div id="publishModalStatus" class="modalStatus"></div>
       <div class="modalActions">
-        <button type="button" class="modalCancel" onclick="window.closePublishModal()">Annuler</button>
-        <button type="button" class="modalConfirm ok" id="publishModalConfirm" onclick="window.confirmPublishModal()">Publier</button>
+        <button type="button" class="modalCancel" onclick="window.closePublishModal()">{{ t('common.cancel') }}</button>
+        <button type="button" class="modalConfirm ok" id="publishModalConfirm" onclick="window.confirmPublishModal()">{{ t('pv.act.publish') }}</button>
       </div>
     </div>
   </div>
@@ -283,13 +280,13 @@
 <div id="mediaLoader" class="mediaLoader" aria-live="polite" aria-busy="true">
   <div class="mediaLoaderCard">
     <div class="loaderSpin"></div>
-    <p class="loaderTitle" id="mediaLoaderTitle">Génération du média</p>
-    <p class="loaderText" id="mediaLoaderText">L'IA prépare un média adapté au post sélectionné.</p>
+    <p class="loaderTitle" id="mediaLoaderTitle">{{ t('pm.media.loader.title') }}</p>
+    <p class="loaderText" id="mediaLoaderText">{{ t('pm.media.loader.text') }}</p>
     <ol class="loaderSteps" id="mediaLoaderSteps">
-      <li>1. Analyse du post et du format</li>
-      <li>2. Construction du prompt média</li>
-      <li>3. Génération du média</li>
-      <li>4. Affichage dans la carte</li>
+      <li>{{ t('pm.media.loader.s1') }}</li>
+      <li>{{ t('pm.media.loader.s2') }}</li>
+      <li>{{ t('pm.media.loader.s3') }}</li>
+      <li>{{ t('pm.media.loader.s4') }}</li>
     </ol>
   </div>
 </div>

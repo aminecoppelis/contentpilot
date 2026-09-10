@@ -136,6 +136,20 @@ def translate(key: str, locale: str = DEFAULT_LOCALE, **params: Any) -> str:
     return value
 
 
+def js_catalog(locale: str = DEFAULT_LOCALE) -> dict[str, str]:
+    """Sous-ensemble `js.*` du catalogue, injecté dans les pages pour le
+    JavaScript (via window.__I18N)."""
+    if os.environ.get("RELOAD_TRANSLATIONS") == "1":
+        load_all()
+    else:
+        _maybe_reload()
+    loc = normalize_locale(locale)
+    catalog = _CATALOGS.get(loc) or {}
+    fallback = _CATALOGS.get(DEFAULT_LOCALE) or {}
+    keys = set(catalog) | set(fallback)
+    return {k: catalog.get(k, fallback.get(k, k)) for k in keys if k.startswith("js.")}
+
+
 def _accept_language_locale(header: str | None) -> str | None:
     if not header:
         return None

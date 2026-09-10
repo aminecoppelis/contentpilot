@@ -9,7 +9,7 @@
     <div class="mediaPreviewOverlay">
       <button type="button" class="mediaCornerBtn"
               onclick="event.preventDefault();event.stopPropagation();window.openMediaLightbox({{ idea_index }},{{ loop.index0 }});return false"
-              title="Ouvrir en grand" aria-label="Ouvrir en grand">□</button>
+              title="{{ t('pmi.enlarge') }}" aria-label="{{ t('pmi.enlarge') }}">□</button>
     </div>
     {% if m.media_type == 'video' %}
       <video controls playsinline preload="metadata" src="{{ m.url }}"
@@ -19,23 +19,23 @@
     {% endif %}
   </div>
   <div class="mediaCarouselMeta">
-    <span>{{ 'Vidéo' if m.media_type == 'video' else 'Image' }}</span>
+    <span>{{ t('pmi.video') if m.media_type == 'video' else t('pmi.image') }}</span>
     <span class="mediaCarouselCounter">{{ loop.index }} / {{ media|length }}</span>
-    {% if is_selected %}<span class="status published" data-media-selected-badge>Sélectionné</span>{% endif %}
+    {% if is_selected %}<span class="status published" data-media-selected-badge>{{ t('pmi.selected') }}</span>{% endif %}
   </div>
   <div class="mediaActionRow">
     {% if is_selected %}
-      <button type="button" class="mediaUiBtn selected" data-select-media-btn disabled aria-disabled="true">Sélectionné</button>
+      <button type="button" class="mediaUiBtn selected" data-select-media-btn disabled aria-disabled="true">{{ t('pmi.selected') }}</button>
     {% else %}
       <button type="button" class="mediaUiBtn primary" data-select-media-btn
-              onclick="event.preventDefault();event.stopPropagation();window.selectMedia('{{ m.id }}',{{ idea_index }},this);return false">Choisir ce média</button>
+              onclick="event.preventDefault();event.stopPropagation();window.selectMedia('{{ m.id }}',{{ idea_index }},this);return false">{{ t('pmi.choose') }}</button>
     {% endif %}
     <button type="button" class="mediaUiBtn" data-edit-media="1"
-            onclick="event.preventDefault();event.stopPropagation();window.openMediaEditModal({{ idea_index }},{{ loop.index0 }});return false">Modifier</button>
+            onclick="event.preventDefault();event.stopPropagation();window.openMediaEditModal({{ idea_index }},{{ loop.index0 }});return false">{{ t('common.edit') }}</button>
     <button type="button" class="mediaUiBtn"
-            onclick="event.preventDefault();event.stopPropagation();window.downloadGalleryMedia({{ idea_index }},{{ loop.index0 }});return false">Télécharger</button>
+            onclick="event.preventDefault();event.stopPropagation();window.downloadGalleryMedia({{ idea_index }},{{ loop.index0 }});return false">{{ t('pmi.download') }}</button>
     <button type="button" class="mediaUiBtn danger"
-            onclick="event.preventDefault();event.stopPropagation();window.deleteMedia('{{ m.id }}',{{ idea_index }});return false">Supprimer</button>
+            onclick="event.preventDefault();event.stopPropagation();window.deleteMedia('{{ m.id }}',{{ idea_index }});return false">{{ t('common.delete') }}</button>
   </div>
 </div>
 {% endfor %}

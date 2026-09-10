@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>{{ "Compte activé" if activated else "Activation impossible" }} · Post Generator</title>
+  <title>{{ (t('activate.title_ok') if activated else t('activate.title_ko')) }} · {{ t('app.name') }}</title>
   <script>
     (function(){ try { document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'); } catch(e){ document.documentElement.setAttribute('data-theme','light'); } })();
   </script>
@@ -66,18 +66,17 @@
 <body>
 <div class="auth-shell">
   <main class="authCard">
-    <span class="activateBadge">{{ "Activé" if activated else "Lien invalide" }}</span>
-    <h1>{{ "Compte activé" if activated else "Activation impossible" }}</h1>
+    <span class="activateBadge">{{ t('activate.badge_ok') if activated else t('activate.badge_ko') }}</span>
+    <h1>{{ t('activate.title_ok') if activated else t('activate.title_ko') }}</h1>
     <p class="sub">
       {% if activated %}
-        Le compte {{ email }} est maintenant actif. Tu peux te connecter.
+        {{ t('activate.text_ok', email=email) }}
       {% else %}
-        Ce lien est invalide, déjà utilisé ou expiré. Crée un nouveau compte
-        ou demande un nouveau lien d'activation.
+        {{ t('activate.text_ko') }}
       {% endif %}
     </p>
-    <a class="authBtn" href="/app/login?redirect={{ redirect }}">Se connecter</a>
-    <a class="secondaryLink" href="/app/register?redirect={{ redirect }}">Créer un autre compte</a>
+    <a class="authBtn" href="/app/login?redirect={{ redirect }}">{{ t('auth.login.submit') }}</a>
+    <a class="secondaryLink" href="/app/register?redirect={{ redirect }}">{{ t('activate.create_another') }}</a>
   </main>
 </div>
 </body>
