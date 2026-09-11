@@ -26,11 +26,11 @@
 
   <!-- layout.css / topbar.css / tables.css / theme.css absorbés dans ui-kit.css.
        app.css : reste utilitaire partagé (login/register le chargent aussi). -->
-  <link rel="stylesheet" href="/static/css/app.css?v={{ request.query_params.get('v', '21') }}">
-  <link rel="stylesheet" href="/static/css/toast.css?v={{ request.query_params.get('v', '21') }}">
+  <link rel="stylesheet" href="/static/css/app.css?v={{ request.query_params.get('v', '23') }}">
+  <link rel="stylesheet" href="/static/css/toast.css?v={{ request.query_params.get('v', '23') }}">
   {% block extra_style %}{% endblock %}
   <!-- ui-kit.css : système visuel unifié, doit rester le DERNIER pour l'emporter -->
-  <link rel="stylesheet" href="/static/css/ui-kit.css?v={{ request.query_params.get('v', '21') }}">
+  <link rel="stylesheet" href="/static/css/ui-kit.css?v={{ request.query_params.get('v', '23') }}">
 </head>
 <body class="{% if auth_user %}has-sidebar{% endif %}">
 <div class="app-layout">
@@ -394,9 +394,9 @@
     return s;
   };
 </script>
-<script src="/static/js/topbar.js?v={{ request.query_params.get('v', '21') }}"></script>
-<script src="/static/js/toast.js?v={{ request.query_params.get('v', '21') }}"></script>
-<script src="/static/js/pg-ui.js?v={{ request.query_params.get('v', '21') }}"></script>
+<script src="/static/js/topbar.js?v={{ request.query_params.get('v', '23') }}"></script>
+<script src="/static/js/toast.js?v={{ request.query_params.get('v', '23') }}"></script>
+<script src="/static/js/pg-ui.js?v={{ request.query_params.get('v', '23') }}"></script>
 <script src="/static/js/tables.js"></script>
 <script src="/static/js/textarea_limits.js"></script>
 {% block scripts %}{% endblock %}

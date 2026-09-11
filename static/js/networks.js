@@ -149,7 +149,7 @@
     if(!targets.length){ toast(window.t('js.net.no_other_ws'),'error'); return; }
     select.innerHTML=targets.map(function(w){
       return '<option value="'+networkClientEsc(w.id)+'">'+networkClientEsc(w.name)+'</option>';}).join('');
-    if(subtitle)subtitle.textContent='Partager '+String(label||'ce compte')+' avec un workspace spécifique.';
+    if(subtitle)subtitle.textContent=window.t('js.net.share_subtitle',{name:String(label||window.t('js.net.this_account'))});
     modal.classList.add('isOpen'); modal.setAttribute('aria-hidden','false');
   };
   function closeShareModal(){
@@ -225,8 +225,8 @@
       // Ajout : clé obligatoire. Édition : vide = conserver la clé chiffrée existante.
       apiKeyInput.required=!accountId;
       apiKeyInput.placeholder=accountId
-        ? 'Laisser vide pour conserver la clé enregistrée'
-        : 'Clé créée dans Buffer > Settings > API';
+        ? window.t('mc.secret.keep')
+        : window.t('js.net.buffer_key_hint');
     }
     document.getElementById('bufferFormStatus').textContent='';
     modal.classList.add('isOpen');
@@ -251,16 +251,16 @@
       api_key:document.getElementById('bufferApiKey').value||'',
       channel_id:document.getElementById('bufferChannelId').value||''
     };
-    btn.disabled=true; status.className='bufferStatus'; status.textContent='Test de la clé Buffer…';
+    btn.disabled=true; status.className='bufferStatus'; status.textContent=window.t('js.net.testing_key');
     try{
       var r=await fetch(WEBHOOK_BASE+'/networks/buffer/save',{
         method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       var d=await r.json().catch(function(){return {};});
       if(!r.ok||d.success===false) throw new Error(d.message||('HTTP '+r.status));
-      status.className='bufferStatus success'; status.textContent='Enregistré.';
+      status.className='bufferStatus success'; status.textContent=window.t('js.saved');
       setTimeout(function(){location.reload();},600);
     }catch(e){
-      status.className='bufferStatus error'; status.textContent=e.message||'Enregistrement impossible.';
+      status.className='bufferStatus error'; status.textContent=e.message||window.t('js.cons.save_failed');
       btn.disabled=false;
     }
     return false;
@@ -292,12 +292,12 @@
     var queue=cell.querySelector('.quotaQueue');
     if(!queue)return;
     if(cell.dataset.active!=='1'){
-      queue.textContent='File d’attente indisponible';
+      queue.textContent=window.t('js.net.queue_unavailable');
       return;
     }
     var q=payload&&payload.queue&&typeof payload.queue==='object'?payload.queue:null;
     if(!q||q.available!==true){
-      queue.textContent='File d’attente : '+String(q&&q.message||'contrôle indisponible');
+      queue.textContent=window.t('js.net.queue')+' '+String(q&&q.message||window.t('js.net.check_unavailable'));
       return;
     }
     var total=Number(q.total);
@@ -305,15 +305,15 @@
     var remaining=Number(q.remaining);
     var exact=q.exact!==false;
     if(!Number.isFinite(total)||total<0){
-      queue.textContent='File d’attente : limite non chiffrée';
+      queue.textContent=window.t('js.net.queue')+' '+window.t('js.net.limit_unencrypted');
       return;
     }
     if(!exact){
-      queue.textContent='File d’attente : au moins '+String(Math.max(0,Number.isFinite(scheduled)?scheduled:0))+' programmée(s) sur '+String(total);
+      queue.textContent=window.t('js.net.queue_at_least',{count:String(Math.max(0,Number.isFinite(scheduled)?scheduled:0)),total:String(total)});
     }else{
       var safeScheduled=Math.max(0,Number.isFinite(scheduled)?scheduled:0);
       var safeRemaining=Math.max(0,Number.isFinite(remaining)?remaining:(total-safeScheduled));
-      queue.textContent='File d’attente : '+String(safeRemaining)+' / '+String(total)+' place(s) restante(s) · '+String(safeScheduled)+' programmée(s)';
+      queue.textContent=window.t('js.net.queue_detail',{remaining:String(safeRemaining),total:String(total),scheduled:String(safeScheduled)});
     }
     if(q.is_at_limit===true||(exact&&Number.isFinite(remaining)&&remaining<=0))cell.classList.add('isDanger');
     else if(exact&&total>0&&Number.isFinite(remaining)&&remaining/total<=0.2)cell.classList.add('isWarning');
@@ -330,32 +330,32 @@
     if(refresh)refresh.disabled=false;
     if(cell.dataset.active!=='1'){
       cell.classList.add('isDisabled');
-      if(value)value.textContent='Désactivé';
-      if(detail)detail.textContent='Connexion inactive';
+      if(value)value.textContent=window.t('js.net.disabled');
+      if(detail)detail.textContent=window.t('js.net.connection_inactive');
       renderBufferQueue(cell,payload);
       return;
     }
     if(!payload||payload.available!==true){
       cell.classList.add('isUnavailable');
-      if(value)value.textContent='Non disponible';
-      if(detail)detail.textContent=String(payload&&payload.message||'Compteur indisponible');
+      if(value)value.textContent=window.t('js.net.unavailable');
+      if(detail)detail.textContent=String(payload&&payload.message||window.t('js.net.counter_unavailable'));
       renderBufferQueue(cell,payload);
-      cell.title=String(payload&&payload.message||'Compteur indisponible');
+      cell.title=String(payload&&payload.message||window.t('js.net.counter_unavailable'));
       return;
     }
     var total=payload.total===null||payload.total===undefined?null:Number(payload.total);
     var remaining=payload.remaining===null||payload.remaining===undefined?null:Number(payload.remaining);
     if(payload.unlimited===true||total===null||!Number.isFinite(total)){
-      if(value)value.textContent='Illimité';
-      if(detail)detail.textContent='Aucune limite quotidienne chiffrée signalée par Buffer';
+      if(value)value.textContent=window.t('js.net.unlimited');
+      if(detail)detail.textContent=window.t('js.net.no_daily_limit');
       renderBufferQueue(cell,payload);
       cell.title=String(payload.message||'');
       return;
     }
     var safeRemaining=Number.isFinite(remaining)?Math.max(0,remaining):0;
     if(value)value.textContent=String(safeRemaining)+' / '+String(Math.max(0,total));
-    var used=payload.used!==null&&payload.used!==undefined&&Number.isFinite(Number(payload.used))?' · '+Number(payload.used)+' utilisée(s)':'';
-    if(detail)detail.textContent='restantes sur une période de 24 h'+used;
+    var used=payload.used!==null&&payload.used!==undefined&&Number.isFinite(Number(payload.used))?' · '+window.t('js.net.used',{n:Number(payload.used)}):'';
+    if(detail)detail.textContent=window.t('js.net.remaining_24h')+used;
     if(safeRemaining<=0)cell.classList.add('isDanger');
     else if(total>0&&safeRemaining/total<=0.2)cell.classList.add('isWarning');
     renderBufferQueue(cell,payload);
@@ -376,9 +376,9 @@
     cell.classList.remove('isUnavailable','isWarning','isDanger');
     cell.classList.add('isLoading');
     if(refresh)refresh.disabled=true;
-    var value=cell.querySelector('.quotaValue');if(value)value.textContent='Calcul…';
-    var detail=cell.querySelector('.quotaDetail');if(detail)detail.textContent='Lecture du quota en cours';
-    var queue=cell.querySelector('.quotaQueue');if(queue)queue.textContent='File d’attente : calcul…';
+    var value=cell.querySelector('.quotaValue');if(value)value.textContent=window.t('js.net.computing');
+    var detail=cell.querySelector('.quotaDetail');if(detail)detail.textContent=window.t('js.net.reading_quota');
+    var queue=cell.querySelector('.quotaQueue');if(queue)queue.textContent=window.t('js.net.queue')+' '+window.t('js.net.computing');
     try{
       var u=new URL(WEBHOOK_BASE+'/networks/quota',location.origin);
       u.searchParams.set('account_id',String(id));
@@ -388,7 +388,7 @@
       writeQuotaCache(id,d);
       renderQuotaCell(cell,d);
     }catch(e){
-      renderQuotaCell(cell,{available:false,provider:'buffer',message:'Lecture impossible : '+String(e&&e.message||e)});
+      renderQuotaCell(cell,{available:false,provider:'buffer',message:window.t('js.net.read_failed')+' '+String(e&&e.message||e)});
     }
   }
   function pumpQuotaQueue(){
@@ -435,7 +435,7 @@
     if(loader)loader.style.display=hasMore?'block':'none';
     async function loadMore(){
       if(loading||!hasMore)return;loading=true;
-      if(loader){loader.style.display='block';loader.textContent='Chargement…';}
+      if(loader){loader.style.display='block';loader.textContent=window.t('js.loading');}
       try{
         var url=new URL(WEBHOOK_BASE+'/networks/list-page',location.origin);
         url.searchParams.set('limit','20');
@@ -446,8 +446,8 @@
         var empty=document.getElementById('emptyNetworks');if(empty)empty.remove();
         if(d.rows_html){tbody.insertAdjacentHTML('beforeend',d.rows_html);queueVisibleBufferQuotas(false);}
         hasMore=Boolean(d.has_more);cursorAt=String(d.next_cursor_at||'');cursorId=String(d.next_cursor_id||'');
-        if(loader){loader.style.display=hasMore?'block':'none';loader.textContent=hasMore?'Fais défiler pour charger plus de comptes.':'Toutes les lignes sont affichées.';}
-      }catch(e){if(loader){loader.style.display='block';loader.textContent='Chargement impossible. Réessaie en faisant défiler.';}}
+        if(loader){loader.style.display=hasMore?'block':'none';loader.textContent=hasMore?window.t('js.net.scroll_more'):window.t('js.net.all_shown');}
+      }catch(e){if(loader){loader.style.display='block';loader.textContent=window.t('js.net.load_failed');}}
       finally{loading=false;}
     }
     new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting)loadMore();});},{rootMargin:'240px'}).observe(sentinel);

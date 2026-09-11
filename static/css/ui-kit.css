@@ -1507,6 +1507,8 @@ summary:focus-visible,
 
   .pgMobileNavToggle {
     display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
     width: 38px; height: 38px;
     border-radius: var(--radius-md);
     border: 1px solid var(--line-2);

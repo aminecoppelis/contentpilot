@@ -28,13 +28,13 @@
   function openPublishedErrorModal(button){
     if(!button)return;
     lastErrorTrigger=button;
-    var title=String(button.getAttribute('data-error-title')||'Publication').trim();
-    var status=String(button.getAttribute('data-error-status')||'Erreur').trim();
+    var title=String(button.getAttribute('data-error-title')||window.t('js.pub.publication')).trim();
+    var status=String(button.getAttribute('data-error-status')||window.t('js.status.failed')).trim();
     var publicationId=String(button.getAttribute('data-publication-id')||'').trim();
-    var message=String(button.getAttribute('data-error-message')||'Aucun détail supplémentaire disponible.').trim();
-    errorModalTitle.textContent=title||'Détail de l\u2019erreur';
+    var message=String(button.getAttribute('data-error-message')||window.t('js.pub.no_extra_detail')).trim();
+    errorModalTitle.textContent=title||window.t('js.pub.error_detail');
     errorModalMeta.textContent=[status,publicationId].filter(Boolean).join(' · ');
-    errorModalMessage.textContent=message||'Aucun détail supplémentaire disponible.';
+    errorModalMessage.textContent=message||window.t('js.pub.no_extra_detail');
     errorModal.classList.add('isOpen');
     errorModal.setAttribute('aria-hidden','false');
     document.body.classList.add('publishedErrorModalOpen');
@@ -67,7 +67,7 @@
     toolbar.hidden=selectedCount===0;
     toolbar.setAttribute('aria-hidden',selectedCount===0?'true':'false');
     countElement.textContent=String(selectedCount);
-    labelElement.textContent=selectedCount>1?'lignes sélectionnées':'ligne sélectionnée';
+    labelElement.textContent=selectedCount>1?window.t('js.pub.rows_selected'):window.t('js.pub.row_selected');
     deleteButton.disabled=selectedCount===0;
     var selectedLoaded=checks.filter(function(check){
       return selected.has(String(check.value||'').trim());

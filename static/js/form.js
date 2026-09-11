@@ -29,7 +29,7 @@
     var input=mount.querySelector('.msSearch');
     var optionsEl=mount.querySelector('.msOptions');
     var hiddenEl=mount.querySelector('.msHidden');
-    input.placeholder=config.placeholder||'Rechercher ou ajouter...';
+    input.placeholder=config.placeholder||window.t('pe.ms.search');
     function closeOptionsSoon(){setTimeout(function(){optionsEl.classList.remove('isOpen');},140);}
     function addValue(value){
       var clean=String(value||'').trim();if(!clean)return;
@@ -44,7 +44,7 @@
       state.selected.forEach(function(value){
         var tag=document.createElement('span');tag.className='msTag';
         var text=document.createElement('span');text.textContent=value;
-        var btn=document.createElement('button');btn.type='button';btn.setAttribute('aria-label','Retirer '+value);btn.textContent='×';
+        var btn=document.createElement('button');btn.type='button';btn.setAttribute('aria-label',window.t('js.remove')+' '+value);btn.textContent='×';
         btn.addEventListener('click',function(event){event.stopPropagation();removeValue(value);});
         tag.appendChild(text);tag.appendChild(btn);tagsEl.appendChild(tag);
         var hidden=document.createElement('input');hidden.type='hidden';hidden.name=config.name;hidden.value=value;hiddenEl.appendChild(hidden);
@@ -63,11 +63,11 @@
       var lowers=state.options.map(function(v){return v.toLowerCase();});
       var selectedLowers=state.selected.map(function(v){return v.toLowerCase();});
       if(q&&selectedLowers.indexOf(q)<0&&lowers.indexOf(q)<0){
-        var addBtn=document.createElement('button');addBtn.type='button';addBtn.className='msOption msOptionAdd';addBtn.innerHTML='<span></span><strong>Ajouter</strong>';
+        var addBtn=document.createElement('button');addBtn.type='button';addBtn.className='msOption msOptionAdd';addBtn.innerHTML='<span></span><strong>'+window.t('js.add')+'</strong>';
         addBtn.querySelector('span').textContent=input.value.trim();
         addBtn.addEventListener('mousedown',function(event){event.preventDefault();addValue(input.value);input.focus();});optionsEl.prepend(addBtn);
       }
-      if(!optionsEl.children.length){var empty=document.createElement('div');empty.className='msEmpty';empty.textContent='Aucune option disponible. Écris une valeur et appuie sur Entrée.';optionsEl.appendChild(empty);}
+      if(!optionsEl.children.length){var empty=document.createElement('div');empty.className='msEmpty';empty.textContent=window.t('js.ms.no_option');optionsEl.appendChild(empty);}
     }
     input.addEventListener('focus',function(){renderOptions();optionsEl.classList.add('isOpen');});
     input.addEventListener('blur',closeOptionsSoon);
@@ -151,16 +151,16 @@
   }
   function getPromptMode(){ return themeInput&&themeInput.value.trim()?'improve':'generate'; }
   function syncReformulateButtonLabel(){
-    if(reformulateBtn)reformulateBtn.textContent=getPromptMode()==='improve'?'Améliorer avec l\u2019IA':'Générer avec l\u2019IA';
+    if(reformulateBtn)reformulateBtn.textContent=getPromptMode()==='improve'?window.t('js.form.improve_ai'):window.t('pn.f.prompt.generate');
   }
   if(themeInput)themeInput.addEventListener('input',syncReformulateButtonLabel);
   syncReformulateButtonLabel();
 
   if(reformulateBtn)reformulateBtn.addEventListener('click',async function(){
     var subject=getFieldValue('subject').trim();
-    if(!subject){ setPromptAssistStatus('Renseigne d\u2019abord un sujet.','error'); return; }
+    if(!subject){ setPromptAssistStatus(window.t('js.form.subject_first'),'error'); return; }
     reformulateBtn.disabled=true;
-    setPromptAssistStatus('Génération du prompt en cours…','info');
+    setPromptAssistStatus(window.t('js.form.prompt_generating'),'info');
     try{
       var payload={
         subject:subject, prompt:themeInput?themeInput.value:'', prompt_mode:getPromptMode(),
@@ -178,8 +178,8 @@
       if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
       var prompt=(d.data&&d.data.prompt)||d.prompt||'';
       if(prompt&&themeInput){ themeInput.value=prompt; themeInput.dispatchEvent(new Event('input',{bubbles:true})); }
-      setPromptAssistStatus('Prompt généré.','success');
-    }catch(e){ setPromptAssistStatus('Génération impossible : '+e.message,'error'); }
+      setPromptAssistStatus(window.t('js.form.prompt_generated'),'success');
+    }catch(e){ setPromptAssistStatus((e.message||window.t('js.gen_failed')),'error'); }
     finally{ reformulateBtn.disabled=false; syncReformulateButtonLabel(); }
   });
 
