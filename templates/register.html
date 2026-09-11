@@ -141,8 +141,9 @@
   <div class="authTopBar">
     <select class="authLangSelect" aria-label="{{ t('menu.language') }}"
             onchange="if(this.value){window.location.href=this.value;}">
+      {% set current_full_path = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
       {% for lc in supported_locales %}
-      <option value="/app/locale?to={{ lc }}&next={{ request.url.path }}" {{ 'selected' if lc == locale }}>{{ locale_names[lc] }}</option>
+      <option value="/app/locale?to={{ lc }}&next={{ current_full_path | urlencode }}" {{ 'selected' if lc == locale }}>{{ locale_names[lc] }}</option>
       {% endfor %}
     </select>
     <button type="button" class="authThemeToggle" id="authThemeToggle" aria-label="{{ t('common.change_theme') }}">
