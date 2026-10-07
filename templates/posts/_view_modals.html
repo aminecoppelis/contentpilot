@@ -4,7 +4,7 @@
   <div class="modal">
     <div class="modalTop">
       <div><h2 id="modalTitle">{{ t('pm.action.title') }}</h2><p id="modalDescription"></p></div>
-      <button type="button" class="modalClose" onclick="closeActionModal()">×</button>
+      <button type="button" class="modalClose" aria-label="{{ t('common.close') }}" onclick="closeActionModal()">×</button>
     </div>
     <div class="modalBody">
       <div id="modalIdea" class="modalIdea"></div>
@@ -27,7 +27,7 @@
     <div class="modalTop">
       <div><h2 id="generateMoreTitle">{{ t('pv.more') }}</h2>
         <p>{{ t('pm.more.desc') }}</p></div>
-      <button class="modalClose" type="button"
+      <button class="modalClose" type="button" aria-label="{{ t('common.close') }}"
         onclick="document.getElementById('generateMoreModal').classList.remove('isVisible')">×</button>
     </div>
     <form class="generateMoreForm" onsubmit="event.preventDefault();window.submitGenerateMoreIdeas(event,this);return false;">
@@ -50,7 +50,7 @@
     <div class="modalTop">
       <div><h2 id="mediaModalTitle">{{ t('pv.media.generate') }}</h2>
         <p id="mediaModalDescription">{{ t('pm.media.desc') }}</p></div>
-      <button type="button" class="modalClose" onclick="window.closeMediaModal()">×</button>
+      <button type="button" class="modalClose" aria-label="{{ t('common.close') }}" onclick="window.closeMediaModal()">×</button>
     </div>
     <div class="modalBody mediaModalBody">
       <div class="mediaTypeSwitchWrap" id="modalMediaType">
@@ -207,7 +207,7 @@
     <div class="modalTop">
       <div><h2 id="publishModalTitle">{{ t('pm.pub.title') }}</h2>
         <p id="publishModalDescription">{{ t('pm.pub.desc') }}</p></div>
-      <button class="modalClose" type="button" onclick="window.closePublishModal()">×</button>
+      <button class="modalClose" type="button" aria-label="{{ t('common.close') }}" onclick="window.closePublishModal()">×</button>
     </div>
     <div class="modalBody">
       <div id="publishModalIdea" class="modalIdea"></div>

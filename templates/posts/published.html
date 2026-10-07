@@ -67,9 +67,7 @@
     </tbody>
   </table>
 </section>
-<div id="publishedLoadState" class="tableLoadState" style="display:{{ 'block' if has_more else 'none' }}">
-  {{ t('history.scroll_more') }}</div>
-<div id="publishedSentinel" style="height:1px"></div>
+{% include "partials/pagination.html" %}
 
 <div id="publishedErrorModal" class="publishedErrorModal" role="dialog" aria-modal="true"
      aria-labelledby="publishedErrorModalTitle" aria-hidden="true">
@@ -93,10 +91,4 @@
 {% endblock %}
 {% block scripts %}
 <script src="/static/js/published.js?v=22"></script>
-<script>
-window.initInfiniteTable({
-  tbodyId:'publishedTableBody', sentinelId:'publishedSentinel', loadStateId:'publishedLoadState',
-  endpoint:'/app/published/list-page', initialOffset:{{ next_offset }}, hasMore:{{ 'true' if has_more else 'false' }}
-});
-</script>
 {% endblock %}

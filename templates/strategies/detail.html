@@ -1,42 +1,69 @@
 {% extends "base.html" %}
 {% block title %}{{ selected.title or t('sd.default_title') }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css?v=52-clean-calendar"><link rel="stylesheet" href="/static/css/strategy-calendar-clean.css?v=1">{% endblock %}
 {% block content %}
 <section class="strategyWorkspace" data-strategy-id="{{ selected.id }}">
   <div class="strategyWorkspaceHeader">
     <div class="strategyDetailToolbar">
       <a class="pageBack strategyToolbarBtn" href="/app/strategies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>{{ t('nav.strategies') }}</a>
       <div class="strategyDetailTabs" role="tablist" aria-label="{{ t('sd.tabs.aria') }}">
-        <button type="button" class="strategyViewBtn active" data-strategy-tab="summary" aria-selected="true">{{ t('sd.tab.summary') }}</button>
-        <button type="button" class="strategyViewBtn" data-strategy-tab="actions" aria-selected="false">{{ t('sd.tab.actions') }} <span class="tabCount">{{ actions|length }}</span></button>
-        <button type="button" class="strategyViewBtn" data-strategy-tab="calendar" aria-selected="false">{{ t('sd.tab.calendar') }} <span class="tabCount">{{ calendar|length }}</span></button>
+        <button type="button" class="strategyViewBtn active" data-strategy-tab="summary" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg><span>{{ t('sd.tab.summary') }}</span></button>
+        <button type="button" class="strategyViewBtn" data-strategy-tab="actions" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg><span>{{ t('sd.tab.actions') }}</span><span class="tabCount">{{ actions_total }}</span></button>
+        <button type="button" class="strategyViewBtn" data-strategy-tab="posts" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg><span>{{ t('sd.tab.posts') }}</span><span class="tabCount">{{ posts_total }}</span></button>
+        <button type="button" class="strategyViewBtn" data-strategy-tab="calendar" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v15H5zM8 3v4M16 3v4M5 10h14"/></svg><span>{{ t('sd.tab.calendar') }}</span><span class="tabCount">{{ calendar|length }}</span></button>
       </div>
       <div class="strategyDetailActions">
         {% if selected.status != 'active' %}
           <button type="button" class="btn primary tiny strategyStatusBtn" data-strategy-action="validate">{{ t('sd.activate') }}</button>
         {% endif %}
-        {% if selected.status != 'archived' %}
-          <button type="button" class="btn secondary tiny strategyStatusBtn" data-strategy-action="archive">{{ t('sd.archive') }}</button>
-        {% endif %}
-        <button type="button" class="btn danger tiny strategyDetailDeleteBtn"
-                data-strategy-id="{{ selected.id }}" data-strategy-title="{{ selected.title or t('sd.default_title') }}">{{ t('common.delete') }}</button>
+        <details class="strategyMoreMenu">
+          <summary aria-label="{{ t('common.actions') }}">•••</summary>
+          <div>{% if selected.status != 'archived' %}<button type="button" class="strategyStatusBtn" data-strategy-action="archive">{{ t('sd.archive') }}</button>{% endif %}<button type="button" class="strategyDetailDeleteBtn danger" data-strategy-id="{{ selected.id }}" data-strategy-title="{{ selected.title or t('sd.default_title') }}">{{ t('common.delete') }}</button></div>
+        </details>
       </div>
     </div>
 
     <div class="strategyDetailIntro">
-      <div class="strategyDetailMeta">
-        <span class="statusPill {{ selected.status }}">{{ selected.status_label }}</span>
-        <span>{{ selected.platform_label }}</span>
-        <span>{{ selected.account_label }}</span>
-        <span>{{ t('sd.version', n=selected.current_version or 1) }}</span>
-        {% if selected.analyzed_label %}<span>{{ t('sd.analyzed', date=selected.analyzed_label) }}</span>{% endif %}
+      <div class="strategyIntroMain">
+        <div class="strategyHeroEyebrow">{{ t('sd.hero.eyebrow') }}</div>
+        <div class="strategyDetailMeta">
+          <span class="statusPill {{ selected.status }}">{{ t('strat.status.' ~ selected.status) }}</span>
+          <span>{{ selected.account_label or selected.platform_label or t('strat.default_account') }}</span>
+          <span>{{ t('sd.version', n=selected.current_version or 1) }}</span>
+          {% if selected.analyzed_label %}<em>{{ t('sd.analyzed', date=selected.analyzed_label) }}</em>{% endif %}
+        </div>
+        <h1>{{ selected.title or t('sd.default_title') }}</h1>
+        <p>{{ selected.executive_summary or t('sd.default_summary') }}</p>
       </div>
-      <h1>{{ selected.title or t('sd.default_title') }}</h1>
-      <p>{{ selected.executive_summary or t('sd.default_summary') }}</p>
+      <aside class="strategyNextStep">
+        <h2>{{ t('sd.next.title') }}</h2>
+        <ol>
+          <li class="done"><i>✓</i><span>{{ t('sd.next.analyzed') }}</span></li>
+          <li class="{{ 'done' if selected.status == 'active' else 'current' }}"><i>{{ '✓' if selected.status == 'active' else '' }}</i><span>{{ t('sd.next.activate') }}</span></li>
+          <li class="{{ 'done' if planned_actions_total else ('current' if selected.status == 'active' else '') }}"><i>{{ '✓' if planned_actions_total else '' }}</i><span>{{ t('sd.next.plan_actions', count=actions_total) }}</span></li>
+          <li class="{{ 'done' if posts_total else ('current' if planned_actions_total else '') }}"><i>{{ '✓' if posts_total else '' }}</i><span>{{ t('sd.next.posts') }}</span></li>
+        </ol>
+        {% if selected.status != 'active' %}
+          <button type="button" class="btn primary strategyStatusBtn" data-strategy-action="validate">{{ t('sd.activate') }}</button>
+        {% elif not planned_actions_total %}
+          <button type="button" class="btn primary" data-strategy-jump="actions">{{ t('sd.next.plan') }}</button>
+        {% elif not posts_total %}
+          <button type="button" class="btn primary" data-strategy-jump="calendar">{{ t('sd.next.open_calendar') }}</button>
+        {% else %}
+          <button type="button" class="btn primary" data-strategy-jump="posts">{{ t('sd.next.view_posts') }}</button>
+        {% endif %}
+      </aside>
+      <div class="strategyHeroStats">
+        <button type="button" data-strategy-jump="actions"><span>{{ t('sd.stats.actions') }}</span><b>{{ actions_total }}</b><small>{{ t('sd.stats.actions_hint') }}</small></button>
+        <button type="button" data-strategy-jump="posts"><span>{{ t('sd.stats.posts') }}</span><b>{{ posts_total }} <small>/ {{ actions_total }}</small></b><small>{{ t('sd.stats.posts_hint') }}</small></button>
+        <button type="button" data-strategy-jump="calendar"><span>{{ t('sd.stats.plans') }}</span><b>{{ calendar|length }}</b><small>{{ t('sd.stats.plans_hint') }}</small></button>
+        <div><span>{{ t('sd.stats.duration') }}</span><b>{{ t('sd.days', n=selected.duration_days or 30) }}</b><small>{{ t('sd.stats.duration_hint') }}</small></div>
+      </div>
     </div>
   </div>
 
   <section class="strategyTabPanel active" data-strategy-panel="summary">
+    <div class="strategyPanelHeading"><div><span>{{ t('sd.summary.eyebrow') }}</span><h2>{{ t('sd.summary.title') }}</h2><p>{{ t('sd.summary.subtitle') }}</p></div></div>
     <div class="strategySummaryGrid">
       <article class="strategyCard strategyCardWide">
         <div class="strategyCardLabel">{{ t('sd.c.objective') }}</div>
@@ -46,7 +73,7 @@
         {% if selected.objective.conditions %}<p class="strategyMuted">{{ selected.objective.conditions }}</p>{% endif %}
         <div class="strategyMetaChips">
           {% if selected.duration_days %}<span>{{ t('sd.days', n=selected.duration_days) }}</span>{% endif %}
-          {% if selected.objective.feasibility_code %}<span>{{ t('sd.feasibility', code=selected.objective.feasibility_code) }}</span>{% endif %}
+          {% if selected.objective.feasibility_code %}<span>{{ t('sd.feasibility', code=t('sd.level.' ~ selected.objective.feasibility_code)) }}</span>{% endif %}
         </div>
       </article>
 
@@ -65,7 +92,7 @@
         <div class="strategyCardLabel">{{ t('sd.c.positioning') }}</div>
         {% if selected.positioning is mapping %}
           {% for key, value in selected.positioning.items() %}
-            {% if value is not mapping and value is not iterable or value is string %}<p><b>{{ key|replace('_',' ')|title }} :</b> {{ value }}</p>{% endif %}
+            {% if value is not mapping and value is not iterable or value is string %}<p><b>{{ t('sd.field.' ~ key) }} :</b> {{ value }}</p>{% endif %}
           {% endfor %}
         {% elif selected.positioning %}<p>{{ selected.positioning }}</p>
         {% else %}<p class="strategyMuted">{{ t('sd.na') }}</p>{% endif %}
@@ -77,9 +104,9 @@
           <div class="diagnosticGrid">
           {% for key, value in selected.diagnostic.items() %}
             {% if value is number %}
-              <div class="diagnosticItem"><span>{{ key|replace('_',' ')|title }}</span><b>{{ value }}{% if value <= 10 %} / 10{% endif %}</b></div>
+              <div class="diagnosticItem"><span>{{ t('sd.field.' ~ key) }}</span><b>{{ value }}{% if value <= 10 %} / 10{% endif %}</b></div>
             {% elif value is string %}
-              <div class="diagnosticItem diagnosticText"><span>{{ key|replace('_',' ')|title }}</span><b>{{ value }}</b></div>
+              <div class="diagnosticItem diagnosticText"><span>{{ t('sd.field.' ~ key) }}</span><b>{{ value }}</b></div>
             {% endif %}
           {% endfor %}
           </div>
@@ -112,6 +139,7 @@
   </section>
 
   <section class="strategyTabPanel" data-strategy-panel="actions" hidden>
+    <div class="strategyPanelHeading"><div><span>{{ t('sd.actions.eyebrow') }}</span><h2>{{ t('sd.actions.title') }}</h2><p>{{ t('sd.actions.subtitle') }}</p></div><div class="strategyPanelBadge">{{ t('sd.actions.count', count=actions|length) }}</div></div>
     {% if actions %}
     <div class="actionBulkToolbar aiAutoPlanningToolbar">
       <div><b>{{ t('sd.a.ai_planning') }}</b><small id="bulkActionCount"></small></div>
@@ -133,9 +161,9 @@
             <div>
               <div class="strategyActionMeta">
                 <span>{{ t('sd.a.day', n=action.due_day or 1) }}</span>
-                <span>{{ action.category or 'growth' }}</span>
-                <span class="priorityPill {{ action.priority or 'medium' }}">{{ action.priority or 'medium' }}</span>
-                <span class="statusPill {{ action.status or 'pending' }}">{{ action.status or 'pending' }}</span>
+                <span>{{ t('sd.category.' ~ (action.category or 'content')) }}</span>
+                <span class="priorityPill {{ action.priority or 'medium' }}">{{ t('sd.level.' ~ (action.priority or 'medium')) }}</span>
+                <span class="statusPill {{ action.status or 'pending' }}">{{ t('sd.action_status.' ~ (action.status or 'pending')) }}</span>
               </div>
               <h2>{{ action.title or t('sd.a.action') }}</h2>
             </div>
@@ -160,18 +188,61 @@
             <div class="actionCalendarLine">{{ t('sd.a.gen_planned') if action.plan_generation_required else t('sd.a.exec_planned') }} : <b>{{ action.planned_label }}</b></div>
             {% if action.recommended_publish_for and action.plan_generation_required %}<div class="actionCalendarLine audiencePublishLine">{{ t('sd.a.reco_publish') }} : <b>{{ action.recommended_publish_for }}</b></div>{% endif %}
           {% endif %}
+          {% if action.linked_posts %}
+            <div class="strategyLinkedPosts">
+              <div class="strategyLinkedPostsTitle">{{ t('sd.a.linked_posts') }}</div>
+              {% for post in action.linked_posts %}
+                <a class="strategyLinkedPost" href="/app/posts/view?request_id={{ post.request_id }}{% if post.idea_id %}&idea_id={{ post.idea_id }}{% endif %}">
+                  <span><b>{{ post.title }}</b>{% if post.planned_label %}<small>{{ post.planned_label }}</small>{% endif %}</span>
+                  <span class="statusPill {{ post.status }}">{{ post.status }}</span>
+                  <strong>{{ t('sd.a.view_post') }}</strong>
+                </a>
+              {% endfor %}
+            </div>
+          {% endif %}
           <div class="actionControls">
             <button type="button" class="btn primary tiny actionRun" data-action-id="{{ action.id }}" data-planning-state="{{ action.plan_status }}" {% if not action.can_plan %}disabled title="{{ t('sd.a.already_planned.title') }}"{% endif %}>{{ t('sd.a.done_generated') if action.plan_status == 'generated' else (t('sd.a.generating') if action.plan_status == 'generating' else (t('sd.a.already_planned') if action.has_active_plan else t('sd.a.plan_auto'))) }}</button>
+            <button type="button" class="btn secondary tiny actionScheduleManual" data-action-id="{{ action.id }}" {% if not action.can_plan %}disabled title="{{ t('sd.a.already_planned.title') }}"{% endif %}>{{ t('sd.a.plan_manual') }}</button>
             <button type="button" class="btn secondary tiny actionComplete" data-action-id="{{ action.id }}" data-next-status="{{ 'pending' if action.status == 'done' else 'done' }}">{{ t('sd.a.reopen') if action.status == 'done' else t('sd.a.mark_done') }}</button>
           </div>
         </div>
       </article>
       {% endfor %}
     </div>
+    {% with pagination=actions_pagination %}{% include "partials/pagination.html" %}{% endwith %}
     {% else %}<div class="strategyEmptyState">{{ t('sd.a.empty') }}</div>{% endif %}
   </section>
 
+  <section class="strategyTabPanel" data-strategy-panel="posts" hidden>
+    <div class="strategyPanelHeading"><div><span>{{ t('sd.posts.eyebrow') }}</span><h2>{{ t('sd.posts.title') }}</h2><p>{{ t('sd.posts.subtitle') }}</p></div><div class="strategyPanelBadge">{{ t('sd.posts.count', count=strategy_posts|length) }}</div></div>
+    {% if strategy_posts %}<div class="strategyPhoneGallery">
+      {% set network = (selected.platform or selected.platform_label or 'linkedin')|lower %}
+      {% set preview_type = 'ig' if 'instagram' in network else ('fb' if 'facebook' in network else 'li') %}
+      {% for post in strategy_posts %}
+      <article class="strategyPhoneItem">
+        <div class="spPhone p-{{ preview_type }}"><div class="spScreen">
+          <div class="spStatus"><b>9:41</b><span class="spIsland"></span><span class="spSignals">▴▴▴ 5G <i></i></span></div>
+          {% if preview_type == 'li' %}<div class="spTopbar"><b class="spLinkedinLogo">in</b><span class="spSearch">{{ t('pv.preview.search') }}</span><span>○</span></div>
+          {% elif preview_type == 'fb' %}<div class="spTopbar"><b class="spFacebookLogo">facebook</b><span>⊕ &nbsp; ⌕ &nbsp; ○</span></div>
+          {% else %}<div class="spTopbar"><b class="spInstagramLogo">Instagram</b><span>♡ &nbsp; ✉</span></div>{% endif %}
+          <div class="spFeed"><article class="spPost sp-{{ preview_type }}">
+            <div class="spPostHead">{% if preview_type == 'ig' %}<span class="spAvatarRing"><i>{{ (selected.account_label or 'C')[:1]|upper }}</i></span>{% else %}<span class="spAvatar">{{ (selected.account_label or 'C')[:1]|upper }}</span>{% endif %}<span class="spWho"><b>{{ selected.account_label or 'Votre compte' }}</b><small>{% if preview_type == 'li' %}{{ selected.platform_label }} · {% endif %}2 h · ◎</small></span><strong>···</strong></div>
+            {% if preview_type != 'ig' %}<div class="spText">{{ (post.post_text or post.action_title or 'Le contenu sera disponible après sa génération.')[:620] }}{% if (post.post_text or '')|length > 620 %}…{% endif %}</div>{% endif %}
+            {% if post.media_id %}<div class="spMedia {{ 'square' if preview_type == 'ig' else '' }}"><img src="/app/posts/media-image.jpg?media_id={{ post.media_id }}" alt="Aperçu du média" loading="lazy"></div>{% elif post.media_url %}<div class="spMedia {{ 'square' if preview_type == 'ig' else '' }}"><img src="{{ post.media_url }}" alt="Aperçu du média" loading="lazy"></div>{% else %}<div class="spMedia spMediaPlaceholder {{ 'square' if preview_type == 'ig' else '' }}"><span>{{ selected.platform_label }}</span><b>{{ post.title }}</b></div>{% endif %}
+            {% if preview_type == 'ig' %}<div class="spIgActions"><span>♡</span><span>○</span><span>➤</span><span>⚑</span></div><div class="spLikes">{{ t('pv.preview.likes') }}</div><div class="spIgText"><b>{{ selected.account_label or t('strat.default_account') }}</b> {{ (post.post_text or post.action_title or '')[:330] }}{% if (post.post_text or '')|length > 330 %}…{% endif %}</div><div class="spAgo">{{ t('pv.preview.two_hours_ago') }}</div>
+            {% else %}<div class="spPostStats"><span>● ● {{ 128 if preview_type == 'li' else 214 }}</span><span>{{ t('pv.preview.comments') }}</span></div><div class="spPostActions"><span>{{ t('pv.preview.like') }}</span><span>{{ t('pv.preview.comment') }}</span><span>{{ t('pv.preview.share') }}</span>{% if preview_type == 'li' %}<span>{{ t('pv.preview.send') }}</span>{% endif %}</div>{% endif %}
+          </article></div>
+          <div class="spNav">{% if preview_type == 'li' %}<span>⌂</span><span>◉</span><span>⊕</span><span>◎</span><span>▣</span>{% elif preview_type == 'fb' %}<span>⌂</span><span>◉</span><span>▶</span><span>▣</span><span>◎</span><span>☰</span>{% else %}<span>⌂</span><span>⌕</span><span>⊕</span><span>▷</span><span>●</span>{% endif %}</div><i class="spHome"></i>
+        </div></div>
+        <div class="strategyPhoneMeta"><div><span class="statusPill {{ post.status }}">{{ post.status }}</span>{% if post.planned_label %}<small>{{ post.planned_label }}</small>{% endif %}</div><p>{{ t('sd.posts.intervention', title=post.action_title) }}</p><a class="btn primary tiny" href="/app/posts/view?request_id={{ post.request_id }}{% if post.idea_id %}&idea_id={{ post.idea_id }}{% endif %}">{{ t('sd.posts.open') }}</a></div>
+      </article>
+      {% endfor %}
+    </div>{% else %}<div class="strategyEmptyState">{{ t('sd.posts.empty') }}</div>{% endif %}
+    {% with pagination=posts_pagination %}{% include "partials/pagination.html" %}{% endwith %}
+  </section>
+
   <section class="strategyTabPanel" data-strategy-panel="calendar" hidden>
+    <div class="strategyPanelHeading"><div><span>{{ t('sd.calendar.eyebrow') }}</span><h2>{{ t('sd.calendar.title') }}</h2><p>{{ t('sd.calendar.subtitle') }}</p></div><div class="strategyPanelBadge">{{ t('sd.calendar.count', count=calendar|length) }}</div></div>
     <div class="realCalendarPanel" id="strategyCalendarPanel" data-strategy-id="{{ selected.id }}">
       <script type="application/json" id="strategyCalendarItemsJson">{{ calendar_view_items|tojson }}</script>
       <div class="calendarSummary">
@@ -212,8 +283,8 @@
 
 <div class="calendarTaskModal" id="calendarTaskModal" aria-hidden="true">
   <div class="calendarTaskModalBox" role="dialog" aria-modal="true" aria-labelledby="calendarTaskModalTitle">
-    <h2 id="calendarTaskModalTitle">{{ t('sd.task.title') }}</h2>
-    <p>{{ t('sd.task.desc') }}</p>
+    <h2 id="calendarTaskModalTitle" data-edit-title="{{ t('sd.task.title') }}" data-create-title="{{ t('sd.task.create_title') }}">{{ t('sd.task.title') }}</h2>
+    <p id="calendarTaskModalDescription" data-edit-description="{{ t('sd.task.desc') }}" data-create-description="{{ t('sd.task.create_desc') }}">{{ t('sd.task.desc') }}</p>
     <div class="calendarTaskFields">
       <label>{{ t('sd.task.date') }}<input type="date" id="calendarTaskDate" required></label>
       <label>{{ t('sd.task.time') }}<input type="time" id="calendarTaskTime" step="60" required></label>
@@ -226,4 +297,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/strategies.js?v=22"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/strategies.js?v=31-manual-planning"></script>{% endblock %}

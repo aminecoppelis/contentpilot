@@ -1,11 +1,7 @@
 /* VALIDATION_EMAIL_REMINDERS_V68_2026_08_07 — port verbatim.
-   Cron: */15 * * * *. Intervalle entre rappels réussis: 2 heures.
+   Exécution : toutes les 15 minutes.
+   Intervalle entre rappels réussis : 2 heures.
    Un rappel = 1 idée + 1 membre actif du workspace. */
-/* VALIDATION_EMAIL_REMINDERS_V68_2026_08_07
-   Scanner: */15 * * * *
-   Intervalle entre emails réussis: 2 heures
-   Un rappel = 1 idée + 1 membre actif du workspace.
-*/
 CREATE TABLE IF NOT EXISTS public.app_post_validation_email_reminders (
   idea_id uuid NOT NULL,
   request_id uuid,

@@ -1,6 +1,7 @@
 {% for r in requests %}
 <tr id="request-row-{{ r.id }}">
   <td><b>{{ r.title or r.subject or t('posts.list.no_subject') }}</b><div class="mini">{{ r.id }}</div></td>
+  <td>{% if r.generation_origin == 'strategy' %}<a class="postOriginBadge strategy" href="/app/strategies?strategy_id={{ r.strategy_id }}" title="{{ r.strategy_action_title or r.strategy_title }}">{{ t('posts.origin.strategy') }}</a>{% else %}<span class="postOriginBadge manual">{{ t('posts.origin.manual') }}</span>{% endif %}</td>
   <td><span class="status {{ r.status }}">{{ r.status_label }}</span></td>
   <td>{{ r.ideas_count }}</td>
   <td>{{ r.approved_count }}</td>
@@ -9,7 +10,7 @@
   <td>{{ r.created_by_name or "—" }}</td>
   <td><div class="actions">
     {% if r.ideas_count|int > 0 or r.status in ['generating','generating_more'] %}<a class="btn light" href="/app/posts/view?request_id={{ r.id }}">{{ t('posts.list.ideas_link') }}</a>{% else %}<button class="btn light" type="button" disabled title="{{ t('posts.list.no_ideas_title') }}">{{ t('posts.list.ideas_link') }}</button>{% endif %}
-    <a class="btn light" href="/app/posts/edit?id={{ r.id }}">{{ t('common.edit') }}</a>
+    {% if r.generation_origin != 'strategy' %}<a class="btn light" href="/app/posts/edit?id={{ r.id }}">{{ t('common.edit') }}</a>{% endif %}
     <form class="inlineForm" method="post" action="/app/posts/delete" onsubmit="return deleteRequestFromList(event,this)">
       <input type="hidden" name="id" value="{{ r.id }}">
       <button class="danger" type="submit">{{ t('common.delete') }}</button>

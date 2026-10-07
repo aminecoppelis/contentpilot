@@ -17,6 +17,7 @@ from app.services.ai import AIGenerationError
 from app.services import post_generation
 from app.services.copy_ready import build_copy_ready_text
 from app.user_timezone import format_user_datetime
+from app.pagination import page_meta
 
 router = APIRouter(tags=["Posts"])
 from app.templating import templates, render_fragment
@@ -115,7 +116,7 @@ async def post_ideas_action(request: Request, payload: dict = Body(...), user=De
 
     async with pool.acquire() as conn:
         idea_row = await conn.fetchrow(
-            """SELECT pi.raw_idea, pr.form_data
+            """SELECT pi.raw_idea, pi.request_id::text AS request_id, pr.form_data
                FROM public.post_ideas pi
                JOIN public.post_requests pr ON pr.id=pi.request_id AND pr.workspace_id=pi.workspace_id
               WHERE pi.id=$1::uuid AND pi.workspace_id=$2::uuid AND pi.deleted_at IS NULL""",
@@ -136,26 +137,64 @@ async def post_ideas_action(request: Request, payload: dict = Body(...), user=De
     if action in STATUS_ACTIONS:
         new_status, review_action = STATUS_ACTIONS[action]
         async with pool.acquire() as conn:
-            await conn.execute(
-                """
-                UPDATE public.post_ideas
-                SET status = $2,
-                    raw_idea = COALESCE(raw_idea,'{}'::jsonb) || jsonb_build_object(
-                        'review_note', $3::text, 'review_action', $4::text,
-                        'reviewed_at', now()::text, 'reviewed_by', $5::text),
-                    updated_at = now()
-                WHERE id = $1::uuid AND workspace_id = $6::uuid
-                """,
-                idea_id, new_status, instructions or "", review_action, user.id, user.active_workspace_id,
-            )
-            await conn.execute(
-                """
-                INSERT INTO public.post_activity_logs (workspace_id, entity_type, entity_id, action, details)
-                VALUES ($1::uuid,'post_idea',$2::uuid,$3,jsonb_build_object('note',$4::text))
-                """,
-                user.active_workspace_id, idea_id, new_status, instructions or "",
-            )
-        return JSONResponse({"success": True, "data": {"idea_id": idea_id, "status": new_status}})
+            async with conn.transaction():
+                await conn.execute(
+                    """
+                    UPDATE public.post_ideas
+                    SET status = $2,
+                        raw_idea = COALESCE(raw_idea,'{}'::jsonb) || jsonb_build_object(
+                            'review_note', $3::text, 'review_action', $4::text,
+                            'reviewed_at', now()::text, 'reviewed_by', $5::text),
+                        updated_at = now()
+                    WHERE id = $1::uuid AND workspace_id = $6::uuid
+                    """,
+                    idea_id, new_status, instructions or "", review_action, user.id, user.active_workspace_id,
+                )
+                # La liste Posts affiche le statut de la demande parente. On le
+                # recalcule immédiatement à partir de toutes ses idées actives.
+                request_status = await conn.fetchval(
+                    """
+                    WITH states AS (
+                      SELECT lower(COALESCE(status,'pending_review')) AS status
+                      FROM public.post_ideas
+                      WHERE request_id=$1::uuid AND workspace_id=$2::uuid
+                        AND deleted_at IS NULL
+                    ), resolved AS (
+                      SELECT CASE
+                        WHEN EXISTS (SELECT 1 FROM states WHERE status='ready_for_review')
+                          THEN 'ready_for_review'
+                        WHEN EXISTS (SELECT 1 FROM states WHERE status IN ('pending_review','needs_changes'))
+                          THEN 'pending_review'
+                        WHEN NOT EXISTS (SELECT 1 FROM states WHERE status<>'published')
+                          THEN 'published'
+                        WHEN EXISTS (SELECT 1 FROM states WHERE status='scheduled')
+                         AND NOT EXISTS (SELECT 1 FROM states WHERE status NOT IN ('approved','validated','scheduled','published'))
+                          THEN 'scheduled'
+                        WHEN NOT EXISTS (SELECT 1 FROM states WHERE status NOT IN ('approved','validated','scheduled','published'))
+                          THEN 'approved'
+                        WHEN NOT EXISTS (SELECT 1 FROM states WHERE status<>'rejected')
+                          THEN 'rejected'
+                        ELSE 'pending_review'
+                      END AS status
+                    )
+                    UPDATE public.post_requests pr
+                    SET status=resolved.status, updated_at=now()
+                    FROM resolved
+                    WHERE pr.id=$1::uuid AND pr.workspace_id=$2::uuid
+                    RETURNING pr.status
+                    """,
+                    idea_row["request_id"], user.active_workspace_id,
+                )
+                await conn.execute(
+                    """
+                    INSERT INTO public.post_activity_logs (workspace_id, entity_type, entity_id, action, details)
+                    VALUES ($1::uuid,'post_idea',$2::uuid,$3,jsonb_build_object('note',$4::text))
+                    """,
+                    user.active_workspace_id, idea_id, new_status, instructions or "",
+                )
+        return JSONResponse({"success": True, "data": {
+            "idea_id": idea_id, "status": new_status, "request_status": request_status,
+        }})
 
     if action in ("edit", "regenerate"):
         try:
@@ -208,13 +247,16 @@ async def post_reformulate_prompt(payload: dict = Body(...), user=Depends(requir
 
 
 @router.get("/posts", response_class=HTMLResponse)
-async def get_posts(request: Request, status: str | None = None, page: int = 1, user=Depends(require_auth)):
+async def get_posts(request: Request, status: str | None = None, page: int = 1,
+                    origin: str = "all", q: str = "", user=Depends(require_auth)):
     """
     Port fidèle de "HTML - Liste Posts" : cette page liste les DEMANDES
     (post_requests), pas les idées individuelles — chaque ligne agrège le
     nombre d'idées/approuvées/médias pour une demande de génération.
     """
     page = max(1, int(page or 1))
+    origin = origin if origin in {"all", "strategy", "manual"} else "all"
+    q = (q or "").strip()[:120]
     pool = get_pool()
     async with pool.acquire() as conn:
         rows = await conn.fetch(
@@ -222,6 +264,11 @@ async def get_posts(request: Request, status: str | None = None, page: int = 1, 
             SELECT
                 pr.id::text AS id, pr.title, pr.subject, pr.status, pr.updated_at, pr.created_at,
                 u.first_name || ' ' || u.last_name AS created_by_name,
+                CASE WHEN origin.strategy_id IS NOT NULL OR COALESCE(pr.form_data->>'strategy_id','') <> ''
+                     THEN 'strategy' ELSE 'manual' END AS generation_origin,
+                COALESCE(origin.strategy_id::text, pr.form_data->>'strategy_id', '') AS strategy_id,
+                COALESCE(origin.strategy_title, '') AS strategy_title,
+                COALESCE(origin.action_title, '') AS strategy_action_title,
                 COUNT(DISTINCT pi.id) FILTER (WHERE pi.deleted_at IS NULL) AS ideas_count,
                 COUNT(DISTINCT pi.id) FILTER (WHERE pi.status IN ('validated','approved') AND pi.deleted_at IS NULL) AS approved_count,
                 COUNT(DISTINCT pm.id) FILTER (WHERE pm.status='ready' AND COALESCE(pm.public_url,pm.external_url,'')<>'' AND pi.deleted_at IS NULL) AS media_count,
@@ -234,18 +281,51 @@ async def get_posts(request: Request, status: str | None = None, page: int = 1, 
             LEFT JOIN public.app_users u ON u.id = pr.user_id
             LEFT JOIN public.post_ideas pi ON pi.request_id = pr.id
             LEFT JOIN public.post_media pm ON pm.idea_id = pi.id
+            LEFT JOIN LATERAL (
+              SELECT c.strategy_id, c.action_id, s.title AS strategy_title,
+                     ga.title AS action_title
+              FROM public.app_growth_strategy_action_calendar c
+              LEFT JOIN public.app_growth_strategies s ON s.id=c.strategy_id
+              LEFT JOIN public.app_growth_strategy_actions ga ON ga.id=c.action_id
+              WHERE c.request_id=pr.id AND c.workspace_id=pr.workspace_id
+              ORDER BY c.created_at ASC LIMIT 1
+            ) origin ON true
             WHERE pr.workspace_id = $1::uuid AND pr.deleted_at IS NULL
               AND ($2::text IS NULL OR pr.status = $2::text)
-            GROUP BY pr.id, pr.workspace_id, u.first_name, u.last_name
+              AND ($3::text = 'all'
+                   OR ($3::text = 'strategy' AND (origin.strategy_id IS NOT NULL OR COALESCE(pr.form_data->>'strategy_id','') <> ''))
+                   OR ($3::text = 'manual' AND origin.strategy_id IS NULL AND COALESCE(pr.form_data->>'strategy_id','') = ''))
+              AND ($4::text = '' OR concat_ws(' ', pr.title, pr.subject) ILIKE '%' || $4::text || '%')
+            GROUP BY pr.id, pr.workspace_id, u.first_name, u.last_name,
+                     origin.strategy_id, origin.strategy_title, origin.action_title
             ORDER BY pr.updated_at DESC NULLS LAST, pr.created_at DESC
-            LIMIT 20 OFFSET $3
+            LIMIT 10 OFFSET $5
             """,
-            user.active_workspace_id, status, (page - 1) * 20,
+            user.active_workspace_id, status, origin, q, (page - 1) * 10,
         )
         total = await conn.fetchval(
             "SELECT count(*)::int FROM public.post_requests WHERE workspace_id=$1::uuid AND deleted_at IS NULL "
-            "AND ($2::text IS NULL OR status=$2::text)",
-            user.active_workspace_id, status,
+            "AND ($2::text IS NULL OR status=$2::text) "
+            "AND ($3::text='all' OR ($3::text='strategy' AND (COALESCE(form_data->>'strategy_id','')<>'' OR EXISTS "
+            "(SELECT 1 FROM public.app_growth_strategy_action_calendar c WHERE c.request_id=post_requests.id AND c.workspace_id=post_requests.workspace_id))) "
+            "OR ($3::text='manual' AND COALESCE(form_data->>'strategy_id','')='' AND NOT EXISTS "
+            "(SELECT 1 FROM public.app_growth_strategy_action_calendar c WHERE c.request_id=post_requests.id AND c.workspace_id=post_requests.workspace_id))) "
+            "AND ($4::text='' OR concat_ws(' ',title,subject) ILIKE '%' || $4::text || '%')",
+            user.active_workspace_id, status, origin, q,
+        )
+        origin_counts = await conn.fetchrow(
+            """
+            SELECT count(*)::int AS all_count,
+                   count(*) FILTER (WHERE COALESCE(form_data->>'strategy_id','')<>'' OR EXISTS
+                     (SELECT 1 FROM public.app_growth_strategy_action_calendar c
+                      WHERE c.request_id=pr.id AND c.workspace_id=pr.workspace_id))::int AS strategy_count,
+                   count(*) FILTER (WHERE COALESCE(form_data->>'strategy_id','')='' AND NOT EXISTS
+                     (SELECT 1 FROM public.app_growth_strategy_action_calendar c
+                      WHERE c.request_id=pr.id AND c.workspace_id=pr.workspace_id))::int AS manual_count
+            FROM public.post_requests pr
+            WHERE workspace_id=$1::uuid AND deleted_at IS NULL
+            """,
+            user.active_workspace_id,
         )
 
     requests_out = []
@@ -257,9 +337,10 @@ async def get_posts(request: Request, status: str | None = None, page: int = 1, 
 
     return templates.TemplateResponse(request, "posts/list.html", {
         "auth_user": user, "active_nav": "posts", "requests": requests_out, "status": status, "page": page,
-        "total": int(total or 0),
-        "has_more": max(0, page - 1) * 20 + len(requests_out) < int(total or 0),
-        "next_page": page + 1,
+        "total": int(total or 0), "post_origin": origin, "post_search": q,
+        "post_counts": dict(origin_counts),
+        "pagination": page_meta(page=page, page_size=10, total=total, path="/app/posts",
+                                query={"status": status, "origin": origin, "q": q}),
     })
 
 
@@ -288,6 +369,7 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
     """
     pool = get_pool()
     request_row = None
+    origin_context = None
     request_deleted = False
     job_row = None
     async with pool.acquire() as conn:
@@ -313,14 +395,14 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
             )
             if idea_parent is None:
                 return templates.TemplateResponse(request, "error.html", {
-                    "auth_user": user, "active_nav": "history",
+                    "auth_user": user, "active_nav": "posts",
                     "title": "Idée introuvable",
                     "message": "Cette idée n'existe pas dans le workspace actif."
                 }, status_code=404)
             resolved_request_id = str(idea_parent["request_id"] or "")
             if request_id and str(request_id) != resolved_request_id:
                 return templates.TemplateResponse(request, "error.html", {
-                    "auth_user": user, "active_nav": "history",
+                    "auth_user": user, "active_nav": "posts",
                     "title": "Lien incohérent",
                     "message": "Cette idée n'appartient pas au sujet indiqué."
                 }, status_code=404)
@@ -344,6 +426,20 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
                 }, status_code=404)
 
         if request_row is not None and not request_deleted:
+            origin_context = await conn.fetchrow(
+                """
+                SELECT c.strategy_id::text AS strategy_id, c.action_id::text AS action_id,
+                       c.id::text AS calendar_id, s.title AS strategy_title,
+                       ga.title AS action_title, LOWER(COALESCE(sa.provider, 'linkedin')) AS platform,
+                       COALESCE(sa.display_name, 'ContentPilot') AS account_name
+                FROM public.app_growth_strategy_action_calendar c
+                LEFT JOIN public.app_growth_strategies s ON s.id=c.strategy_id
+                LEFT JOIN public.app_growth_strategy_actions ga ON ga.id=c.action_id
+                LEFT JOIN public.app_social_accounts sa ON sa.id=s.social_account_id
+                WHERE c.request_id=$1::uuid AND c.workspace_id=$2::uuid
+                ORDER BY c.created_at ASC LIMIT 1
+                """, request_id, user.active_workspace_id,
+            )
             job_row = await conn.fetchrow(
                 """
                 SELECT id::text,mode,status,requested_count,attempt_count,last_error,created_at,updated_at
@@ -427,6 +523,7 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
             "recommended_format": d["recommended_format"] or "",
             "status_cls": cls, "status_label": label,
             "is_published": status == "published", "is_scheduled": status == "scheduled",
+            "is_approved": status in {"approved", "validated"},
             "awaiting_validation": status == "ready_for_review",
             "business_problem_solved": raw_idea.get("business_problem_solved", ""),
             "ai_or_software_solution": raw_idea.get("ai_or_software_solution", ""),
@@ -495,6 +592,7 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
         "generated_count": generated_count,
         "expected_count": expected_count,
         "background_jobs": background_jobs,
+        "origin_context": dict(origin_context) if origin_context else None,
         "ideas_json": [
             {
                 "idea_id": i["idea_id"], "version_id": i["version_id"], "title": i["title"],
@@ -928,6 +1026,11 @@ async def get_posts_list_page(request: Request, page: int = 1, status: str | Non
             SELECT
                 pr.id::text AS id, pr.title, pr.subject, pr.status, pr.updated_at, pr.created_at,
                 u.first_name || ' ' || u.last_name AS created_by_name,
+                CASE WHEN origin.strategy_id IS NOT NULL OR COALESCE(pr.form_data->>'strategy_id','') <> ''
+                     THEN 'strategy' ELSE 'manual' END AS generation_origin,
+                COALESCE(origin.strategy_id::text, pr.form_data->>'strategy_id', '') AS strategy_id,
+                COALESCE(origin.strategy_title, '') AS strategy_title,
+                COALESCE(origin.action_title, '') AS strategy_action_title,
                 COUNT(DISTINCT pi.id) FILTER (WHERE pi.deleted_at IS NULL) AS ideas_count,
                 COUNT(DISTINCT pi.id) FILTER (WHERE pi.status IN ('validated','approved') AND pi.deleted_at IS NULL) AS approved_count,
                 COUNT(DISTINCT pm.id) FILTER (WHERE pm.status='ready' AND COALESCE(pm.public_url,pm.external_url,'')<>'' AND pi.deleted_at IS NULL) AS media_count,
@@ -940,9 +1043,19 @@ async def get_posts_list_page(request: Request, page: int = 1, status: str | Non
             LEFT JOIN public.app_users u ON u.id = pr.user_id
             LEFT JOIN public.post_ideas pi ON pi.request_id = pr.id
             LEFT JOIN public.post_media pm ON pm.idea_id = pi.id
+            LEFT JOIN LATERAL (
+              SELECT c.strategy_id, c.action_id, s.title AS strategy_title,
+                     ga.title AS action_title
+              FROM public.app_growth_strategy_action_calendar c
+              LEFT JOIN public.app_growth_strategies s ON s.id=c.strategy_id
+              LEFT JOIN public.app_growth_strategy_actions ga ON ga.id=c.action_id
+              WHERE c.request_id=pr.id AND c.workspace_id=pr.workspace_id
+              ORDER BY c.created_at ASC LIMIT 1
+            ) origin ON true
             WHERE pr.workspace_id = $1::uuid AND pr.deleted_at IS NULL
               AND ($2::text IS NULL OR pr.status = $2::text)
-            GROUP BY pr.id, pr.workspace_id, u.first_name, u.last_name
+            GROUP BY pr.id, pr.workspace_id, u.first_name, u.last_name,
+                     origin.strategy_id, origin.strategy_title, origin.action_title
             ORDER BY pr.updated_at DESC NULLS LAST, pr.created_at DESC
             LIMIT 20 OFFSET $3
             """,

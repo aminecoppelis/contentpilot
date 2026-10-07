@@ -29,6 +29,7 @@ from app.dependencies.auth import require_auth
 from app.security import new_activation_token
 from app.services.mailer import send_workspace_invite_email
 from app.user_timezone import format_user_value
+from app.pagination import page_meta
 
 router = APIRouter(tags=["Workspace"])
 from app.templating import templates
@@ -46,12 +47,16 @@ def role_label(role: str | None) -> str:
 
 
 @router.get("/workspace", response_class=HTMLResponse)
-async def get_workspace(request: Request, user=Depends(require_auth)):
+async def get_workspace(request: Request, member_page: int = 1, invitation_page: int = 1,
+                        user=Depends(require_auth)):
     import json as _json
 
+    member_page = max(1, int(member_page or 1))
+    invitation_page = max(1, int(invitation_page or 1))
     pool = get_pool()
     async with pool.acquire() as conn:
-        row = await conn.fetchrow(sql("workspace/load.sql"), user.id, user.active_workspace_id)
+        row = await conn.fetchrow(sql("workspace/load.sql"), user.id, user.active_workspace_id,
+                                  (member_page - 1) * 10, (invitation_page - 1) * 10)
 
     def _parse(value, default):
         if value is None:
@@ -92,6 +97,12 @@ async def get_workspace(request: Request, user=Depends(require_auth)):
         "can_delete": can_delete, "can_delete_base": can_delete_base,
         "has_alternative_workspace": has_alternative_workspace,
         "role_label": role_label(effective_role),
+        "members_pagination": page_meta(page=member_page, page_size=10,
+            total=(row["members_total"] if row else 0), path="/app/workspace",
+            query={"invitation_page": invitation_page}, page_param="member_page"),
+        "invitations_pagination": page_meta(page=invitation_page, page_size=10,
+            total=(row["invitations_total"] if row else 0), path="/app/workspace",
+            query={"member_page": member_page}, page_param="invitation_page"),
     })
 
 

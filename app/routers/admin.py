@@ -23,11 +23,12 @@ from app.dependencies.auth import require_admin
 from app.security import session_token_hash
 from app.services.settings_service import get_serper_settings, save_serper_settings
 from app.user_timezone import format_user_datetime
+from app.pagination import page_meta
 
 router = APIRouter(tags=["Admin"])
 from app.templating import templates, render_fragment
 
-ADMIN_USERS_PAGE_SIZE = 20
+ADMIN_USERS_PAGE_SIZE = 10
 
 
 def _session_hash(request: Request) -> str:
@@ -67,16 +68,19 @@ def _decorate_users(rows, current_user_id: str, timezone_name: str) -> list[dict
 
 @router.get("/admin/users", response_class=HTMLResponse)
 async def get_admin_users(request: Request, user=Depends(require_admin),
-                           success: str | None = None, error: str | None = None):
+                           success: str | None = None, error: str | None = None, page: int = 1):
+    page = max(1, int(page or 1))
     pool = get_pool()
     async with pool.acquire() as conn:
-        rows = await _fetch_users(conn)
+        rows = await _fetch_users(conn, offset=(page - 1) * ADMIN_USERS_PAGE_SIZE)
         total = await conn.fetchval("SELECT count(*)::int FROM public.app_users WHERE deleted_at IS NULL")
 
     return templates.TemplateResponse(request, "admin/users.html", {
         "auth_user": user, "active_nav": "admin",
         "users": _decorate_users(rows, user.id, user.timezone),
-        "total_users": total, "users_has_more": total > ADMIN_USERS_PAGE_SIZE,
+        "total_users": total,
+        "pagination": page_meta(page=page, page_size=ADMIN_USERS_PAGE_SIZE, total=total,
+                                path="/app/admin/users"),
         "notice": success or error, "notice_error": bool(error),
     })
 

@@ -24,6 +24,7 @@ from app.services.social_accounts import (
     fetch_accessible_account, ensure_local_workspace_link, ensure_explicit_workspace_link,
 )
 from app.user_timezone import format_user_datetime
+from app.pagination import page_meta
 from app.services.settings_service import (
     get_meta_settings, save_meta_settings,
     PROVIDER_META_FACEBOOK, PROVIDER_META_INSTAGRAM, DEFAULT_GRAPH_VERSION,
@@ -127,27 +128,24 @@ def _decorate_network_rows(rows, timezone_name: str, now=None) -> list[dict]:
 async def get_networks(request: Request, user=Depends(require_auth),
                         connected: str | None = None, oauth_error: str | None = None,
                         oauth_provider: str | None = None, oauth_stage: str | None = None,
-                        oauth_warning: str | None = None):
+                        oauth_warning: str | None = None, page: int = 1):
     """Port fidèle de "HTML - Mes réseaux" (libellés de provider, états de jeton,
     cibles de partage, notice OAuth)."""
     from datetime import datetime, timezone
 
+    page = max(1, int(page or 1))
     pool = get_pool()
     async with pool.acquire() as conn:
         rows = await conn.fetch(
-            _network_access_list_sql() + " ORDER BY a.updated_at DESC NULLS LAST, a.id DESC LIMIT 21",
-            user.active_workspace_id,
+            _network_access_list_sql() + " ORDER BY a.updated_at DESC NULLS LAST, a.id DESC LIMIT $2 OFFSET $3",
+            user.active_workspace_id, 10, (page - 1) * 10,
         )
         total = await conn.fetchval(
             "SELECT count(*)::int FROM (" + _network_access_list_sql() + ") network_access",
             user.active_workspace_id,
         )
 
-    has_more = len(rows) > 20
-    first_page = rows[:20]
-    accounts = _decorate_network_rows(first_page, user.timezone)
-    next_cursor_at = first_page[-1]["updated_at"].isoformat() if first_page and first_page[-1]["updated_at"] else ""
-    next_cursor_id = first_page[-1]["id"] if first_page else ""
+    accounts = _decorate_network_rows(rows, user.timezone)
 
     share_targets = [
         {"id": w.id, "name": w.name} for w in user.workspaces if w.id != user.active_workspace_id
@@ -170,7 +168,8 @@ async def get_networks(request: Request, user=Depends(require_auth),
     return templates.TemplateResponse(request, "networks/list.html", {
         "auth_user": user, "active_nav": "networks",
         "accounts": accounts, "total": int(total or 0), "share_targets": share_targets,
-        "has_more": has_more, "next_cursor_at": next_cursor_at, "next_cursor_id": next_cursor_id,
+        "has_more": False, "next_cursor_at": "", "next_cursor_id": "",
+        "pagination": page_meta(page=page, page_size=10, total=total, path="/app/networks"),
         "notice": notice, "notice_type": notice_type,
     })
 

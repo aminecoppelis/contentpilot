@@ -42,7 +42,7 @@
     var labelsEl=panel.querySelector('[data-selected-labels]');
     if(labelsEl){
       if(values.indexOf('all')>=0){
-        labelsEl.innerHTML='<span class="select2Placeholder">Tous</span>';
+        labelsEl.innerHTML='<span class="select2Placeholder">'+window.t('common.all')+'</span>';
       } else {
         labelsEl.innerHTML=inputs.filter(function(i){return i.checked && i.value!=='all';})
           .map(function(i){return '<span class="select2Chip">'+labelForInput(i).replace(/[&<>"']/g,function(c){
@@ -91,7 +91,7 @@
     async function loadMore(){
       if(loading||!hasMore) return;
       loading=true;
-      if(loadState) loadState.textContent='Chargement…';
+      if(loadState) loadState.textContent=window.t('common.loading');
       try{
         var url=new URL(opts.endpoint, window.location.origin);
         url.searchParams.set('offset', String(offset));
@@ -104,9 +104,9 @@
         offset=Number(payload.next_offset||offset);
         hasMore=Boolean(payload.has_more);
         if(loadState) loadState.style.display=hasMore?'block':'none';
-        if(loadState&&hasMore) loadState.textContent='Fais défiler pour charger plus de lignes.';
+        if(loadState&&hasMore) loadState.textContent=window.t('common.scroll_more');
       }catch(e){
-        if(loadState) loadState.textContent='Chargement impossible.';
+        if(loadState) loadState.textContent=window.t('common.load_error');
       }finally{ loading=false; }
     }
     var observer=new IntersectionObserver(function(entries){

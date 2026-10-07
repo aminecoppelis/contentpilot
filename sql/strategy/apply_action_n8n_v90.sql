@@ -372,10 +372,24 @@ schedule_payload_base AS (
     sa.format_kind,
     COALESCE(sc.strategy_data->'target_analysis','{}'::jsonb) AS target_analysis,
     sa.rn,
-    (
-      date_trunc('day', now() + (sa.ai_offset_days * interval '1 day'))
+    COALESCE((SELECT calendar_planned_for FROM p), (
+      GREATEST(
+        date_trunc('day', now() + (sa.ai_offset_days * interval '1 day')),
+        COALESCE(
+          (
+            SELECT date_trunc('day', MAX(existing.planned_for)) + interval '1 day'
+            FROM public.app_growth_strategy_action_calendar existing
+            WHERE existing.strategy_id=sc.id
+              AND COALESCE(existing.status,'scheduled') IN
+                  ('scheduled','generating','generated','approved','published','done','completed')
+              AND COALESCE(existing.payload->>'kind','') <> 'adaptive_checkpoint'
+              AND existing.action_id IS DISTINCT FROM sa.id
+          ),
+          date_trunc('day', now() + (sa.ai_offset_days * interval '1 day'))
+        )
+      )
       + (sa.ai_hour * interval '1 hour')
-    ) AS planned_for,
+    )) AS planned_for,
     sa.ai_offset_days,
     sa.ai_hour,
     sa.ai_group,
@@ -383,6 +397,9 @@ schedule_payload_base AS (
     sa.realistic_horizon_days,
     sa.max_horizon_days,
     CASE
+      WHEN (SELECT calendar_planned_for FROM p) IS NOT NULL
+      THEN (SELECT calendar_planned_for FROM p) + interval '1 hour'
+      ELSE CASE
       WHEN sa.schedule_kind='publishable_content'
        AND (sa.kpi#>>'{calendar_plan,recommended_publish_offset_days}') ~ '^[0-9]{1,3}$'
        AND (sa.kpi#>>'{calendar_plan,recommended_publish_hour}') ~ '^[0-9]{1,2}$'
@@ -405,6 +422,7 @@ schedule_payload_base AS (
         )
       )
       ELSE NULL
+      END
     END AS recommended_publish_for,
     COALESCE(
       CASE

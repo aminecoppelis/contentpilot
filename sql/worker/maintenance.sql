@@ -174,16 +174,29 @@ WITH detached AS MATERIALIZED (
 ), repaired_ideas AS (
   UPDATE public.post_ideas pi
   SET current_version_id = r.version_id,
-      status = 'ready_for_review',
+      status = CASE
+        WHEN lower(COALESCE(pi.status,'')) IN
+          ('approved','validated','rejected','scheduled','published','archived')
+          THEN pi.status
+        ELSE 'ready_for_review'
+      END,
       updated_at = now()
   FROM repair_candidates r
   WHERE pi.id = r.idea_id
-    AND (pi.current_version_id IS DISTINCT FROM r.version_id
-         OR lower(COALESCE(pi.status,'')) <> 'ready_for_review')
+    AND (
+      pi.current_version_id IS DISTINCT FROM r.version_id
+      OR lower(COALESCE(pi.status,'')) IN
+        ('draft','pending_review','generating','generated','processing','running','queued','error','failed')
+    )
   RETURNING pi.id
 ), repaired_requests AS (
   UPDATE public.post_requests pr
-  SET status = 'ready_for_review',
+  SET status = CASE
+        WHEN lower(COALESCE(pr.status,'')) IN
+          ('approved','validated','rejected','scheduled','published','archived')
+          THEN pr.status
+        ELSE 'ready_for_review'
+      END,
       generated_at = COALESCE(pr.generated_at,now()),
       last_error = NULL,
       post_count = GREATEST(COALESCE(pr.post_count,0),1)

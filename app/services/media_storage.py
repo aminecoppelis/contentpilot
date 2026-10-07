@@ -20,7 +20,11 @@ def media_dir() -> Path:
 
 
 def public_url(file_name: str) -> str:
-    return f"{get_settings().media_public_base_url.rstrip('/')}/{file_name}"
+    settings = get_settings()
+    base = str(settings.media_public_base_url or "").strip().rstrip("/")
+    if not base:
+        base = f"{str(settings.app_base_url).rstrip('/')}/public-media"
+    return f"{base}/{file_name}"
 
 
 def write_media(media_id: str, data: bytes, suffix: str) -> tuple[str, str, int]:

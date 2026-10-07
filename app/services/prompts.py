@@ -565,6 +565,7 @@ def build_generate_strategy_plan_prompt(context: dict[str, Any]) -> str:
             "\nSECONDE ANALYSE : " + str(context.get("_retry_reason"))
             + "\nCorrige le diagnostic/plan précédent sans recopier une erreur."
         )
+    minimum_actions = int(context.get("minimum_action_count") or 0)
     return f"""Tu es un consultant senior en stratégie de croissance organique pour les réseaux sociaux.
 
 MISSION
@@ -575,7 +576,9 @@ RÈGLES FACTUELLES
 - N'invente aucun chiffre, client, résultat, concurrent ou tendance.
 - Respecte form_data.language et duration_days.
 - objective_already_reached=true UNIQUEMENT si les données observées prouvent explicitement que l'objectif quantifiable est déjà atteint.
-- Si objective_already_reached=false, action_blueprints doit contenir au moins une action.
+- Si objective_already_reached=false, action_blueprints doit contenir au moins {minimum_actions} actions, soit au minimum 3 posts par semaine.
+- Toutes les actions sont des posts publiables : category="content" et requires_post_generation=true.
+- Ne propose jamais de créer un calendrier, un planning, un audit, un reporting, un profil ou une tâche manuelle.
 - Ne crée aucune routine autonome de likes/commentaires/follows.
 - Chaque blueprint correspond à un livrable concret et vérifiable.
 - Une action profil/bio n'est autorisée que si network_snapshot.biography_available=true et si la bio réellement lue justifie une modification.

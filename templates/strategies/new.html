@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ t('strat.modal.create_title') }} · {{ t('app.name') }}{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css?v=38-actions-in-prompt">{% endblock %}
+{% block content %}
+<section class="strategyCreatePage">
+  <a class="pageBack" href="/app/strategies"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m15 18-6-6 6-6"/></svg>{{ t('nav.strategies') }}</a>
+  <header class="strategyCreateHeader">
+    <div class="eyebrow">{{ t('strat.eyebrow') }}</div>
+    <h1>{{ t('strat.modal.create_title') }}</h1>
+    <p>{{ t('strat.modal.create_subtitle') }}</p>
+  </header>
+  <form class="strategyForm strategyCreateForm" id="strategyForm" data-submit-url="/app/strategies/generate">
+    <section class="strategyCreateSection">
+      <div class="strategyCreateSectionHead"><span>1</span><div><h2>{{ t('strat.modal.network_label') }}</h2><p>{{ t('strat.modal.network_hint') }}</p></div></div>
+      <div class="field"><select name="social_account_id"><option value="" selected>{{ t('strat.modal.no_account') }}</option>{% for a in accounts %}<option value="{{ a.id }}">{{ a.label }}</option>{% endfor %}</select></div>
+    </section>
+    <section class="strategyCreateSection">
+      <div class="strategyCreateSectionHead"><span>2</span><div><h2>{{ t('strat.modal.duration') }}</h2><p>{{ t('strat.modal.duration_hint') }}</p></div></div>
+      <div class="formGrid"><div class="field"><label for="strategyDuration">{{ t('strat.modal.duration') }}</label><select id="strategyDuration" name="duration_days" required><option value="" selected disabled>{{ t('strat.modal.choose_duration') }}</option><option value="30">30 {{ t('strat.modal.days') }}</option><option value="60">60 {{ t('strat.modal.days') }}</option><option value="90">90 {{ t('strat.modal.days') }}</option><option value="120">120 {{ t('strat.modal.days') }}</option></select></div><div class="field"><label>{{ t('menu.language') }}</label><select name="language"><option value="français" {{ 'selected' if locale == 'fr' }}>{{ t('strat.modal.lang_fr') }}</option><option value="anglais" {{ 'selected' if locale == 'en' }}>{{ t('strat.modal.lang_en') }}</option><option value="arabe" {{ 'selected' if locale == 'ar' }}>{{ t('strat.modal.lang_ar') }}</option></select></div></div>
+    </section>
+    <section class="strategyCreateSection">
+      <div class="strategyCreateSectionHead"><span>3</span><div><h2>{{ t('strat.modal.instructions') }}</h2><p>{{ t('strat.modal.instructions_hint') }}</p></div></div>
+      <div class="field strategyInstructionsField"><div class="strategyInstructionsHeader"><label>{{ t('strat.modal.instructions') }}</label><button type="button" class="btn secondary strategyInlineAiBtn" id="generateInstructionsBtn" disabled title="{{ t('strat.modal.generate_disabled') }}">{{ t('strat.modal.generate_ai') }}</button></div><textarea name="instructions" required maxlength="5000" rows="12" placeholder="{{ t('strat.modal.instructions_placeholder') }}"></textarea></div>
+      <div class="strategyCreateActions"><a class="btn secondary" href="/app/strategies">{{ t('common.cancel') }}</a><button class="btn primary" id="submitStrategyBtn" type="submit" disabled>{{ t('strat.modal.submit') }}</button></div>
+    </section>
+    <input type="hidden" name="objective_type" value="custom"><input type="hidden" name="research_depth" value="standard"><input type="hidden" name="country" value="France">
+  </form>
+</section>
+<div class="loader" id="loader">{{ t('strat.loader') }}</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/strategies.js?v=24-background-create"></script>{% endblock %}

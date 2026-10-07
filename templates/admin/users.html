@@ -74,10 +74,8 @@
     {% if not users %}<tr id="adminUsersEmpty"><td colspan="5" style="text-align:center;color:var(--muted);padding:30px">{{ t('adm.usr.empty') }}</td></tr>{% endif %}
     </tbody>
   </table>
-  <div id="adminUsersLoadState" style="padding:14px 16px;text-align:center;color:var(--ink-2);font-size:13px;
-       display:{{ 'block' if users_has_more else 'none' }}">{{ t('adm.usr.scroll_more') }}</div>
-  <div id="adminUsersSentinel" style="height:1px"></div>
 </section>
+{% include "partials/pagination.html" %}
 
 <div id="editUserModal" class="modalOverlay">
   <div class="modal">
@@ -144,7 +142,7 @@ document.addEventListener('click',function(event){
 });
 bindAdminActionForms();
 // Scroll infini Admin : les lignes ajoutées réutilisent exactement les mêmes formulaires/actions.
-(function initAdminUsersInfiniteScroll(){
+{% if false %}(function initAdminUsersInfiniteScroll(){
   var tbody=document.getElementById('adminUsersTbody');
   var sentinel=document.getElementById('adminUsersSentinel');
   var state=document.getElementById('adminUsersLoadState');
@@ -171,7 +169,7 @@ bindAdminActionForms();
   }
   var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting)loadMore();});},{rootMargin:'240px'});
   observer.observe(sentinel);
-})();
+})();{% endif %}
 
 </script>
 {% endblock %}

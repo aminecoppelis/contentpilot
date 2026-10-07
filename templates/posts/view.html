@@ -1,18 +1,21 @@
 {% extends "base.html" %}
 {% block title %}{{ page_heading }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/consultation.css?v=20260903-video-bg-v90">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/consultation.css?v=20261007-format-preview-fix">{% endblock %}
 {% block content %}
 <header class="header" id="posts-view-header">
   <div>
-    {% if active_nav == 'history' %}
-    <a class="pageBack" href="/app/history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>{{ t('nav.ideas') }}</a>
-    {% else %}
     <a class="pageBack" href="/app/posts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>{{ t('nav.subjects') }}</a>
-    {% endif %}
     <div class="eyebrow" id="posts-view-eyebrow">{{ t('pv.eyebrow') }}</div>
     <h1 class="h1" id="posts-view-heading">{{ page_heading }}</h1>
   </div>
 </header>
+
+{% if origin_context %}
+<section class="postStrategyOrigin" role="status">
+  <div><span class="postOriginBadge strategy">{{ t('posts.origin.strategy') }}</span><b>{{ origin_context.strategy_title or t('posts.origin.strategy') }}</b>{% if origin_context.action_title %}<small>{{ t('posts.origin.intervention', title=origin_context.action_title) }}</small>{% endif %}</div>
+  <a class="btn light" href="/app/strategies?strategy_id={{ origin_context.strategy_id }}">{{ t('posts.origin.back_strategy') }}</a>
+</section>
+{% endif %}
 
 {% if request_deleted %}
 <section class="orphanIdeaNotice" role="status">
@@ -55,16 +58,26 @@
     </div>
 
     <section class="postReady">
+      {% set preview_platform = (origin_context.platform if origin_context and origin_context.platform else 'linkedin')|lower %}
+      {% set preview_account = origin_context.account_name if origin_context and origin_context.account_name else 'ContentPilot' %}
+      {% set selected_preview_media = idea.media | selectattr('id', 'equalto', idea.selected_media_id) | list %}
+      {% set preview_media = selected_preview_media[0] if selected_preview_media else (idea.media[0] if idea.media else none) %}
       <div class="postReadyHeader">
         <div><span class="label">{{ t('pv.ready_label') }}</span>
           <h2 id="post-title-{{ i }}">{{ idea.post_title }}</h2></div>
+        <div class="postViewSwitch" role="group" aria-label="{{ t('pv.display.aria') }}">
+          <button type="button" data-post-view-mode="editor" onclick="setPostDisplayMode('editor')">{{ t('pv.display.editor') }}</button>
+          <button type="button" data-post-view-mode="split" onclick="setPostDisplayMode('split')">{{ t('pv.display.split') }}</button>
+          <button type="button" data-post-view-mode="preview" onclick="setPostDisplayMode('preview')">{{ t('pv.display.preview') }}</button>
+        </div>
       </div>
+      <div class="postLiveWorkspace" data-post-workspace="{{ i }}"><div class="postLiveEditor">
       {% if not read_only %}<div class="formatToolbar" aria-label="{{ t('pv.format.aria') }}">
-        <button type="button" id="fmt-bold-{{ i }}" class="fmtBold" onmousedown="event.preventDefault()"
+        <button type="button" id="fmt-bold-{{ i }}" class="fmtBold" title="{{ t('pv.format.bold') }}" aria-label="{{ t('pv.format.bold') }}" aria-pressed="false" onmousedown="event.preventDefault()"
                 onclick="formatPostSelection({{ i }}, 'bold')">B</button>
-        <button type="button" id="fmt-italic-{{ i }}" class="fmtItalic" onmousedown="event.preventDefault()"
+        <button type="button" id="fmt-italic-{{ i }}" class="fmtItalic" title="{{ t('pv.format.italic') }}" aria-label="{{ t('pv.format.italic') }}" aria-pressed="false" onmousedown="event.preventDefault()"
                 onclick="formatPostSelection({{ i }}, 'italic')">I</button>
-        <button type="button" id="fmt-underline-{{ i }}" class="fmtUnderline" onmousedown="event.preventDefault()"
+        <button type="button" id="fmt-underline-{{ i }}" class="fmtUnderline" title="{{ t('pv.format.underline') }}" aria-label="{{ t('pv.format.underline') }}" aria-pressed="false" onmousedown="event.preventDefault()"
                 onclick="formatPostSelection({{ i }}, 'underline')">U</button>
         <button type="button" class="copyBtn copyIconBtn" title="{{ t('pv.copy') }}" aria-label="{{ t('pv.copy') }}"
                 onmousedown="event.preventDefault()" onclick="copyPost('copy-{{ i }}', this)">⧉</button>
@@ -77,6 +90,20 @@
                 title="{{ t('pv.regen.title') }}">{{ t('pv.regen') }}</button>
         <span id="post-edit-status-{{ i }}" class="hint" style="margin:0;align-self:center"></span>
       </div>{% endif %}
+      </div>
+      <aside class="postLivePreview" aria-label="{{ t('pv.preview.phone_aria') }}">
+        <div class="lpCaption"><span></span>{{ t('pv.preview.live') }}</div>
+        <div class="lpPhone lp-{{ preview_platform }}"><div class="lpScreen">
+          <div class="lpStatus"><b>9:41</b><i></i><span>● ◔ ▰</span></div>
+          <div class="lpAppbar">{% if preview_platform == 'instagram' %}<b>Instagram</b><span>♡　✉</span>{% elif preview_platform == 'facebook' %}<b class="lpFacebook">facebook</b><span>⌕　☰</span>{% else %}<b class="lpLinkedin">in</b><span>⌕　✉</span>{% endif %}</div>
+          <div class="lpPost">
+            <div class="lpAuthor"><span class="lpAvatar">{{ preview_account[:1]|upper }}</span><div><b>{{ preview_account }}</b><small>{{ t('pv.preview.now') }}</small></div><i>•••</i></div>
+            {% if preview_platform != 'instagram' %}<div class="lpText" data-live-post-text="{{ i }}">{{ idea.full_text }}</div>{% endif %}
+            <div class="lpMedia {{ 'empty' if not preview_media }}" data-live-post-media="{{ i }}">{% if preview_media %}{% if preview_media.media_type == 'video' %}<video muted playsinline preload="metadata" src="/app/posts/media-video.mp4?media_id={{ preview_media.id }}"></video>{% else %}<img src="/app/posts/media-image.jpg?media_id={{ preview_media.id }}" alt="{{ t('pv.preview.media_alt') }}">{% endif %}{% else %}<span>{{ t('pv.preview.media_empty') }}</span>{% endif %}</div>
+            {% if preview_platform == 'instagram' %}<div class="lpIgActions"><span>♡　◯　⌁</span><span>▢</span></div><b class="lpLikes">{{ t('pv.preview.likes') }}</b><div class="lpText lpIgText"><b>{{ preview_account }}</b> <span data-live-post-text="{{ i }}">{{ idea.full_text }}</span></div>{% else %}<div class="lpStats"><span>👍 ❤️ 48</span><span>{{ t('pv.preview.comments') }}</span></div><div class="lpActions"><span>👍<small>{{ t('pv.preview.like') }}</small></span><span>◯<small>{{ t('pv.preview.comment') }}</small></span><span>↗<small>{{ t('pv.preview.share') }}</small></span></div>{% endif %}
+          </div><div class="lpHome"></div>
+        </div></div>
+      </aside></div>
     </section>
 
     <section class="mediaSection" id="media-slot-{{ i }}">
@@ -93,7 +120,7 @@
           {% if idea.media|length > 1 %}
             <button type="button" class="carouselNav" data-carousel-prev="{{ i }}"
               onclick="event.preventDefault();event.stopPropagation();window.moveCarouselMedia({{ i }},-1);return false"
-              aria-label="Média précédent">‹</button>
+              aria-label="{{ t('js.media_prev') }}">‹</button>
           {% else %}<span></span>{% endif %}
           <div class="mediaCarousel" id="media-carousel-{{ i }}">
             {% set selected_by_id = idea.media | selectattr('id', 'equalto', idea.selected_media_id) | list %}
@@ -108,36 +135,36 @@
                   <div class="mediaPreviewOverlay">
                     <button type="button" class="mediaCornerBtn"
                             onclick="event.preventDefault();event.stopPropagation();window.openMediaLightbox({{ i }},{{ loop.index0 }});return false"
-                            title="Ouvrir en grand" aria-label="Ouvrir en grand">□</button>
+                            title="{{ t('js.enlarge') }}" aria-label="{{ t('js.enlarge') }}">□</button>
                   </div>
                   {% if m.media_type == 'video' %}
                     <video controls playsinline preload="metadata" src="{{ m.url }}"
                            data-video-proxy-url="/app/posts/media-video.mp4?media_id={{ m.id }}"></video>
                   {% else %}
-                    <img src="{{ m.url }}" alt="Aperçu image"
+                    <img src="{{ m.url }}" alt="{{ t('pv.media.image_preview') }}"
                          onclick="window.openMediaLightbox({{ i }},{{ loop.index0 }})">
                   {% endif %}
                 </div>
                 <div class="mediaCarouselMeta">
-                  <span>{{ 'Vidéo' if m.media_type == 'video' else 'Image' }}</span>
+                  <span>{{ t('pm.media.video') if m.media_type == 'video' else t('pm.media.image') }}</span>
                   <span class="mediaCarouselCounter">{{ loop.index }} / {{ idea.media|length }}</span>
-                  {% if is_selected %}<span class="status published" data-media-selected-badge>Sélectionné</span>{% endif %}
+                  {% if is_selected %}<span class="status published" data-media-selected-badge>{{ t('js.selected') }}</span>{% endif %}
                 </div>
                 <div class="mediaActionRow">
                   {% if not read_only %}
                     {% if is_selected %}
-                      <button type="button" class="mediaUiBtn selected" data-select-media-btn disabled aria-disabled="true">Sélectionné</button>
+                      <button type="button" class="mediaUiBtn selected" data-select-media-btn disabled aria-disabled="true">{{ t('js.selected') }}</button>
                     {% else %}
                       <button type="button" class="mediaUiBtn primary" data-select-media-btn
-                              onclick="event.preventDefault();event.stopPropagation();window.selectMedia('{{ m.id }}',{{ i }},this);return false">Choisir ce média</button>
+                              onclick="event.preventDefault();event.stopPropagation();window.selectMedia('{{ m.id }}',{{ i }},this);return false">{{ t('js.choose_media') }}</button>
                     {% endif %}
                     <button type="button" class="mediaUiBtn" data-edit-media="1"
-                            onclick="event.preventDefault();event.stopPropagation();window.openMediaEditModal({{ i }},{{ loop.index0 }});return false">Modifier</button>
+                            onclick="event.preventDefault();event.stopPropagation();window.openMediaEditModal({{ i }},{{ loop.index0 }});return false">{{ t('common.edit') }}</button>
                   {% endif %}
                   <button type="button" class="mediaUiBtn"
-                          onclick="event.preventDefault();event.stopPropagation();window.downloadGalleryMedia({{ i }},{{ loop.index0 }});return false">Télécharger</button>
+                          onclick="event.preventDefault();event.stopPropagation();window.downloadGalleryMedia({{ i }},{{ loop.index0 }});return false">{{ t('js.download') }}</button>
                   {% if not read_only %}<button type="button" class="mediaUiBtn danger"
-                          onclick="event.preventDefault();event.stopPropagation();window.deleteMedia('{{ m.id }}',{{ i }});return false">Supprimer</button>{% endif %}
+                          onclick="event.preventDefault();event.stopPropagation();window.deleteMedia('{{ m.id }}',{{ i }});return false">{{ t('common.delete') }}</button>{% endif %}
                 </div>
               </div>
             {% endfor %}
@@ -145,7 +172,7 @@
           {% if idea.media|length > 1 %}
             <button type="button" class="carouselNav" data-carousel-next="{{ i }}"
               onclick="event.preventDefault();event.stopPropagation();window.moveCarouselMedia({{ i }},1);return false"
-              aria-label="Média suivant">›</button>
+              aria-label="{{ t('js.media_next') }}">›</button>
           {% else %}<span></span>{% endif %}
         </div>
       {% elif idea.media_count %}
@@ -193,6 +220,8 @@
         {% if not read_only and not idea.is_published %}<span id="validation-actions-{{ i }}" class="validationActions">
           {% if idea.is_scheduled %}
             <button type="button" class="ok" disabled title="{{ t('pv.act.scheduled.title') }}">{{ t('pv.act.scheduled') }}</button>
+          {% elif idea.is_approved %}
+            <button type="button" class="ok" disabled title="{{ t('pv.act.validated.title') }}">{{ t('pv.act.validated') }}</button>
           {% elif idea.awaiting_validation %}
             <button type="button" onclick="openActionModal({{ i }}, 'Valider')" class="ok"
                     title="{{ t('pv.act.approve.title') }}">{{ t('pv.act.approve') }}</button>
@@ -249,5 +278,5 @@ window.__PG_VIEW = {
   backgroundJobs: {{ background_jobs | tojson }}
 };
 </script>
-<script src="/static/js/consultation.js?v=22"></script>
+<script src="/static/js/consultation.js?v=25-format-toggle-preview"></script>
 {% endblock %}

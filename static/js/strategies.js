@@ -15,25 +15,43 @@
   function toast(msg,type){
     window.pgToast(msg,type||'success');
   }
+  function openModal(){
+    if(!modal)return;
+    modal.classList.add('isOpen');
+    modal.setAttribute('aria-hidden','false');
+    document.body.classList.add('modalOpen');
+    var firstField=form?form.querySelector('select, input:not([type="hidden"]), textarea'):null;
+    if(firstField) setTimeout(function(){ firstField.focus(); }, 50);
+  }
   function closeModal(){
     if(!modal)return;
+    if(document.activeElement && modal.contains(document.activeElement)){
+      document.activeElement.blur();
+    }
     modal.classList.remove('isOpen');
     modal.setAttribute('aria-hidden','true');
     document.body.classList.remove('modalOpen');
+    var openBtn=document.getElementById('openCreateBtn');
+    if(openBtn) setTimeout(function(){ openBtn.focus(); }, 50);
   }
+  window.openStrategyModal=openModal;
+  window.closeStrategyModal=closeModal;
+  var openBtn=document.getElementById('openCreateBtn');
+  if(openBtn) openBtn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
+  var closeBtn=document.getElementById('closeModalBtn');
+  if(closeBtn) closeBtn.addEventListener('click', function(e){ e.preventDefault(); closeModal(); });
   var cancelBtn=document.getElementById('cancelFormBtn');
-  if(cancelBtn)cancelBtn.addEventListener('click',closeModal);
-  if(modal)modal.addEventListener('click',function(e){ if(e.target===modal)closeModal(); });
+  if(cancelBtn) cancelBtn.addEventListener('click', function(e){ e.preventDefault(); closeModal(); });
+  if(modal) modal.addEventListener('click', function(e){ if(e.target===modal) closeModal(); });
 
-  /* Le bouton "Analyser" ne s'active que si compte + durée + instructions sont remplis
-     (STRATEGY_ACCOUNT_DURATION_REQUIRED_UI). "Générer avec l'IA" ne dépend que du compte. */
+  /* Les deux boutons reposent sur une durée et une phrase de départ.
+     Le compte enrichit le contexte mais reste facultatif. */
   function syncFormState(){
     if(!form)return;
-    var account=String(form.social_account_id&&form.social_account_id.value||'').trim();
     var duration=String(form.duration_days&&form.duration_days.value||'').trim();
     var instructions=String(form.instructions&&form.instructions.value||'').trim();
-    if(submitBtn) submitBtn.disabled=!(account&&duration&&instructions);
-    if(aiBtn) aiBtn.disabled=!account;
+    if(submitBtn) submitBtn.disabled=!(duration&&instructions);
+    if(aiBtn) aiBtn.disabled=!(duration&&instructions);
   }
   if(form){
     form.addEventListener('input',syncFormState);
@@ -51,7 +69,8 @@
         body:JSON.stringify({
           social_account_id:form.social_account_id.value,
           duration_days:Number(form.duration_days.value||0)||null,
-          language:form.language.value
+          language:form.language.value,
+          instructions:String(form.instructions.value||'').trim()
         })});
       var d=await r.json().catch(function(){return {};});
       if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
@@ -69,8 +88,8 @@
     if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent=window.t('js.strat.analyzing'); }
     if(loader)loader.classList.add('show');
     try{
+      var accountId=String(form.social_account_id&&form.social_account_id.value||'').trim();
       var payload={
-        social_account_id:form.social_account_id.value,
         objective_type:form.objective_type.value,
         duration_days:Number(form.duration_days.value||30),
         language:form.language.value,
@@ -78,15 +97,16 @@
         research_depth:form.research_depth.value,
         country:form.country.value
       };
-      var r=await fetch(WEBHOOK_BASE+'/strategies/analyze',{
+      if(accountId) payload.social_account_id=accountId;
+      var r=await fetch(form.getAttribute('data-submit-url')||WEBHOOK_BASE+'/strategies/generate',{
         method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       var d=await r.json().catch(function(){return {};});
       if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
       var strategyId=(d.data&&d.data.strategy_id)||d.strategy_id||'';
       window.pgToast(window.t('js.strat.created'),'success');
-      window.location.href=WEBHOOK_BASE+'/strategies'+(strategyId?('?strategy_id='+encodeURIComponent(strategyId)):'');
+      window.location.href=WEBHOOK_BASE+'/strategies';
     }catch(e){
-      toast('Analyse impossible : '+e.message,'error');
+      toast(window.t('js.strat.create_failed')+' '+e.message,'error');
       if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent=previous; }
       if(loader)loader.classList.remove('show');
     }
@@ -115,6 +135,7 @@
   /* Modale d'édition d'un créneau de calendrier */
   var calendarModal=document.getElementById('calendarTaskModal');
   var currentCalendarId='';
+  var currentCalendarActionId='';
   function userNowParts(){
     var parts=new Intl.DateTimeFormat('fr-FR',{timeZone:(window.pgUserTimezone?window.pgUserTimezone():(window.__PG_TIMEZONE||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC')),year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
     var out={}; parts.forEach(function(p){if(p.type!=='literal')out[p.type]=p.value;});
@@ -127,8 +148,9 @@
     var out={}; parts.forEach(function(p){if(p.type!=='literal')out[p.type]=p.value;});
     return {date:(out.year||'')+'-'+(out.month||'')+'-'+(out.day||''),time:(out.hour||'00')+':'+(out.minute||'00')};
   }
-  window.openCalendarTaskModal=function(calendarId,isoDate,plannedDay,plannedHour){
+  window.openCalendarTaskModal=function(calendarId,isoDate,plannedDay,plannedHour,actionId){
     currentCalendarId=String(calendarId||'');
+    currentCalendarActionId=String(actionId||'');
     if(!calendarModal)return;
     var values=plannedDay?{date:String(plannedDay),time:String(plannedHour||'09:00').slice(0,5)}:userPartsFromIso(isoDate);
     var dateEl=document.getElementById('calendarTaskDate');
@@ -136,11 +158,19 @@
     var now=userNowParts();
     if(dateEl){dateEl.min=now.date;dateEl.value=values.date;}
     if(timeEl)timeEl.value=values.time||'09:00';
+    var titleEl=document.getElementById('calendarTaskModalTitle');
+    var descriptionEl=document.getElementById('calendarTaskModalDescription');
+    var isCreation=Boolean(currentCalendarActionId&&!currentCalendarId);
+    if(titleEl)titleEl.textContent=titleEl.getAttribute(isCreation?'data-create-title':'data-edit-title')||titleEl.textContent;
+    if(descriptionEl)descriptionEl.textContent=descriptionEl.getAttribute(isCreation?'data-create-description':'data-edit-description')||descriptionEl.textContent;
     calendarModal.classList.add('isOpen');
     calendarModal.setAttribute('aria-hidden','false');
   };
   function closeCalendarModal(){
     if(!calendarModal)return;
+    if(document.activeElement && calendarModal.contains(document.activeElement)){
+      document.activeElement.blur();
+    }
     calendarModal.classList.remove('isOpen');
     calendarModal.setAttribute('aria-hidden','true');
   }
@@ -158,17 +188,18 @@
     if(selectedKey<=nowKey){toast(window.t('js.strat.future_datetime'),'error');return;}
     var detailWorkspace=document.querySelector('.strategyWorkspace[data-strategy-id]');
     var detailStrategyId=detailWorkspace?String(detailWorkspace.getAttribute('data-strategy-id')||''):'';
-    if(!detailStrategyId||!currentCalendarId){toast(window.t('js.strat.task_not_found'),'error');return;}
+    if(!detailStrategyId||(!currentCalendarId&&!currentCalendarActionId)){toast(window.t('js.strat.task_not_found'),'error');return;}
     calSave.disabled=true;
     try{
       // datetime-local n'a pas d'offset : le backend l'interprète dans le fuseau IANA de l'utilisateur.
       var plannedFor=dateEl.value+'T'+timeEl.value+':00';
       var payload={strategy_id:detailStrategyId,calendar_id:currentCalendarId,planned_for:plannedFor,timezone:(window.pgUserTimezone?window.pgUserTimezone():window.__PG_TIMEZONE||'UTC')};
-      var r=await fetch(WEBHOOK_BASE+'/strategies/calendar/reschedule',{
-        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+      var endpoint=WEBHOOK_BASE+'/strategies/calendar/reschedule';
+      if(currentCalendarActionId){payload.action='schedule_action_posts';payload.action_id=currentCalendarActionId;payload.auto_plan=false;endpoint=WEBHOOK_BASE+'/strategies/action';}
+      var r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       // Compatibilité avec un backend intermédiaire qui ne posséderait pas encore
       // l'endpoint dédié, sans jamais utiliser une méthode non autorisée.
-      if(r.status===404||r.status===405){
+      if(currentCalendarId&&(r.status===404||r.status===405)){
         r=await fetch(WEBHOOK_BASE+'/strategies/action',{
           method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify(Object.assign({action:'reschedule'},payload))});
@@ -212,6 +243,7 @@
     try{history.replaceState(null,'',window.location.pathname+window.location.search+'#'+name);}catch(e){}
   }
   tabButtons.forEach(function(btn){btn.addEventListener('click',function(){showTab(btn.getAttribute('data-strategy-tab'));});});
+  document.querySelectorAll('[data-strategy-jump]').forEach(function(btn){btn.addEventListener('click',function(){showTab(btn.getAttribute('data-strategy-jump'));var tabs=document.querySelector('.strategyDetailTabs');if(tabs)tabs.scrollIntoView({behavior:'smooth',block:'nearest'});});});
   var initialHash=String(window.location.hash||'').replace(/^#/,'');
   var hasCalendarQuery=false;
   try{hasCalendarQuery=new URL(window.location.href).searchParams.has('cal_view');}catch(e){}
@@ -315,6 +347,8 @@
     if(bulkLaunch){event.preventDefault();schedulePostsFromActions(selectedBulkActionIds(),bulkLaunch);return;}
     var actionRun=event.target&&event.target.closest?event.target.closest('.actionRun'):null;
     if(actionRun){event.preventDefault();schedulePostsFromActions([actionRun.getAttribute('data-action-id')],actionRun);return;}
+    var actionScheduleManual=event.target&&event.target.closest?event.target.closest('.actionScheduleManual'):null;
+    if(actionScheduleManual){event.preventDefault();window.openCalendarTaskModal('','','','',actionScheduleManual.getAttribute('data-action-id'));return;}
     var actionComplete=event.target&&event.target.closest?event.target.closest('.actionComplete'):null;
     if(actionComplete){
       event.preventDefault();

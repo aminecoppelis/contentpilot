@@ -25,6 +25,7 @@ from app.worker.media_video_cron import run_video_poll_cycle
 from app.worker.media_image_cron import run_image_generation_cycle
 from app.worker.publication_cron import run_publication_cycle
 from app.worker.post_generation_cron import run_post_generation_cycle
+from app.worker.strategy_generation_cron import run_strategy_generation_cycle
 from app.config import get_settings
 
 logger = logging.getLogger("worker.scheduler")
@@ -93,6 +94,15 @@ async def _publication_job() -> None:
     except Exception:  # noqa: BLE001
         logger.exception("Scheduled publication cycle: erreur non interceptée")
 
+async def _strategy_generation_job() -> None:
+    try:
+        result = await run_strategy_generation_cycle()
+        if result.get("stage") != "idle":
+            logger.info("Strategy generation recovery: %s", result)
+    except Exception:  # noqa: BLE001
+        logger.exception("Strategy generation recovery failed")
+
+
 def start_scheduler() -> None:
     scheduler.add_job(
         _worker_job,
@@ -130,6 +140,14 @@ def start_scheduler() -> None:
         _publication_job,
         CronTrigger.from_crontab("* * * * *"),
         id="scheduled_publications",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=30,
+    )
+    scheduler.add_job(
+        _strategy_generation_job,
+        CronTrigger.from_crontab("* * * * *"),
+        id="strategy_generation_recovery",
         max_instances=1,
         coalesce=True,
         misfire_grace_time=30,

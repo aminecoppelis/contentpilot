@@ -19,6 +19,8 @@ from app.services.ai_contracts import (
     normalize_modify_idea,
     normalize_reformulate_prompt,
     normalize_strategy,
+    normalize_strategy_action_batch,
+    normalize_strategy_plan,
     normalize_worker_post,
 )
 
@@ -203,10 +205,12 @@ async def _run_agent(
     for attempt in range(1, attempts + 1):
         retry_note = ""
         if attempt > 1:
+            previous_failure = failures[-1] if failures else "réponse non conforme"
             retry_note = (
                 "\n\nIMPORTANT — nouvelle tentative serveur : la réponse précédente était tronquée, "
                 "mal formée ou non conforme. Régénère l'objet JSON COMPLET depuis le début. "
-                "N'abrège aucun champ, ne termine jamais au milieu d'une chaîne et ferme tous les tableaux/objets."
+                "N'abrège aucun champ, ne termine jamais au milieu d'une chaîne et ferme tous les tableaux/objets. "
+                f"Erreur précise à corriger : {previous_failure}."
             )
         try:
             completion = await _call_openrouter(
@@ -323,16 +327,34 @@ async def reformulate_prompt(context: dict) -> AIResult:
 
 
 async def _strategy_completion(system: str, user: str) -> _Completion:
-    """Appel OpenRouter identique au nœud stratégie n8n : modèle, tokens et température fixes."""
+    """Appel OpenRouter pour la stratégie avec budget suffisant et repli automatique."""
     settings = get_settings()
-    return await _call_openrouter(
-        system,
-        user,
-        max_tokens=int(getattr(settings, "openrouter_strategy_max_tokens", 2200) or 2200),
-        temperature=float(getattr(settings, "openrouter_strategy_temperature", 0.3) or 0.3),
-        json_mode=False,
-        model=str(getattr(settings, "openrouter_strategy_model", "openai/gpt-4.1-mini") or "openai/gpt-4.1-mini"),
-    )
+    max_tokens = max(int(getattr(settings, "openrouter_strategy_max_tokens", 5000) or 5000), 4500)
+    temperature = float(getattr(settings, "openrouter_strategy_temperature", 0.3) or 0.3)
+    primary_model = str(getattr(settings, "openrouter_strategy_model", "") or settings.openrouter_model or "openai/gpt-4o-mini").strip()
+    fallback_model = str(settings.openrouter_model or "openai/gpt-4o-mini").strip()
+
+    try:
+        return await _call_openrouter(
+            system,
+            user,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            json_mode=False,
+            model=primary_model,
+        )
+    except AIGenerationError as exc:
+        if primary_model != fallback_model:
+            logger.warning("Strategy generation with %s failed (%s), falling back to %s", primary_model, exc, fallback_model)
+            return await _call_openrouter(
+                system,
+                user,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                json_mode=False,
+                model=fallback_model,
+            )
+        raise
 
 
 def _strategy_parse_any(value: Any) -> tuple[dict, str]:
@@ -408,6 +430,27 @@ def _strategy_low_value(action: dict) -> bool:
     return bool(re.search(r"routine d.?interaction|commentaires cibles|repondre a des conversations|répondre à des conversations|commenter des comptes|liker|suivre des comptes|engagement quotidien", blob))
 
 
+def _strategy_is_publishable_post_action(action: dict) -> bool:
+    """Le produit ne planifie temporairement que des contenus publiables."""
+    category = str(action.get("category") or "").strip().lower()
+    requires_post = action.get("requires_post_generation") is True or str(
+        action.get("requires_post_generation") or ""
+    ).strip().lower() == "true"
+    blob = " ".join(str(action.get(k) or "") for k in (
+        "title", "description", "deliverable", "format", "angle"
+    )).lower()
+    operational_task = bool(re.search(
+        r"cr[eé]er (?:un |le )?(?:calendrier|planning)|calendrier [eé]ditorial|"
+        r"configurer|mettre en place (?:un |le )?(?:outil|tableau|tracking)|"
+        r"(?:faire|r[eé]aliser|effectuer|lancer|mener) (?:un |l['’])?audit|"
+        r"audit(?:er)? (?:le |la |les |un |une )?(?:profil|compte|performance|r[eé]sultats)|"
+        r"(?:cr[eé]er|faire|mettre en place) (?:un |le )?reporting|"
+        r"(?:cr[eé]er|mettre en place) (?:un |le )?tableau de bord|modifier (?:la |le )?(?:bio|profil)",
+        blob,
+    ))
+    return requires_post and category in {"content", "contenu", "post", "publication"} and not operational_task
+
+
 def _strategy_is_profile_action(action: dict) -> bool:
     blob = " ".join(str(action.get(k) or "") for k in ("category", "title", "description", "deliverable", "output_type")).lower()
     return bool(re.search(r"(^|\b)(profil|profile|bio|biographie|biography)(\b|$)", blob))
@@ -428,9 +471,10 @@ def _strategy_profile_action_valid(action: dict, context: dict) -> bool:
 
 def _strategy_usable_actions(parsed: dict, context: dict) -> tuple[list[dict], list[dict]]:
     actions = [a for a in (parsed.get("actions") or []) if isinstance(a, dict)] if isinstance(parsed.get("actions"), list) else []
-    usable = [a for a in actions if str(a.get("title") or "").strip() and not _strategy_low_value(a)]
-    invalid_profile = [a for a in usable if not _strategy_profile_action_valid(a, context)]
-    return usable, invalid_profile
+    candidates = [a for a in actions if str(a.get("title") or "").strip() and not _strategy_low_value(a)]
+    invalid = [a for a in candidates if not _strategy_is_publishable_post_action(a)]
+    usable = [a for a in candidates if _strategy_is_publishable_post_action(a)]
+    return usable, invalid
 
 
 def _strategy_context_for_normalizer(context: dict) -> dict:
@@ -447,13 +491,68 @@ def _strategy_context_for_normalizer(context: dict) -> dict:
 
 
 async def generate_strategy(context: dict) -> AIResult:
-    """Reproduit le pipeline n8n V90/V101 pour la stratégie.
+    """Génère le plan puis les actions par petits lots parallèles.
 
-    1. génération complète ;
-    2. seconde passe complète si JSON invalide / programme vide / action profil invalide ;
-    3. passe actions uniquement si la seconde passe n'a toujours pas d'actions utilisables ;
-    4. fusion puis normalisation serveur.
+    Ce découpage permet d'imposer au moins trois posts par semaine sans demander
+    au modèle un unique JSON gigantesque et fragile.
     """
+    normalized_context = _strategy_context_for_normalizer(context)
+    form_data = context.get("form_data") if isinstance(context.get("form_data"), dict) else {}
+    try:
+        duration = max(1, min(365, int(form_data.get("duration_days") or 30)))
+    except (TypeError, ValueError):
+        duration = 30
+    minimum_actions = min(duration, ((duration + 6) // 7) * 3)
+    plan_context = {**normalized_context, "minimum_action_count": minimum_actions}
+
+    plan_result = await _run_agent(
+        prompts.GENERATE_STRATEGY_PLAN_SYSTEM,
+        prompts.build_generate_strategy_plan_prompt(plan_context),
+        max_tokens=8000,
+        temperature=0.3,
+        validator=normalize_strategy_plan,
+        context=plan_context,
+        agent_name="strategy_plan",
+    )
+    strategy = plan_result.parsed["strategy"]
+    blueprints = plan_result.parsed["action_blueprints"]
+    if not blueprints:
+        return AIResult(parsed={"strategy": strategy, "actions": []}, raw_text=plan_result.raw_text)
+
+    batches = [blueprints[index:index + 4] for index in range(0, len(blueprints), 4)]
+    batch_semaphore = asyncio.Semaphore(3)
+
+    async def generate_batch(batch: list[dict]) -> AIResult:
+        batch_context = {
+            **normalized_context,
+            "strategy": strategy,
+            "blueprints": batch,
+        }
+        async with batch_semaphore:
+            return await _run_agent(
+                prompts.GENERATE_STRATEGY_ACTIONS_SYSTEM,
+                prompts.build_generate_strategy_actions_prompt(
+                    context=normalized_context, strategy=strategy, blueprints=batch,
+                ),
+                max_tokens=5000,
+                temperature=0.3,
+                validator=normalize_strategy_action_batch,
+                context=batch_context,
+                agent_name="strategy_actions_batch",
+            )
+
+    batch_results = await asyncio.gather(*(generate_batch(batch) for batch in batches))
+    actions = [action for result in batch_results for action in result.parsed["actions"]]
+    if len(actions) < minimum_actions:
+        raise AIGenerationError(
+            f"PROGRAMME_STRATEGIE_INCOMPLET : {len(actions)} actions reçues, {minimum_actions} requises."
+        )
+    combined = {"strategy": strategy, "actions": actions}
+    return AIResult(parsed=combined, raw_text=json.dumps(combined, ensure_ascii=False))
+
+
+async def generate_strategy_legacy(context: dict) -> AIResult:
+    """Ancien pipeline monolithique conservé temporairement pour diagnostic."""
     first = await _strategy_completion(
         strategy_n8n_prompts.PRIMARY_SYSTEM,
         strategy_n8n_prompts.primary_prompt(context),
@@ -472,7 +571,7 @@ async def generate_strategy(context: dict) -> AIResult:
         reason = (
             "Réponse JSON IA invalide ou tronquée."
             if first_error else
-            "Une action bio/profil a été proposée sans vérification suffisante du profil actuel ou sans bio finale prête à copier."
+            "Une ou plusieurs actions ne génèrent pas un post publiable. Toutes les actions doivent être des contenus planifiables."
             if first_invalid_profile else
             "Objectif non atteint mais aucun programme d’actions exploitable."
         )

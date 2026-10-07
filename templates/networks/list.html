@@ -55,8 +55,7 @@
     </tbody>
   </table>
 </div>
-<div id="networkLoader" class="loader" style="display:{{ 'block' if has_more else 'none' }}">{{ t('net.scroll_more') }}</div>
-<div id="networkSentinel" style="height:1px"></div>
+{% include "partials/pagination.html" %}
 
 <div class="shareModalOverlay" id="editNetworkModal" aria-hidden="true">
   <div class="shareModal" role="dialog" aria-modal="true" aria-labelledby="editNetworkTitle">

@@ -29,7 +29,9 @@ class Settings(BaseSettings):
     # MEDIA_STORAGE_DIR peut rester relatif ; il sera résolu depuis PROJECT_ROOT,
     # et non depuis le répertoire courant du process.
     media_storage_dir: str = "public-media"
-    media_public_base_url: str = "https://socialnetwork.coppelis.com/public-media"
+    # Vide par défaut : l'URL suit APP_BASE_URL (localhost en développement,
+    # domaine public en production). Peut être surchargée pour un CDN.
+    media_public_base_url: str = ""
     trust_proxy_headers: bool = True
     env: str = "development"
     log_level: str = "info"
@@ -68,8 +70,8 @@ class Settings(BaseSettings):
     openrouter_api_key: str = ""
     openrouter_model: str = "openai/gpt-4o-mini"
     # Stratégie : paramètres identiques au nœud OpenRouter n8n validé en production.
-    openrouter_strategy_model: str = "openai/gpt-4.1-mini"
-    openrouter_strategy_max_tokens: int = 2200
+    openrouter_strategy_model: str = "openai/gpt-4o-mini"
+    openrouter_strategy_max_tokens: int = 5000
     openrouter_strategy_temperature: float = 0.3
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     # Garde-fous des sorties JSON structurées. Le second/3e essai augmente

@@ -5,7 +5,10 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from datetime import datetime, timezone
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Request, Depends, Body, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -22,12 +25,17 @@ from app.services.social_accounts import fetch_accessible_account
 from app.services import strategy_calendar_n8n
 from app.worker.calendar_worker import run_cycle
 from app.user_timezone import parse_user_datetime, to_user_datetime, format_user_datetime
+from app.pagination import page_meta
+from app.i18n import resolve_locale
 
 router = APIRouter(tags=["Strategies"])
 from app.templating import templates
 
 
-STRATEGY_STATUS_LABELS = {"draft": "Brouillon", "active": "Active", "archived": "Archivée"}
+STRATEGY_STATUS_LABELS = {
+    "generating": "Génération en cours", "draft": "Brouillon",
+    "active": "Active", "failed": "Échec", "archived": "Archivée",
+}
 PLATFORM_LABELS = {"facebook": "Facebook", "instagram": "Instagram", "buffer": "Buffer", "linkedin": "LinkedIn"}
 def _parse_future_planned_for(value: object, timezone_name: str) -> datetime:
     """Interprète la saisie dans le fuseau utilisateur puis retourne l'instant UTC."""
@@ -104,7 +112,9 @@ async def _reschedule_calendar_task(conn, *, calendar_id: str, strategy_id: str,
 
 
 @router.get("/strategies", response_class=HTMLResponse)
-async def get_strategies(request: Request, strategy_id: str | None = None, user=Depends(require_auth)):
+async def get_strategies(request: Request, strategy_id: str | None = None, page: int = 1,
+                         action_page: int = 1, post_page: int = 1, status: str = "all",
+                         q: str = "", user=Depends(require_auth)):
     """Liste des stratégies ou détail d'une stratégie lorsque strategy_id est fourni."""
     pool = get_pool()
 
@@ -144,6 +154,7 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
         selected_row = None
         selected_actions_rows = []
         selected_calendar_rows = []
+        selected_strategy_post_rows = []
         if strategy_id:
             try:
                 selected_row = await conn.fetchrow(
@@ -171,6 +182,12 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
             if selected_row is None:
                 raise HTTPException(status_code=404, detail="Stratégie introuvable dans ce workspace.")
 
+            action_page = max(1, int(action_page or 1))
+            post_page = max(1, int(post_page or 1))
+            selected_actions_total = await conn.fetchval(
+                "SELECT count(*)::int FROM public.app_growth_strategy_actions WHERE strategy_id=$1::uuid AND workspace_id=$2::uuid",
+                strategy_id, user.active_workspace_id,
+            )
             selected_actions_rows = await conn.fetch(
                 """
                 SELECT id::text, title, description, category, priority, status, due_day,
@@ -178,9 +195,11 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
                 FROM public.app_growth_strategy_actions
                 WHERE strategy_id = $1::uuid AND workspace_id = $2::uuid
                 ORDER BY COALESCE(due_day, 1), created_at, id
+                LIMIT 6 OFFSET $3
                 """,
                 strategy_id,
                 user.active_workspace_id,
+                (action_page - 1) * 6,
             )
             selected_calendar_rows = await conn.fetch(
                 """
@@ -188,6 +207,10 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
                        c.status, c.payload, c.error_message, c.triggered_at,
                        c.created_at, c.updated_at,
                        a.title AS action_title, a.category AS action_category,
+                       pr.subject AS request_subject, pr.status AS request_status,
+                       linked_idea.idea_id, linked_idea.idea_title,
+                       linked_idea.idea_status, linked_idea.post_text,
+                       linked_idea.post_cta, linked_idea.media_url,
                        EXISTS (
                          SELECT 1
                          FROM public.post_requests linked_request
@@ -196,13 +219,111 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
                        ) AS active_request_exists
                 FROM public.app_growth_strategy_action_calendar c
                 LEFT JOIN public.app_growth_strategy_actions a ON a.id = c.action_id
+                LEFT JOIN public.post_requests pr
+                  ON pr.id = c.request_id AND pr.workspace_id = c.workspace_id
+                 AND pr.deleted_at IS NULL
+                LEFT JOIN LATERAL (
+                  SELECT pi.id::text AS idea_id, pi.title AS idea_title,
+                         pi.status AS idea_status, pv.post_text,
+                         pv.cta AS post_cta,
+                         (SELECT COALESCE(pm.public_url,pm.external_url)
+                            FROM public.post_media pm
+                           WHERE pm.idea_id=pi.id AND pm.workspace_id=pi.workspace_id
+                             AND pm.status='ready'
+                             AND COALESCE(pm.public_url,pm.external_url,'')<>''
+                           ORDER BY (pm.media_role='cover') DESC, pm.created_at ASC
+                           LIMIT 1) AS media_url
+                  FROM public.post_ideas pi
+                  LEFT JOIN public.post_versions pv ON pv.id=pi.current_version_id
+                  WHERE pi.request_id = c.request_id
+                    AND pi.workspace_id = c.workspace_id
+                    AND pi.deleted_at IS NULL
+                  ORDER BY pi.number ASC, pi.created_at ASC
+                  LIMIT 1
+                ) linked_idea ON true
                 WHERE c.strategy_id = $1::uuid AND c.workspace_id = $2::uuid
+                  -- Les checkpoints adaptatifs servent au pilotage interne de
+                  -- la stratégie. Ce ne sont pas des tâches éditoriales et ils
+                  -- ne doivent ni apparaître ni être comptés dans le calendrier.
+                  AND COALESCE(c.payload->>'kind','') <> 'adaptive_checkpoint'
                 ORDER BY c.planned_for ASC, c.created_at ASC
                 """,
                 strategy_id,
                 user.active_workspace_id,
             )
+            # Un même sujet/request peut recevoir plusieurs idées (bouton
+            # « générer une nouvelle idée »). La vue calendrier reste à une
+            # ligne par créneau, mais l'onglet Posts doit lire chaque idea_id.
+            selected_posts_total = await conn.fetchval(
+                """SELECT count(DISTINCT pi.id)::int
+                     FROM public.app_growth_strategy_action_calendar c
+                     JOIN public.post_requests pr ON pr.id=c.request_id AND pr.workspace_id=c.workspace_id AND pr.deleted_at IS NULL
+                     JOIN public.post_ideas pi ON pi.request_id=pr.id AND pi.workspace_id=c.workspace_id AND pi.deleted_at IS NULL
+                     WHERE c.strategy_id=$1::uuid AND c.workspace_id=$2::uuid""",
+                strategy_id, user.active_workspace_id,
+            )
+            selected_strategy_post_rows = await conn.fetch(
+                """
+                SELECT DISTINCT ON (pi.id)
+                       c.action_id::text, c.request_id::text, c.planned_for,
+                       a.title AS action_title, pr.subject AS request_subject,
+                       pi.id::text AS idea_id, pi.title AS idea_title,
+                       pi.status AS idea_status, pv.post_text, pv.cta AS post_cta,
+                       (SELECT pm.id::text
+                          FROM public.post_media pm
+                         WHERE pm.idea_id=pi.id AND pm.workspace_id=pi.workspace_id
+                           AND pm.status='ready'
+                           AND COALESCE(pm.public_url,pm.external_url,'')<>''
+                         ORDER BY (pm.media_role='cover') DESC, pm.created_at ASC
+                         LIMIT 1) AS media_id,
+                       (SELECT COALESCE(pm.public_url,pm.external_url)
+                          FROM public.post_media pm
+                         WHERE pm.idea_id=pi.id AND pm.workspace_id=pi.workspace_id
+                           AND pm.status='ready'
+                           AND COALESCE(pm.public_url,pm.external_url,'')<>''
+                         ORDER BY (pm.media_role='cover') DESC, pm.created_at ASC
+                         LIMIT 1) AS media_url
+                FROM public.app_growth_strategy_action_calendar c
+                JOIN public.app_growth_strategy_actions a ON a.id=c.action_id
+                JOIN public.post_requests pr
+                  ON pr.id=c.request_id AND pr.workspace_id=c.workspace_id
+                 AND pr.deleted_at IS NULL
+                JOIN public.post_ideas pi
+                  ON pi.request_id=pr.id AND pi.workspace_id=c.workspace_id
+                 AND pi.deleted_at IS NULL
+                LEFT JOIN public.post_versions pv ON pv.id=pi.current_version_id
+                WHERE c.strategy_id=$1::uuid AND c.workspace_id=$2::uuid
+                ORDER BY pi.id, c.created_at ASC
+                LIMIT 6 OFFSET $3
+                """,
+                strategy_id,
+                user.active_workspace_id,
+                (post_page - 1) * 6,
+            )
 
+        page = max(1, int(page or 1))
+        status = status if status in {"all", "active", "draft"} else "all"
+        q = (q or "").strip()[:120]
+        status_counts = await conn.fetchrow(
+            """
+            SELECT count(*)::int AS all_count,
+                   count(*) FILTER (WHERE status='active')::int AS active_count,
+                   count(*) FILTER (WHERE status='draft')::int AS draft_count
+            FROM public.app_growth_strategies
+            WHERE workspace_id=$1::uuid
+            """,
+            user.active_workspace_id,
+        )
+        list_where = """s.workspace_id=$1::uuid
+            AND ($2::text = 'all' OR s.status = $2::text)
+            AND ($3::text = '' OR concat_ws(' ', s.title, s.objective_label,
+                 a.display_name, a.platform_account_name, a.provider) ILIKE '%' || $3::text || '%')"""
+        strategies_total = await conn.fetchval(
+            f"""SELECT count(*)::int FROM public.app_growth_strategies s
+                LEFT JOIN public.app_social_accounts a ON a.id=s.social_account_id
+                WHERE {list_where}""",
+            user.active_workspace_id, status, q,
+        )
         rows = await conn.fetch(
             """
             SELECT s.id::text, s.title, s.status, s.objective_label, s.current_version,
@@ -213,10 +334,14 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
                      WHERE ga.strategy_id = s.id AND ga.status IN ('done','generated','completed')) AS done_actions
             FROM public.app_growth_strategies s
             LEFT JOIN public.app_social_accounts a ON a.id = s.social_account_id
-            WHERE s.workspace_id = $1::uuid
+            WHERE """ + list_where + """
             ORDER BY COALESCE(s.updated_at, s.created_at) DESC
+            LIMIT 10 OFFSET $4
             """,
             user.active_workspace_id,
+            status,
+            q,
+            (page - 1) * 10,
         )
         # La page de liste doit rester compatible avec une base mise à jour
         # progressivement. `revoked_at` est une colonne additive récente ; un
@@ -268,7 +393,7 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
         selected["platform_label"] = PLATFORM_LABELS.get(str(selected.get("platform") or ""), selected.get("platform") or "—")
         selected["analyzed_label"] = format_datetime(selected.get("last_analyzed_at"))
         selected["updated_label"] = format_datetime(selected.get("updated_at") or selected.get("created_at"))
-        selected["account_label"] = selected.get("account_name") or selected.get("platform_account_name") or selected.get("external_username") or "Compte social"
+        selected["account_label"] = selected.get("account_name") or selected.get("platform_account_name") or selected.get("external_username") or ""
 
         strategy_data = selected["strategy_data"]
         objective = strategy_data.get("objective") if isinstance(strategy_data.get("objective"), dict) else {}
@@ -322,7 +447,7 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
                 "planned_time": item.get("planned_time") or "",
                 "planned_label": item.get("planned_label") or "",
                 "status": item.get("status") or "scheduled",
-                "title": item.get("action_title") or "Tâche planifiée",
+                "title": item.get("action_title") or payload.get("action_title") or ((payload.get("action") or {}).get("title") if isinstance(payload.get("action"), dict) else "") or payload.get("subject") or payload.get("theme") or item.get("request_subject") or "Tâche planifiée",
                 "category": item.get("action_category") or "",
                 "error_message": item.get("error_message") or "",
                 "kind": "checkpoint" if str(payload.get("kind") or "") == "adaptive_checkpoint" else "action",
@@ -335,10 +460,46 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
                 ) and not bool(item.get("active_request_exists")),
             })
 
+        posts_by_action: dict[str, list[dict]] = {}
+        for calendar_row in selected_calendar_rows:
+            calendar_post = dict(calendar_row)
+            if not calendar_post.get("request_id") or not calendar_post.get("idea_id"):
+                continue
+            posts_by_action.setdefault(str(calendar_post.get("action_id") or ""), []).append({
+                "request_id": str(calendar_post.get("request_id") or ""),
+                "idea_id": str(calendar_post.get("idea_id") or ""),
+                "title": calendar_post.get("idea_title") or calendar_post.get("request_subject") or "Post stratégique",
+                "status": calendar_post.get("idea_status") or calendar_post.get("request_status") or "generated",
+                "planned_label": format_datetime(calendar_post.get("planned_for")),
+            })
+        strategy_posts = []
+        for row in selected_strategy_post_rows:
+            post_row = dict(row)
+            linked_post = {
+                "request_id": str(post_row.get("request_id") or ""),
+                "idea_id": str(post_row.get("idea_id") or ""),
+                "title": post_row.get("idea_title") or post_row.get("request_subject") or "Post stratégique",
+                "status": post_row.get("idea_status") or "generated",
+                "planned_label": format_datetime(post_row.get("planned_for")),
+                "post_text": str(post_row.get("post_text") or "").strip(),
+                "post_cta": str(post_row.get("post_cta") or "").strip(),
+                "media_url": str(post_row.get("media_url") or "").strip(),
+                "media_id": str(post_row.get("media_id") or "").strip(),
+                "action_title": post_row.get("action_title") or "",
+            }
+            action_links = posts_by_action.setdefault(str(post_row.get("action_id") or ""), [])
+            if not any(item.get("idea_id") == linked_post["idea_id"] for item in action_links):
+                action_links.append(linked_post)
+            strategy_posts.append(linked_post)
+
         # État de planification par action — même logique de lecture que l'UI n8n :
         # un plan actif empêche un doublon; generation_required distingue
         # « Génération prévue » de « Exécution prévue ».
         active_plan_statuses = {"scheduled", "generating", "generated", "published", "approved", "completed", "success", "succeeded", "done"}
+        planned_actions_total = len({
+            str(item.get("action_id") or "") for item in calendar
+            if item.get("action_id") and str(item.get("status") or "scheduled").lower() in active_plan_statuses
+        })
         plans_by_action: dict[str, list[dict]] = {}
         clearable_calendar_count = 0
         for item in calendar:
@@ -378,6 +539,11 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
                 action_item["planned_label"] = ""
                 action_item["recommended_publish_for"] = ""
 
+            # La fiche stratégie devient la source de vérité du parcours :
+            # chaque intervention expose directement les posts créés par ses
+            # créneaux, sans obliger l'utilisateur à les retrouver dans la liste globale.
+            action_item["linked_posts"] = posts_by_action.get(str(action_item.get("id") or ""), [])
+
         return templates.TemplateResponse(request, "strategies/detail.html", {
             "auth_user": user,
             "active_nav": "strategies",
@@ -386,24 +552,144 @@ async def get_strategies(request: Request, strategy_id: str | None = None, user=
             "calendar": calendar,
             "calendar_view_items": calendar_view_items,
             "clearable_calendar_count": clearable_calendar_count,
+            "strategy_posts": strategy_posts,
+            "actions_total": int(selected_actions_total or 0),
+            "posts_total": int(selected_posts_total or 0),
+            "planned_actions_total": planned_actions_total,
+            "actions_pagination": page_meta(page=action_page, page_size=6,
+                total=selected_actions_total, path="/app/strategies",
+                query={"strategy_id": strategy_id, "post_page": post_page}, fragment="actions",
+                page_param="action_page"),
+            "posts_pagination": page_meta(page=post_page, page_size=6,
+                total=selected_posts_total, path="/app/strategies",
+                query={"strategy_id": strategy_id, "action_page": action_page}, fragment="posts",
+                page_param="post_page"),
         })
 
     return templates.TemplateResponse(request, "strategies/list.html", {
         "auth_user": user, "active_nav": "strategies",
-        "strategies": strategies, "accounts": accounts,
+        "strategies": strategies, "accounts": accounts, "strategy_filter": status,
+        "strategy_search": q, "strategy_counts": dict(status_counts),
+        "pagination": page_meta(page=page, page_size=10, total=strategies_total,
+                                path="/app/strategies", query={"status": status, "q": q}),
     })
+
+
+@router.get("/strategies/new", response_class=HTMLResponse)
+async def get_strategy_new(request: Request, user=Depends(require_auth)):
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT DISTINCT ON (a.id) a.id::text, a.provider, a.display_name, a.platform_account_name
+            FROM public.app_social_accounts a
+            LEFT JOIN public.app_social_account_workspaces saw
+              ON saw.account_id=a.id AND saw.workspace_id=$1::uuid
+            WHERE a.deleted_at IS NULL AND a.is_active=true
+              AND (a.workspace_id=$1::uuid OR saw.account_id IS NOT NULL)
+              AND (CASE WHEN saw.account_id IS NULL AND a.workspace_id=$1::uuid
+                        THEN true ELSE COALESCE(saw.is_active,false) END)=true
+            ORDER BY a.id, a.display_name
+            """,
+            user.active_workspace_id,
+        )
+    accounts = [{
+        "id": row["id"],
+        "label": f"{row['display_name'] or row['platform_account_name'] or 'Compte'} · "
+                 f"{PLATFORM_LABELS.get(row['provider'], row['provider'])}",
+    } for row in rows]
+    return templates.TemplateResponse(request, "strategies/new.html", {
+        "auth_user": user, "active_nav": "strategies", "accounts": accounts,
+    })
+
+
+async def _generate_strategy_in_background(payload: dict, user, strategy_id: str) -> None:
+    try:
+        response = await post_strategies_analyze(
+            {**payload, "_background_strategy_id": strategy_id}, user
+        )
+        if int(getattr(response, "status_code", 500) or 500) < 400:
+            return
+        detail = bytes(getattr(response, "body", b"")).decode("utf-8", errors="replace")[:3500]
+        raise RuntimeError(detail or "La génération de stratégie a échoué.")
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Background strategy generation failed strategy_id=%s", strategy_id)
+        pool = get_pool()
+        async with pool.acquire() as conn:
+            await conn.execute(
+                """
+                UPDATE public.app_growth_strategies
+                SET status='failed', strategy_data=COALESCE(strategy_data,'{}'::jsonb)
+                    || jsonb_build_object('generation_error',$2::text), updated_at=now()
+                WHERE id=$1::uuid
+                """,
+                strategy_id, str(exc)[:3500],
+            )
+
+
+@router.post("/strategies/generate")
+async def post_strategy_generate(request: Request, payload: dict = Body(...), user=Depends(require_auth)):
+    payload = dict(payload or {})
+    language_by_locale = {"fr": "français", "en": "anglais", "ar": "arabe"}
+    accepted_languages = set(language_by_locale.values())
+    if str(payload.get("language") or "").strip().lower() not in accepted_languages:
+        payload["language"] = language_by_locale.get(resolve_locale(request), "français")
+    instructions = str(payload.get("instructions") or "").strip()
+    try:
+        duration_days = max(1, min(365, int(payload.get("duration_days") or 30)))
+    except (TypeError, ValueError):
+        duration_days = 30
+    if not instructions:
+        return JSONResponse({"success": False, "error": "VALIDATION_ERROR", "message": "Instructions manquantes."}, status_code=422)
+    social_account_id = str(payload.get("social_account_id") or "").strip() or None
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        if social_account_id:
+            account = await fetch_accessible_account(
+                conn, social_account_id, user.active_workspace_id, active_only=True
+            )
+            if account is None:
+                return JSONResponse({
+                    "success": False, "error": "NOT_FOUND",
+                    "message": "Compte social introuvable dans ce workspace.",
+                }, status_code=404)
+        row = await conn.fetchrow(
+            """
+            INSERT INTO public.app_growth_strategies (
+              workspace_id,social_account_id,created_by,title,objective_type,objective_label,
+              status,duration_days,form_data,strategy_data,current_version
+            ) VALUES ($1::uuid,$2::uuid,$3::uuid,$4,$5,$6,'generating',$7,$8,'{}'::jsonb,1)
+            RETURNING id::text AS strategy_id
+            """,
+            user.active_workspace_id, social_account_id, user.id,
+            instructions[:120], str(payload.get("objective_type") or "custom"),
+            str(payload.get("objective_label") or instructions[:240]), duration_days,
+            json.dumps(payload),
+        )
+    strategy_id = row["strategy_id"]
+    return JSONResponse({"success": True, "async": True, "status": "generating", "data": {
+        "strategy_id": strategy_id, "redirect_url": "/app/strategies",
+    }}, status_code=202)
 
 
 @router.post("/strategies/analyze")
 async def post_strategies_analyze(payload: dict = Body(...), user=Depends(require_auth)):
-    """Pipeline complet (Cahier technique §7.7) : profil + concurrence + IA + retry si actions vides."""
-    pool = get_pool()
-    social_account_id = payload["social_account_id"]
+    """Pipeline complet (Cahier technique §7.7) : profil + concurrence + IA + retry si actions vides.
 
-    async with pool.acquire() as conn:
-        account = await fetch_accessible_account(
-            conn, social_account_id, user.active_workspace_id, active_only=True
-        )
+    social_account_id est optionnel : si absent, l'analyse de compte est sautée et
+    la stratégie est créée sans compte lié (mode hors-réseau).
+    """
+    background_strategy_id = str(payload.get("_background_strategy_id") or "").strip()
+    payload = {key: value for key, value in payload.items() if key != "_background_strategy_id"}
+    pool = get_pool()
+    social_account_id = str(payload.get("social_account_id") or "").strip() or None
+
+    account = None
+    if social_account_id:
+        async with pool.acquire() as conn:
+            account = await fetch_accessible_account(
+                conn, social_account_id, user.active_workspace_id, active_only=True
+            )
 
     network_snapshot = {"profile_available": False, "biography_available": False, "recent_content": []}
     if account:
@@ -534,7 +820,11 @@ async def post_strategies_analyze(payload: dict = Body(...), user=Depends(requir
     try:
         result = await ai.generate_strategy(context)
     except AIGenerationError as exc:
+        logger.error("AI strategy generation failed (502): %s", exc)
         return JSONResponse({"success": False, "error": "AI_GENERATION_FAILED", "message": str(exc)}, status_code=502)
+    except Exception as exc:
+        logger.exception("Unexpected error during strategy analysis: %s", exc)
+        return JSONResponse({"success": False, "error": "INTERNAL_ERROR", "message": str(exc)}, status_code=500)
 
     actions = result.parsed.get("actions", [])
     strategy_data = result.parsed.get("strategy", {})
@@ -542,7 +832,25 @@ async def post_strategies_analyze(payload: dict = Body(...), user=Depends(requir
     # enregistrée sans ses actions serait inexploitable (aucune planification possible).
     async with pool.acquire() as conn:
       async with conn.transaction():
-        strategy_row = await conn.fetchrow(
+        if background_strategy_id:
+            strategy_row = await conn.fetchrow(
+                """
+                UPDATE public.app_growth_strategies
+                SET social_account_id=$2::uuid, title=$4, objective_type=$5,
+                    objective_label=$6, status='draft', duration_days=$7,
+                    form_data=$8, network_snapshot=$9, research_context=$10,
+                    strategy_data=$11, last_analyzed_at=now(), updated_at=now()
+                WHERE id=$1::uuid AND workspace_id=$3::uuid
+                RETURNING id::text AS strategy_id
+                """,
+                background_strategy_id, social_account_id, user.active_workspace_id,
+                strategy_data.get("title", ""), payload.get("objective_type", ""),
+                payload.get("objective_label", ""), payload.get("duration_days", 30),
+                json.dumps(payload), json.dumps(network_snapshot), json.dumps(research_context),
+                json.dumps(strategy_data),
+            )
+        else:
+            strategy_row = await conn.fetchrow(
             """
             INSERT INTO public.app_growth_strategies (
                 workspace_id, social_account_id, created_by, title, objective_type, objective_label,
@@ -555,7 +863,7 @@ async def post_strategies_analyze(payload: dict = Body(...), user=Depends(requir
             strategy_data.get("title", ""), payload.get("objective_type", ""), payload.get("objective_label", ""),
             payload.get("duration_days", 30), json.dumps(payload), json.dumps(network_snapshot),
             json.dumps(research_context), json.dumps(strategy_data),
-        )
+            )
         # Insertion en lot (executemany) plutôt qu'un aller-retour par action
         if actions:
             action_rows = []
@@ -583,6 +891,7 @@ async def post_strategies_analyze(payload: dict = Body(...), user=Depends(requir
             )
 
     return JSONResponse({"success": True, "data": {"strategy_id": strategy_row["strategy_id"], "strategy": strategy_data, "actions": actions}})
+
 
 
 @router.post("/strategies/action")
@@ -667,6 +976,11 @@ async def post_strategies_action(payload: dict = Body(...), user=Depends(require
             return JSONResponse({"success": False, "error": "VALIDATION_ERROR", "message": "calendar_id invalide."}, status_code=422)
         try:
             # Le n8n convertit le datetime local du navigateur en ISO avant SQL.
+            planned_for = _parse_future_planned_for(planned_for, user.timezone).isoformat()
+        except ValueError as exc:
+            return JSONResponse({"success": False, "error": "VALIDATION_ERROR", "message": str(exc)}, status_code=422)
+    elif action in {"schedule_action_posts", "generate_action_posts"} and planned_for:
+        try:
             planned_for = _parse_future_planned_for(planned_for, user.timezone).isoformat()
         except ValueError as exc:
             return JSONResponse({"success": False, "error": "VALIDATION_ERROR", "message": str(exc)}, status_code=422)
@@ -873,31 +1187,47 @@ async def post_strategies_overdue_retry(payload: dict = Body(...), user=Depends(
 async def post_generate_instructions(payload: dict = Body(...), user=Depends(require_auth)):
     """
     Bouton « Générer avec l'IA » de la modale de création : produit une
-    instruction courte (Problématique + Objectif quantifiable) à partir du
-    compte social choisi et de la durée.
+    instruction complète à partir de la phrase saisie, de la durée et,
+    lorsqu'il est présent, du compte social choisi.
     """
     pool = get_pool()
-    account_id = payload.get("social_account_id")
+    account_id = str(payload.get("social_account_id") or "").strip() or None
     duration_days = payload.get("duration_days") or 30
     language = payload.get("language", "français")
+    seed_instructions = str(payload.get("instructions") or payload.get("prompt") or "").strip()
+    if not seed_instructions:
+        return JSONResponse({
+            "success": False, "error": "VALIDATION_ERROR",
+            "message": "Saisissez une phrase de départ avant de générer avec l’IA.",
+        }, status_code=422)
 
-    async with pool.acquire() as conn:
-        account = await fetch_accessible_account(
-            conn, str(account_id or ""), user.active_workspace_id, active_only=True
-        )
-    if account is None:
-        return JSONResponse({"success": False, "error": "NOT_FOUND",
-                              "message": "Compte social introuvable."}, status_code=404)
+    account = None
+    if account_id:
+        async with pool.acquire() as conn:
+            account = await fetch_accessible_account(
+                conn, account_id, user.active_workspace_id, active_only=True
+            )
+        if account is None:
+            return JSONResponse({"success": False, "error": "NOT_FOUND",
+                                  "message": "Compte social introuvable."}, status_code=404)
+
+    if account:
+        subject = (f"Stratégie de croissance {account['provider']} pour "
+                   f"{account['display_name'] or account['platform_account_name'] or 'le compte'} : "
+                   f"{seed_instructions}")
+    else:
+        subject = seed_instructions
 
     context = {
-        "subject": f"Stratégie de croissance {account['provider']} pour "
-                    f"{account['display_name'] or account['platform_account_name'] or 'le compte'}",
-        "prompt_mode": "generate",
+        "subject": subject,
+        "prompt": seed_instructions,
+        "prompt_mode": "improve",
         "language": language,
         "commercial_objective": f"croissance organique sur {duration_days} jours",
         "target_sector": "",
-        "constraints": "Rédige une instruction courte contenant une section Problématique et "
-                        "une section Objectif quantifiable, adaptée au réseau et à la durée.",
+        "constraints": "Conserve fidèlement l'intention de la phrase saisie. Rédige une instruction "
+                       "de stratégie contenant une section Problématique et une section Objectif "
+                       "quantifiable, adaptée au réseau s'il est connu et à la durée.",
     }
     try:
         result = await ai.reformulate_prompt(context)

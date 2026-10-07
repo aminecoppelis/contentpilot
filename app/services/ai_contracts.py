@@ -346,6 +346,7 @@ def normalize_strategy(parsed: Any, context: dict | None = None) -> dict:
     if not title:
         raise AIContractError("La stratégie ne contient pas de title.")
     strategy["title"] = title
+    strategy["objective_already_reached"] = _bool(strategy.get("objective_already_reached"), False)
 
     diagnostic = _dict(strategy.get("diagnostic"))
     for key in (
@@ -421,6 +422,24 @@ def normalize_strategy(parsed: Any, context: dict | None = None) -> dict:
         elif category in {"profile", "bio", "biography", "profil/bio"}:
             category = "profil"
         action["category"] = category
+
+        # Mode actuel du produit : aucune tâche manuelle/opérationnelle dans
+        # une stratégie. Chaque action doit aboutir à un post planifiable.
+        if category != "content" or not action["requires_post_generation"]:
+            continue
+        operational_blob = " ".join(_text(action.get(key)).lower() for key in (
+            "title", "description", "deliverable", "format", "angle"
+        ))
+        if re.search(
+            r"cr[eé]er (?:un |le )?(?:calendrier|planning)|calendrier [eé]ditorial|"
+            r"configurer|mettre en place (?:un |le )?(?:outil|tableau|tracking)|"
+            r"(?:faire|r[eé]aliser|effectuer|lancer|mener) (?:un |l['’])?audit|"
+            r"audit(?:er)? (?:le |la |les |un |une )?(?:profil|compte|performance|r[eé]sultats)|"
+            r"(?:cr[eé]er|faire|mettre en place) (?:un |le )?reporting|"
+            r"(?:cr[eé]er|mettre en place) (?:un |le )?tableau de bord|modifier (?:la |le )?(?:bio|profil)",
+            operational_blob,
+        ):
+            continue
 
         profile_update = _dict(action.get("profile_update"))
         profile_update["change_needed"] = _bool(profile_update.get("change_needed"), False)
@@ -502,8 +521,8 @@ def normalize_strategy_plan(parsed: Any, context: dict | None = None) -> dict:
             category = "content"
         elif category in {"profile", "bio", "biography", "profil/bio"}:
             category = "profil"
-        if category == "profil" and not biography_available:
-            # Une optimisation de bio ne peut pas être décidée sans avoir lu la bio.
+        requires_post = _bool(item.get("requires_post_generation"), category == "content")
+        if category != "content" or not requires_post:
             continue
         blueprints.append({
             **item,
@@ -513,11 +532,18 @@ def normalize_strategy_plan(parsed: Any, context: dict | None = None) -> dict:
             "category": category,
             "priority": _enum(item.get("priority"), {"low", "medium", "high"}, "medium"),
             "due_day": _int(item.get("due_day"), 1, duration, min(duration, index + 1)),
-            "requires_post_generation": _bool(item.get("requires_post_generation"), category == "content"),
+            "requires_post_generation": True,
         })
 
     if not strategy["objective_already_reached"] and not blueprints:
         raise AIContractError("L'objectif n'est pas indiqué comme atteint : action_blueprints ne peut pas être vide.")
+
+    minimum_actions = _int(context.get("minimum_action_count"), 0, duration, 0)
+    if not strategy["objective_already_reached"] and len(blueprints) < minimum_actions:
+        raise AIContractError(
+            f"Plan trop court : {len(blueprints)} action(s), {minimum_actions} requises "
+            "pour assurer au moins trois posts par semaine."
+        )
 
     # Une stratégie de N jours ne peut matériellement pas avoir davantage d'actions
     # quotidiennes distinctes que de jours. Cette borne dépend donc de l'horizon,
@@ -543,8 +569,22 @@ def normalize_strategy_action_batch(parsed: Any, context: dict | None = None) ->
             f"Lot d'actions incomplet : {len(raw_actions)} reçu(s), {len(expected_ids)} attendu(s)."
         )
 
+    # Les champs de pilotage viennent du plan déjà validé. Le modèle détaille
+    # le contenu mais ne doit pas pouvoir faire échouer tout le lot en modifiant
+    # accidentellement un plan_id, une date, une catégorie ou le booléen post.
+    reconciled_actions: list[dict] = []
+    for raw_action, raw_blueprint in zip(raw_actions, blueprints):
+        action = deepcopy(_dict(raw_action))
+        blueprint = _dict(raw_blueprint)
+        for field in (
+            "plan_id", "title", "category", "priority", "due_day",
+            "requires_post_generation",
+        ):
+            action[field] = blueprint.get(field)
+        reconciled_actions.append(action)
+
     strategy = _dict(context.get("strategy"))
-    normalized = normalize_strategy({"strategy": strategy, "actions": raw_actions}, context)
+    normalized = normalize_strategy({"strategy": strategy, "actions": reconciled_actions}, context)
     actions = normalized["actions"]
     if len(actions) != len(expected_ids):
         raise AIContractError(

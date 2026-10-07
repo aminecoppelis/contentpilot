@@ -1,7 +1,9 @@
 -- Port verbatim de "BDD - Charger Workspace"
 -- Params: $1 user_id, $2 workspace_id
 WITH p AS (
-  SELECT NULLIF($1::text,'')::uuid AS user_id,NULLIF($2::text,'')::uuid AS workspace_id
+  SELECT NULLIF($1::text,'')::uuid AS user_id,NULLIF($2::text,'')::uuid AS workspace_id,
+         GREATEST(0,COALESCE($3::int,0)) AS member_offset,
+         GREATEST(0,COALESCE($4::int,0)) AS invitation_offset
 ), actor AS (
   SELECT p.*,lower(COALESCE(u.role,'user')) AS global_role
   FROM p
@@ -33,5 +35,11 @@ WITH p AS (
 )
 SELECT
   COALESCE((SELECT row_to_json(a) FROM allowed a),'{}'::json) AS workspace,
-  COALESCE((SELECT jsonb_agg(to_jsonb(m) ORDER BY m.is_owner DESC,lower(m.name)) FROM members m),'[]'::jsonb) AS members,
-  COALESCE((SELECT jsonb_agg(to_jsonb(i) ORDER BY i.created_at DESC) FROM invitations i),'[]'::jsonb) AS invitations;
+  COALESCE((SELECT jsonb_agg(to_jsonb(m)) FROM (
+    SELECT * FROM members ORDER BY is_owner DESC,lower(name) LIMIT 10 OFFSET (SELECT member_offset FROM p)
+  ) m),'[]'::jsonb) AS members,
+  COALESCE((SELECT jsonb_agg(to_jsonb(i)) FROM (
+    SELECT * FROM invitations ORDER BY created_at DESC LIMIT 10 OFFSET (SELECT invitation_offset FROM p)
+  ) i),'[]'::jsonb) AS invitations,
+  (SELECT count(*)::int FROM members) AS members_total,
+  (SELECT count(*)::int FROM invitations) AS invitations_total;

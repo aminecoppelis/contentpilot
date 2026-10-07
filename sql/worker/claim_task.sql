@@ -188,6 +188,8 @@ WITH candidate AS MATERIALIZED (
       'source','growth_strategy_calendar_clean_worker',
       'calendar_id',r.id::text,
       'strategy_id',r.strategy_id::text,
+      'action_id',COALESCE(r.payload#>>'{action,id}',''),
+      'generation_origin','strategy',
       'planned_for',r.planned_for::text,
       'payload',r.payload,
       'worker_version','UNIFIED_V20'

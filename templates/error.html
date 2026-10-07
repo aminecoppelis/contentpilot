@@ -37,12 +37,11 @@
     <h1>{{ title }}</h1>
     <p class="message">{{ message }}</p>
     {% if detail %}<p class="detail">{{ detail }}</p>{% endif %}
-    <div class="help">Tu peux revenir à la page précédente et réessayer. Si l'erreur persiste, transmets la
-      référence affichée au support.</div>
+    <div class="help">{{ t('error.help') }}</div>
     <div class="actions">
       <a class="btn primary" href="{{ back }}"
-         onclick="if(window.history.length>1){event.preventDefault();window.history.back();return false;}">Revenir à la page précédente</a>
-      <a class="btn secondary" href="/app/posts">Retour aux sujets</a>
+         onclick="if(window.history.length>1){event.preventDefault();window.history.back();return false;}">{{ t('common.back_previous') }}</a>
+      <a class="btn secondary" href="/app/posts">{{ t('common.back_posts') }}</a>
     </div>
   </main>
 </body>

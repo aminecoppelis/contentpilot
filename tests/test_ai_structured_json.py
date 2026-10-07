@@ -9,7 +9,7 @@ os.environ.setdefault("OPENROUTER_JSON_ATTEMPTS", "3")
 
 from app.config import get_settings
 from app.services import ai
-from app.services.ai_contracts import normalize_strategy, normalize_generate_ideas, AIContractError
+from app.services.ai_contracts import normalize_strategy, normalize_strategy_plan, normalize_generate_ideas, AIContractError
 
 
 class StructuredJSONRetryTests(unittest.IsolatedAsyncioTestCase):
@@ -66,6 +66,58 @@ class StructuredJSONRetryTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ContractNormalizationTests(unittest.TestCase):
+    def test_strategy_plan_requires_three_posts_per_week(self):
+        parsed = {
+            "strategy": {
+                "title": "Plan mensuel",
+                "objective_already_reached": False,
+                "objective": {"duration_days": 30},
+            },
+            "action_blueprints": [
+                {
+                    "plan_id": f"a{i}", "title": f"Post {i}", "reason": "Objectif éditorial",
+                    "category": "content", "requires_post_generation": True, "due_day": i,
+                }
+                for i in range(1, 12)
+            ],
+        }
+        with self.assertRaises(AIContractError):
+            normalize_strategy_plan(parsed, {
+                "form_data": {"duration_days": 30},
+                "minimum_action_count": 15,
+            })
+
+    def test_strategy_keeps_only_publishable_post_actions(self):
+        strategy = {"title": "Stratégie", "objective": {"duration_days": 30}}
+        actions = [
+            {
+                "title": "Créer un calendrier éditorial",
+                "description": "Mettre en place le planning du mois",
+                "category": "content", "requires_post_generation": True,
+            },
+            {
+                "title": "Publier un retour d'expérience client",
+                "description": "Générer un post avec un enseignement concret",
+                "category": "content", "requires_post_generation": True,
+                "format": "post", "angle": "avant/après", "cta": "Demander un diagnostic",
+            },
+            {
+                "title": "Faire un audit mensuel",
+                "description": "Analyser les KPI", "category": "measurement",
+                "requires_post_generation": False,
+            },
+        ]
+
+        result = normalize_strategy(
+            {"strategy": strategy, "actions": actions},
+            {"form_data": {"duration_days": 30}},
+        )
+
+        self.assertEqual(len(result["actions"]), 1)
+        self.assertEqual(result["actions"][0]["title"], "Publier un retour d'expérience client")
+        self.assertTrue(result["actions"][0]["requires_post_generation"])
+        self.assertEqual(result["actions"][0]["category"], "content")
+
     def test_strategy_clamps_enums_ranges_and_removes_unverifiable_profile_action(self):
         parsed = {
             "strategy": {
@@ -94,6 +146,25 @@ class ContractNormalizationTests(unittest.TestCase):
         self.assertEqual(result["strategy"]["objective"]["feasibility_code"], "medium")
         self.assertEqual(result["strategy"]["diagnostic"]["growth_potential"], 10)
         self.assertEqual(result["actions"], [])
+
+    def test_strategy_keeps_publishable_content_about_audit(self):
+        parsed = {
+            "strategy": {"title": "Stratégie", "objective": {"duration_days": 30}},
+            "actions": [{
+                "plan_id": "a9",
+                "title": "Comparaison entre audit traditionnel et digital",
+                "description": "Créer une infographie qui compare les deux méthodes.",
+                "category": "content",
+                "priority": "high",
+                "due_day": 9,
+                "requires_post_generation": True,
+                "deliverable": "Post et infographie prêts à publier",
+                "media_prefill": {"media_type": "image", "aspect_ratio": "4:5"},
+            }],
+        }
+        result = normalize_strategy(parsed, {"form_data": {"duration_days": 30}})
+        self.assertEqual(len(result["actions"]), 1)
+        self.assertEqual(result["actions"][0]["plan_id"], "a9")
 
     def test_generate_ideas_rejects_incomplete_count(self):
         idea = {

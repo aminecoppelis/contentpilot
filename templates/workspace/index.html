@@ -80,7 +80,7 @@
       <div class="field"><label>{{ t('auth.field.email') }}</label><input type="email" name="email" required></div>
       <div class="field"><label>{{ t('ws.field.role') }}</label>
         <select name="role"><option value="member">{{ t('ws.role.member') }}</option><option value="admin">{{ t('ws.role.admin') }}</option></select>
-      </div>
+  </div>
     </div>
     <button>{{ t('ws.invite.submit') }}</button>
   </form>
@@ -120,6 +120,7 @@
     {% else %}<tr><td colspan="3">{{ t('ws.members.empty') }}</td></tr>{% endfor %}
     </tbody>
   </table></div>
+  {% with pagination=members_pagination %}{% include "partials/pagination.html" %}{% endwith %}
 </section>
 
 {% if can_admin %}
@@ -144,6 +145,7 @@
     {% else %}<tr><td colspan="4">{{ t('ws.invites.empty') }}</td></tr>{% endfor %}
     </tbody>
   </table></div>
+  {% with pagination=invitations_pagination %}{% include "partials/pagination.html" %}{% endwith %}
 </section>
 {% endif %}
 

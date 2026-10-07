@@ -8,17 +8,19 @@ Port fidèle de "HTML - Historique" et "HTML - Publications" :
 from __future__ import annotations
 
 from fastapi import APIRouter, Request, Depends, Body
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.database import get_pool
 from app.dependencies.auth import require_auth
 from app.user_timezone import format_user_datetime
+from app.pagination import page_meta
 
 router = APIRouter(tags=["Listing"])
 from app.templating import templates, render_fragment
 
 PAGE_SIZE = 25
+PUBLISHED_PAGE_SIZE = 10
 
 # Libellés exacts (statusLabelMap de l'original)
 STATUS_LABEL_MAP = {
@@ -174,14 +176,9 @@ async def _load_history(workspace_id: str, statuses: list[str], offset: int, tim
 
 @router.get("/history", response_class=HTMLResponse)
 async def get_history(request: Request, filter: str | None = None, user=Depends(require_auth)):
-    statuses = _parse_filter(filter)
-    rows, total = await _load_history(user.active_workspace_id, statuses, 0, user.timezone)
-    return templates.TemplateResponse(request, "posts/history.html", {
-        "auth_user": user, "active_nav": "history",
-        "rows": rows, "total": total,
-        "options": HISTORY_FILTER_OPTIONS, "selected": statuses, "all_selected": "all" in statuses,
-        "has_more": len(rows) >= PAGE_SIZE and total > len(rows), "next_offset": len(rows),
-    })
+    # Ancienne vue « Idées de post » conservée uniquement comme URL compatible.
+    # L'interface utilise désormais un accès unique : Posts.
+    return RedirectResponse("/app/posts", status_code=302)
 
 
 @router.get("/history/list-page")
@@ -225,11 +222,12 @@ WHERE pp.workspace_id = $1::uuid AND ($2::text[] IS NULL OR pp.status = ANY($2::
 """
 
 
-async def _load_published(workspace_id: str, statuses: list[str], offset: int, timezone_name: str):
+async def _load_published(workspace_id: str, statuses: list[str], offset: int, timezone_name: str,
+                          limit: int = PUBLISHED_PAGE_SIZE):
     status_array = None if "all" in statuses else statuses
     pool = get_pool()
     async with pool.acquire() as conn:
-        rows = await conn.fetch(PUBLISHED_SQL, workspace_id, status_array, PAGE_SIZE, offset)
+        rows = await conn.fetch(PUBLISHED_SQL, workspace_id, status_array, limit, offset)
         total = await conn.fetchval(PUBLISHED_COUNT_SQL, workspace_id, status_array)
 
     out = []
@@ -247,14 +245,17 @@ async def _load_published(workspace_id: str, statuses: list[str], offset: int, t
 
 
 @router.get("/published", response_class=HTMLResponse)
-async def get_published(request: Request, filter: str | None = None, user=Depends(require_auth)):
+async def get_published(request: Request, filter: str | None = None, page: int = 1,
+                        user=Depends(require_auth)):
     statuses = _parse_filter(filter)
-    rows, total = await _load_published(user.active_workspace_id, statuses, 0, user.timezone)
+    page = max(1, int(page or 1))
+    rows, total = await _load_published(user.active_workspace_id, statuses, (page - 1) * PUBLISHED_PAGE_SIZE, user.timezone)
     return templates.TemplateResponse(request, "posts/published.html", {
         "auth_user": user, "active_nav": "published",
         "rows": rows, "total": total,
         "options": PUBLISHED_FILTER_OPTIONS, "selected": statuses, "all_selected": "all" in statuses,
-        "has_more": len(rows) >= PAGE_SIZE and total > len(rows), "next_offset": len(rows),
+        "pagination": page_meta(page=page, page_size=PUBLISHED_PAGE_SIZE, total=total,
+                                path="/app/published", query={"filter": filter}),
     })
 
 

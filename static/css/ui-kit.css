@@ -1711,7 +1711,10 @@ summary:focus-visible,
 .has-sidebar .postReady::before,
 .has-sidebar .card::before { content: none !important; }
 /* Modales de consultation (fond blanc dur → thème) */
-.has-sidebar .modal,
+.has-sidebar .modalOverlay .modal,
+.has-sidebar .modal:not(.modalOverlay):not(#strategyModal),
+.has-sidebar .modalCard,
+.has-sidebar .calendarTaskModalBox,
 .has-sidebar .mediaLoaderCard,
 .has-sidebar .publishAccountDropdown,
 .has-sidebar .newSubjectCard .msOptions {
@@ -1720,10 +1723,12 @@ summary:focus-visible,
   color: var(--ink) !important;
 }
 .has-sidebar .modal p,
+.has-sidebar .modalCard p,
 .has-sidebar .modalIdea,
 .has-sidebar .publishAccountGroupTitle,
 .has-sidebar .newSubjectCard .msEmpty { color: var(--ink-2) !important; }
 .has-sidebar .modalClose,
+.has-sidebar .closeBtn,
 .has-sidebar .modalCancel,
 .has-sidebar .mediaDownload {
   background: var(--surface-2) !important;
@@ -2298,3 +2303,14 @@ summary:focus-visible,
 .has-sidebar .publicationStatusDot--published { background: var(--success); }
 .has-sidebar .publicationStatusDot--error { background: var(--danger); }
 .has-sidebar .publicationStatusDot--pending { background: var(--ink-3); }
+
+.pgPagination{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:14px 0 24px;padding:10px 12px;border:1px solid var(--border);border-radius:16px;background:var(--surface);box-shadow:0 8px 24px rgba(15,23,42,.05)}
+.pgPagination[hidden]{display:none!important}
+.pgPaginationInfo{color:var(--muted);font-size:13px;font-weight:700}
+.pgPaginationButtons{display:flex;align-items:center;gap:6px}
+.pgPaginationButton{display:grid;place-items:center;min-width:36px;height:36px;padding:0 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;font-weight:800;cursor:pointer;transition:.16s ease}
+.pgPaginationButton:hover:not(:disabled){border-color:#2563eb;color:#2563eb;transform:translateY(-1px)}
+.pgPaginationButton.isCurrent{border-color:#2563eb;background:#2563eb;color:#fff;box-shadow:0 6px 16px rgba(37,99,235,.22)}
+.pgPaginationButton:disabled{cursor:not-allowed;opacity:.38}
+.pgPaginationButton{text-decoration:none}.pgPaginationButton.isDisabled{pointer-events:none;opacity:.38}
+@media(max-width:640px){.pgPagination{align-items:flex-start;flex-direction:column}.pgPaginationButtons{width:100%;overflow-x:auto}.pgPaginationButton{flex:0 0 36px}}

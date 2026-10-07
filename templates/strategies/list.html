@@ -1,34 +1,56 @@
 {% extends "base.html" %}
 {% block title %}Stratégies · Post Generator{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css?v=51-detail-tabs-list">{% endblock %}
 {% block content %}
-<section class="hero strategiesListHero">
-  <div class="eyebrow">{{ t('strat.eyebrow') }}</div>
-  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <h1 style="margin:0">{{ t('strat.title') }}</h1>
-    <span id="strategiesPageCount" class="countPill" title="{{ t('strat.count_label') }}"
-          aria-label="{{ t('strat.count_label') }} : {{ strategies|length }}">{{ strategies|length }}</span>
+<div class="strategyListPage">
+<section class="strategiesListHero">
+  <div>
+    <div class="eyebrow">{{ t('strat.eyebrow') }}</div>
+    <div class="strategyListTitle">
+      <h1>{{ t('strat.title') }}</h1>
+      <span id="strategiesPageCount" class="countPill" title="{{ t('strat.count_label') }}"
+            aria-label="{{ t('strat.count_label') }} : {{ strategy_counts.all_count }}">{{ strategy_counts.all_count }}</span>
+    </div>
+    <p class="muted">{{ t('strat.subtitle') }}</p>
   </div>
-  <p class="muted">{{ t('strat.subtitle') }}</p>
-  <div class="actions">
-    <button type="button" class="btn primary" id="openCreateBtn" aria-controls="strategyModal" aria-haspopup="dialog"
-      onclick="var m=document.getElementById('strategyModal');if(m){m.classList.add('isOpen');m.setAttribute('aria-hidden','false');document.body.classList.add('modalOpen');}return false;">
-      {{ t('strat.new') }}</button>
-  </div>
+  <a class="btn primary strategyListNewBtn" href="/app/strategies/new">{{ t('strat.new') }}</a>
 </section>
+
+<section class="strategyListSurface">
+<div class="strategyListFilters">
+  <div class="strategyFilterTabs" role="group" aria-label="{{ t('strat.filters.label') }}">
+    <a href="/app/strategies?status=all{% if strategy_search %}&amp;q={{ strategy_search|urlencode }}{% endif %}" class="strategyFilterTab{{ ' active' if strategy_filter == 'all' }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="1"></rect><path d="M8 9h8M8 13h5"></path></svg>
+      {{ t('strat.filters.all') }} <span>{{ strategy_counts.all_count }}</span>
+    </a>
+    <a href="/app/strategies?status=active{% if strategy_search %}&amp;q={{ strategy_search|urlencode }}{% endif %}" class="strategyFilterTab{{ ' active' if strategy_filter == 'active' }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="m8.5 12 2.2 2.2 4.8-5"></path></svg>
+      {{ t('strat.filters.active') }} <span>{{ strategy_counts.active_count }}</span>
+    </a>
+    <a href="/app/strategies?status=draft{% if strategy_search %}&amp;q={{ strategy_search|urlencode }}{% endif %}" class="strategyFilterTab{{ ' active' if strategy_filter == 'draft' }}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"></path><path d="M14 3v4h4M9 12h6M9 16h4"></path></svg>
+      {{ t('strat.filters.draft') }} <span>{{ strategy_counts.draft_count }}</span>
+    </a>
+  </div>
+  <form class="strategySearch" method="get" action="/app/strategies" role="search">
+    <input type="hidden" name="status" value="{{ strategy_filter }}">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+    <input type="search" name="q" value="{{ strategy_search }}" placeholder="{{ t('strat.search.placeholder') }}" aria-label="{{ t('strat.search.label') }}">
+  </form>
+</div>
 
 <div class="tableWrap strategiesTableWrap">
   <table>
     <thead><tr>
       <th>{{ t('strat.table.strategy') }}</th><th>{{ t('common.status') }}</th><th>{{ t('strat.table.network') }}</th><th>{{ t('strat.table.account') }}</th>
-      <th>{{ t('common.actions') }}</th><th>{{ t('strat.table.version') }}</th><th>{{ t('strat.table.last_modified') }}</th><th>{{ t('common.actions') }}</th>
+      <th>{{ t('strat.table.progress') }}</th><th>{{ t('strat.table.version') }}</th><th>{{ t('strat.table.last_modified') }}</th><th><span class="srOnly">{{ t('common.actions') }}</span></th>
     </tr></thead>
     <tbody id="strategiesTableBody">
     {% for s in strategies %}
       <tr>
         <td class="strategyTitleCell"><b>{{ s.title or t('strat.default_title') }}</b>
           {% if s.objective_label %}<small>{{ s.objective_label }}</small>{% endif %}</td>
-        <td><span class="statusPill {{ s.status }}">{{ s.status_label }}</span></td>
+        <td><span class="statusPill {{ s.status }}">{{ t('strat.status.' ~ s.status) }}</span></td>
         <td>{{ s.platform_label }}</td>
         <td>{{ s.account_name or t('strat.default_account') }}</td>
         <td><div class="strategyProgressCell">
@@ -38,7 +60,11 @@
         <td>{{ s.current_version or 1 }}</td>
         <td>{{ s.updated_label }}</td>
         <td class="actionsCell"><div class="strategyTableActions">
+          {% if s.status == 'generating' %}
+          <button class="btn secondary tiny strategyTableActionBtn" type="button" disabled>{{ t('strat.loader') }}</button>
+          {% else %}
           <a class="btn secondary tiny strategyTableActionBtn" href="/app/strategies?strategy_id={{ s.id }}">{{ t('strat.open') }}</a>
+          {% endif %}
           <button type="button" class="btn danger tiny strategyListDeleteBtn"
                   data-strategy-id="{{ s.id }}" data-strategy-title="{{ s.title or t('strat.default_title') }}">{{ t('common.delete') }}</button>
         </div></td>
@@ -49,60 +75,8 @@
     </tbody>
   </table>
 </div>
-
-<div class="modal" id="strategyModal" role="dialog" aria-modal="true"
-     aria-labelledby="strategyModalTitle" aria-hidden="true">
-  <div class="modalCard">
-    <div class="modalHead">
-      <div>
-        <h2 id="strategyModalTitle">{{ t('strat.modal.create_title') }}</h2>
-        <p>{{ t('strat.modal.create_subtitle') }}</p>
-      </div>
-      <button type="button" class="closeBtn" id="closeModalBtn" aria-label="{{ t('common.close') }}"
-        onclick="var m=document.getElementById('strategyModal');if(m){m.classList.remove('isOpen');m.setAttribute('aria-hidden','true');document.body.classList.remove('modalOpen');}return false;">×</button>
-    </div>
-    {% if not accounts %}
-      <div class="accountWarning">{{ t('strat.modal.no_account_pre') }}
-        <a href="/app/networks">{{ t('nav.networks') }}</a>.</div>
-    {% endif %}
-    <form class="strategyForm" id="strategyForm">
-      <div class="field"><label>{{ t('strat.modal.network_label') }}</label>
-        <select name="social_account_id" required>
-          <option value="" selected disabled>{{ t('strat.modal.choose_account') }}</option>
-          {% for a in accounts %}<option value="{{ a.id }}">{{ a.label }}</option>{% endfor %}
-        </select>
-      </div>
-      <input type="hidden" name="objective_type" value="custom">
-      <div class="formGrid">
-        <div class="field"><label>{{ t('strat.modal.duration') }}</label>
-          <select name="duration_days" required>
-            <option value="" selected disabled>{{ t('strat.modal.choose_duration') }}</option>
-            <option value="30">30 {{ t('strat.modal.days') }}</option><option value="60">60 {{ t('strat.modal.days') }}</option>
-            <option value="90">90 {{ t('strat.modal.days') }}</option><option value="120">120 {{ t('strat.modal.days') }}</option>
-          </select>
-          <div class="hint">{{ t('strat.modal.duration_hint') }}</div>
-        </div>
-        <div class="field"><label>{{ t('menu.language') }}</label>
-          <select name="language"><option value="français">{{ t('strat.modal.lang_fr') }}</option><option value="anglais">{{ t('strat.modal.lang_en') }}</option></select>
-        </div>
-      </div>
-      <div class="field strategyInstructionsField">
-        <div class="strategyInstructionsHeader">
-          <label>{{ t('strat.modal.instructions') }}</label>
-          <button type="button" class="btn secondary strategyInlineAiBtn" id="generateInstructionsBtn" disabled>{{ t('strat.modal.generate_ai') }}</button>
-        </div>
-        <textarea name="instructions" required maxlength="5000"
-          placeholder="{{ t('strat.modal.instructions_placeholder') }}"></textarea>
-        <div class="hint">{{ t('strat.modal.instructions_hint') }}</div>
-      </div>
-      <input type="hidden" name="research_depth" value="standard">
-      <input type="hidden" name="country" value="France">
-      <div class="formActions strategyModalActions">
-        <button type="button" class="btn secondary" id="cancelFormBtn">{{ t('common.cancel') }}</button>
-        <button class="btn primary" id="submitStrategyBtn" type="submit" disabled>{{ t('strat.modal.submit') }}</button>
-      </div>
-    </form>
-  </div>
+{% include "partials/pagination.html" %}
+</section>
 </div>
 
 <div class="calendarTaskModal" id="calendarTaskModal" aria-hidden="true">
@@ -124,5 +98,6 @@
 <div class="loader" id="loader">{{ t('strat.loader') }}</div>
 {% endblock %}
 {% block scripts %}
-<script src="/static/js/strategies.js?v=22"></script>
+{% if strategies|selectattr('status', 'equalto', 'generating')|list %}<script>setTimeout(function(){window.location.reload();},4000);</script>{% endif %}
+<script src="/static/js/strategies.js?v=24-background-create"></script>
 {% endblock %}

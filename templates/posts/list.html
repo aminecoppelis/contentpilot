@@ -1,32 +1,46 @@
 {% extends "base.html" %}
-{% block title %}Mes sujets · Post Generator{% endblock %}
+{% block title %}Mes posts · Post Generator{% endblock %}
 {% block extra_style %}
+<link rel="stylesheet" href="/static/css/posts-list.css?v=1-clean-tabs">
 <style>
   /* Tout le reste (hero, boutons, table, statuts, actions) vient d'ui-kit.css.
      Ici : seulement le centrage des colonnes numériques de CETTE table. */
-  #postRequestRows td:nth-child(3),
   #postRequestRows td:nth-child(4),
-  #postRequestRows td:nth-child(5) { text-align: center; }
+  #postRequestRows td:nth-child(5),
+  #postRequestRows td:nth-child(6) { text-align: center; }
+  .postOriginBadge{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900;text-decoration:none;white-space:nowrap}
+  .postOriginBadge.strategy{background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe}
+  .postOriginBadge.manual{background:#f8fafc;color:#475569;border:1px solid #e2e8f0}
 </style>
 {% endblock %}
 {% block content %}
-<section class="hero">
-  <div class="eyebrow">{{ t('common.content_eyebrow') }}</div>
-  <h1>{{ t('posts.list.title') }}</h1>
-  <p class="muted">{{ t('posts.list.subtitle') }}</p>
-  <div class="actions"><a class="btn primary" href="/app/posts/new">{{ t('posts.list.new') }}</a></div>
+<div class="postListPage">
+<section class="postListHero">
+  <div><div class="eyebrow">{{ t('common.content_eyebrow') }}</div><div class="postListTitle"><h1>{{ t('posts.list.title') }}</h1><span>{{ post_counts.all_count }}</span></div><p class="muted">{{ t('posts.list.subtitle') }}</p></div>
+  <a class="btn primary postListNewBtn" href="/app/posts/new">{{ t('posts.list.new') }}</a>
 </section>
 
-<div class="tableWrap">
+<section class="postListSurface">
+<div class="postListFilters">
+  <nav class="postFilterTabs" aria-label="{{ t('posts.filters.label') }}">
+    <a class="postFilterTab{{ ' active' if post_origin == 'all' }}" href="/app/posts?origin=all{% if status %}&amp;status={{ status|urlencode }}{% endif %}{% if post_search %}&amp;q={{ post_search|urlencode }}{% endif %}"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1"></rect><path d="M8 9h8M8 13h5"></path></svg>{{ t('posts.filters.all') }} <span>{{ post_counts.all_count }}</span></a>
+    <a class="postFilterTab{{ ' active' if post_origin == 'strategy' }}" href="/app/posts?origin=strategy{% if status %}&amp;status={{ status|urlencode }}{% endif %}{% if post_search %}&amp;q={{ post_search|urlencode }}{% endif %}"><svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"></path><circle cx="12" cy="12" r="8"></circle></svg>{{ t('posts.filters.strategy') }} <span>{{ post_counts.strategy_count }}</span></a>
+    <a class="postFilterTab{{ ' active' if post_origin == 'manual' }}" href="/app/posts?origin=manual{% if status %}&amp;status={{ status|urlencode }}{% endif %}{% if post_search %}&amp;q={{ post_search|urlencode }}{% endif %}"><svg viewBox="0 0 24 24"><path d="M5 19h4l10-10-4-4L5 15zM13 7l4 4"></path></svg>{{ t('posts.filters.manual') }} <span>{{ post_counts.manual_count }}</span></a>
+  </nav>
+  <form class="postListSearch" method="get" action="/app/posts" role="search"><input type="hidden" name="origin" value="{{ post_origin }}">{% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg><input type="search" name="q" value="{{ post_search }}" placeholder="{{ t('posts.search.placeholder') }}" aria-label="{{ t('posts.search.label') }}"></form>
+</div>
+
+<div class="tableWrap postListTableWrap">
   <table>
     <thead><tr>
-      <th>{{ t('posts.list.table.subject') }}</th><th>{{ t('common.status') }}</th><th>{{ t('posts.list.table.ideas') }}</th><th>{{ t('posts.list.table.approved') }}</th><th>{{ t('posts.list.table.media') }}</th>
+      <th>{{ t('posts.list.table.subject') }}</th><th>{{ t('posts.list.table.origin') }}</th><th>{{ t('common.status') }}</th><th>{{ t('posts.list.table.ideas') }}</th><th>{{ t('posts.list.table.approved') }}</th><th>{{ t('posts.list.table.media') }}</th>
       <th>{{ t('posts.list.table.last_modified') }}</th><th>{{ t('posts.list.table.created_by') }}</th><th>{{ t('common.actions') }}</th>
     </tr></thead>
     <tbody id="postRequestRows">
     {% for r in requests %}
       <tr id="request-row-{{ r.id }}">
         <td><b>{{ r.title or r.subject or t('posts.list.no_subject') }}</b><div class="mini">{{ r.id }}</div></td>
+        <td>{% if r.generation_origin == 'strategy' %}<a class="postOriginBadge strategy" href="/app/strategies?strategy_id={{ r.strategy_id }}" title="{{ r.strategy_action_title or r.strategy_title }}">{{ t('posts.origin.strategy') }}</a>{% else %}<span class="postOriginBadge manual">{{ t('posts.origin.manual') }}</span>{% endif %}</td>
         <td><span class="status {{ r.status }}">{{ r.status_label }}</span></td>
         <td>{{ r.ideas_count }}</td>
         <td>{{ r.approved_count }}</td>
@@ -36,7 +50,7 @@
         <td>
           <div class="actions">
             {% if r.ideas_count|int > 0 or r.status in ['generating','generating_more'] %}<a class="btn light" href="/app/posts/view?request_id={{ r.id }}">{{ t('posts.list.ideas_link') }}</a>{% else %}<button class="btn light" type="button" disabled title="{{ t('posts.list.no_ideas_title') }}">{{ t('posts.list.ideas_link') }}</button>{% endif %}
-            <a class="btn light" href="/app/posts/edit?id={{ r.id }}">{{ t('common.edit') }}</a>
+            {% if r.generation_origin != 'strategy' %}<a class="btn light" href="/app/posts/edit?id={{ r.id }}">{{ t('common.edit') }}</a>{% endif %}
             <form class="inlineForm" method="post" action="/app/posts/delete" onsubmit="return deleteRequestFromList(event,this)">
               <input type="hidden" name="id" value="{{ r.id }}">
               <button class="danger" type="submit">{{ t('common.delete') }}</button>
@@ -45,13 +59,14 @@
         </td>
       </tr>
     {% else %}
-      <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:32px">{{ t('posts.list.empty') }}</td></tr>
+      <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px">{{ t('posts.list.empty') }}</td></tr>
     {% endfor %}
     </tbody>
   </table>
 </div>
-<div id="postRequestLoadState" style="padding:14px 16px;text-align:center;color:var(--muted);font-size:13px;display:{{ 'block' if has_more else 'none' }}">{{ t('posts.list.scroll_more') }}</div>
-<div id="postRequestSentinel" style="height:1px"></div>
+{% include "partials/pagination.html" %}
+</section>
+</div>
 {% endblock %}
 {% block scripts %}
 <script>
@@ -85,8 +100,15 @@ function showListToast(message, type){
 }
 async function deleteRequestFromList(event, form){
   event.preventDefault();
-  if(!confirm(window.__I18N_POSTS_LIST.deleteConfirm)) return false;
+  var confirmed=await window.pgConfirm(window.__I18N_POSTS_LIST.deleteConfirm,{
+    danger:true,
+    confirmText:window.t('js.delete'),
+    cancelText:window.t('js.cancel')
+  });
+  if(!confirmed) return false;
   var id = form.querySelector('input[name=id]').value;
+  var submitButton=form.querySelector('button[type=submit]');
+  if(submitButton)submitButton.disabled=true;
   try{
     var resp = await fetch('/app/posts/delete', {method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({request_id:id})});
@@ -96,32 +118,10 @@ async function deleteRequestFromList(event, form){
       showListToast(window.__I18N_POSTS_LIST.deleted);
     } else {
       showListToast(data.message || window.__I18N_POSTS_LIST.deleteError, 'error');
+      if(submitButton)submitButton.disabled=false;
     }
-  }catch(e){ showListToast(window.__I18N_POSTS_LIST.deleteError, 'error'); }
+  }catch(e){ showListToast(window.__I18N_POSTS_LIST.deleteError, 'error');if(submitButton)submitButton.disabled=false; }
   return false;
 }
-(function initPostsInfiniteScroll(){
-  var tbody=document.getElementById('postRequestRows');
-  var sentinel=document.getElementById('postRequestSentinel');
-  var state=document.getElementById('postRequestLoadState');
-  if(!tbody||!sentinel||!state)return;
-  var page={{ next_page }};var hasMore={{ 'true' if has_more else 'false' }};var loading=false;
-  if(!hasMore){state.style.display='none';return;}
-  async function loadMore(){
-    if(loading||!hasMore)return;loading=true;state.style.display='block';state.textContent=window.__I18N_POSTS_LIST.loading;
-    try{
-      var url=new URL('/app/posts/list-page',location.origin);url.searchParams.set('page',String(page));
-      {% if status %}url.searchParams.set('status',{{ status|tojson }});{% endif %}
-      var r=await fetch(url,{credentials:'same-origin'});var d=await r.json();var data=d.data||d;
-      if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
-      var empty=tbody.querySelector('tr td[colspan="8"]');if(empty&&empty.parentElement)empty.parentElement.remove();
-      if(data.rows_html)tbody.insertAdjacentHTML('beforeend',data.rows_html);
-      page=Number(data.next_page||page+1);hasMore=Boolean(data.has_more);
-      state.style.display=hasMore?'block':'none';state.textContent=hasMore?window.__I18N_POSTS_LIST.scrollMore:window.__I18N_POSTS_LIST.allLoaded;
-    }catch(e){state.style.display='block';state.textContent=window.__I18N_POSTS_LIST.loadError;}finally{loading=false;}
-  }
-  new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting)loadMore();});},{rootMargin:'240px'}).observe(sentinel);
-})();
-
 </script>
 {% endblock %}
