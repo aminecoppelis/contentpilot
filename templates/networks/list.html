@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Mes réseaux · Post Generator{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/networks.css?v=24-buffer-only">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/networks.css?v=25-buffer-only">{% endblock %}
 {% block content %}
 <section class="hero">
   <div>
@@ -13,12 +13,12 @@
   </div>
   <div class="channelConnectors">
     {% if auth_user.is_super_admin %}
-    <a class="channelCard" href="/app/networks/meta/config">
+    <button type="button" class="channelCard channelCardDisabled" disabled aria-disabled="true">
       <span class="channelIcon metaChannelIcon" aria-label="Meta">
         <img src="/static/img/meta.svg" alt="" width="30" height="24" aria-hidden="true">
       </span>
-      <span><b>{{ t('net.configure_meta') }}</b><small>{{ t('net.configure_meta_sub') }}</small></span>
-    </a>
+      <span><b>{{ t('net.configure_meta') }}</b><small>{{ t('net.configure_meta_sub') }}</small><em>{{ t('net.coming_soon') }}</em></span>
+    </button>
     {% endif %}
     <button type="button" class="channelCard facebookCard channelCardDisabled" disabled aria-disabled="true">
       <span class="channelIcon facebookChannelIcon" aria-label="Facebook">
