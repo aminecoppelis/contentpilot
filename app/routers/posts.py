@@ -753,6 +753,14 @@ async def get_dashboard(request: Request, user=Depends(require_auth)):
             "SELECT count(*) FROM public.app_growth_strategies WHERE workspace_id=$1::uuid AND status='active'",
             user.active_workspace_id,
         )
+        strategies_total = await conn.fetchval(
+            "SELECT count(*) FROM public.app_growth_strategies WHERE workspace_id=$1::uuid",
+            user.active_workspace_id,
+        )
+        generated_posts = await conn.fetchval(
+            "SELECT count(*) FROM public.post_requests WHERE workspace_id=$1::uuid AND deleted_at IS NULL",
+            user.active_workspace_id,
+        )
         planned_actions = await conn.fetchval(
             "SELECT count(*) FROM public.app_growth_strategy_action_calendar WHERE workspace_id=$1::uuid AND status IN ('scheduled','retry')",
             user.active_workspace_id,
@@ -795,10 +803,16 @@ async def get_dashboard(request: Request, user=Depends(require_auth)):
         for r in recent_rows
     ]
 
+    quick_start_completed = sum((
+        bool(connected_accounts), bool(strategies_total), bool(generated_posts),
+        bool(planned_actions or published_posts),
+    ))
     return templates.TemplateResponse(request, "posts/dashboard.html", {
         "auth_user": user, "active_nav": "dashboard",
         "connected_accounts": connected_accounts, "active_strategies": active_strategies,
         "planned_actions": planned_actions, "published_posts": published_posts, "failed_items": failed_items,
+        "strategies_total": strategies_total, "generated_posts": generated_posts,
+        "quick_start_completed": quick_start_completed,
         "next_actions": next_actions, "recent_activity": recent_activity, "todos": [],
     })
 

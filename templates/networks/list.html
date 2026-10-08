@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Mes réseaux · Post Generator{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/networks.css">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/networks.css?v=24-buffer-only">{% endblock %}
 {% block content %}
 <section class="hero">
   <div>
@@ -20,18 +20,18 @@
       <span><b>{{ t('net.configure_meta') }}</b><small>{{ t('net.configure_meta_sub') }}</small></span>
     </a>
     {% endif %}
-    <a class="channelCard facebookCard" href="/app/networks/facebook/connect">
+    <button type="button" class="channelCard facebookCard channelCardDisabled" disabled aria-disabled="true">
       <span class="channelIcon facebookChannelIcon" aria-label="Facebook">
         <img src="/static/img/facebook.svg" alt="" width="30" height="30" aria-hidden="true">
       </span>
-      <span><b>{{ t('net.connect_facebook') }}</b><small>{{ t('net.connect_facebook_sub') }}</small></span>
-    </a>
-    <a class="channelCard instagramCard" href="/app/networks/instagram/connect">
+      <span><b>{{ t('net.connect_facebook') }}</b><small>{{ t('net.connect_facebook_sub') }}</small><em>{{ t('net.coming_soon') }}</em></span>
+    </button>
+    <button type="button" class="channelCard instagramCard channelCardDisabled" disabled aria-disabled="true">
       <span class="channelIcon instagramChannelIcon" aria-label="Instagram">
         <img src="/static/img/instagram.svg" alt="" width="30" height="30" aria-hidden="true">
       </span>
-      <span><b>{{ t('net.connect_instagram') }}</b><small>{{ t('net.connect_instagram_sub') }}</small></span>
-    </a>
+      <span><b>{{ t('net.connect_instagram') }}</b><small>{{ t('net.connect_instagram_sub') }}</small><em>{{ t('net.coming_soon') }}</em></span>
+    </button>
     <button type="button" class="channelCard bufferCard" onclick="window.openBufferModal();return false">
       <span class="channelIcon bufferChannelIcon" aria-label="Buffer">
         <img src="/static/img/buffer.svg" alt="" width="30" height="30" aria-hidden="true">
@@ -90,7 +90,16 @@
         <h2>{{ t('net.buffer_modal.title') }}</h2>
         <p class="muted">{{ t('net.buffer_modal.subtitle') }}</p>
       </div>
-      <button type="button" class="bufferModalClose" onclick="window.closeBufferModal();return false">×</button>
+      <button type="button" class="bufferModalClose" aria-label="{{ t('common.close') }}" onclick="window.closeBufferModal();return false">×</button>
+    </div>
+    <div class="bufferConnectGuide">
+      <div class="bufferGuideTitle"><span>?</span><div><b>{{ t('net.buffer_guide.title') }}</b><small>{{ t('net.buffer_guide.intro') }}</small></div></div>
+      <ol>
+        <li>{{ t('net.buffer_guide.step1') }}</li>
+        <li>{{ t('net.buffer_guide.step2') }} <a href="https://publish.buffer.com/settings/api" target="_blank" rel="noopener noreferrer">{{ t('net.buffer_guide.open_api') }} ↗</a></li>
+        <li>{{ t('net.buffer_guide.step3') }}</li>
+      </ol>
+      <p>{{ t('net.buffer_guide.security') }}</p>
     </div>
     <form id="bufferForm" class="bufferForm" onsubmit="return window.saveBufferAccount(event)">
       <input type="hidden" id="bufferAccountId" name="account_id">

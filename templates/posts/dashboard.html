@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Accueil · Post Generator{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/dashboard.css?v=2-current-step">{% endblock %}
 {# Aucune CSS de page : dashboard est entièrement piloté par ui-kit.css
    (.kpiCard, .panel, .nextCard, .emptyState, .pgToast…). #}
 {% block content %}
@@ -9,6 +10,33 @@
   <h1>{{ t('dash.title') }}</h1>
   <p class="muted">{{ t('dash.subtitle') }}</p>
 </section>
+
+{% if quick_start_completed < 4 %}
+<section class="quickStart" aria-labelledby="quickStartTitle">
+  <div class="quickStartHead">
+    <div><span>{{ t('dash.quick.eyebrow') }}</span><h2 id="quickStartTitle">{{ t('dash.quick.title') }}</h2><p>{{ t('dash.quick.subtitle') }}</p></div>
+    <div class="quickStartProgress"><b>{{ quick_start_completed }}/4</b><div><i style="width:{{ quick_start_completed * 25 }}%"></i></div></div>
+  </div>
+  <ol class="quickStartSteps">
+    <li class="{{ 'done' if connected_accounts else 'current' }}">
+      <span class="quickStepNumber">{{ '✓' if connected_accounts else '1' }}</span><div><b>{{ t('dash.quick.account.title') }}</b>{% if not connected_accounts %}<em>{{ t('dash.quick.now') }}</em>{% endif %}<small>{{ t('dash.quick.account.text') }}</small></div>
+      <a href="/app/networks">{{ t('dash.quick.account.cta') }}</a>
+    </li>
+    <li class="{{ 'done' if strategies_total else ('current' if connected_accounts else '') }}">
+      <span class="quickStepNumber">{{ '✓' if strategies_total else '2' }}</span><div><b>{{ t('dash.quick.strategy.title') }}</b>{% if connected_accounts and not strategies_total %}<em>{{ t('dash.quick.now') }}</em>{% endif %}<small>{{ t('dash.quick.strategy.text') }}</small></div>
+      <a href="/app/strategies/new">{{ t('dash.quick.strategy.cta') }}</a>
+    </li>
+    <li class="{{ 'done' if generated_posts else ('current' if strategies_total else '') }}">
+      <span class="quickStepNumber">{{ '✓' if generated_posts else '3' }}</span><div><b>{{ t('dash.quick.post.title') }}</b>{% if strategies_total and not generated_posts %}<em>{{ t('dash.quick.now') }}</em>{% endif %}<small>{{ t('dash.quick.post.text') }}</small></div>
+      <a href="/app/posts">{{ t('dash.quick.post.cta') }}</a>
+    </li>
+    <li class="{{ 'done' if planned_actions or published_posts else ('current' if generated_posts else '') }}">
+      <span class="quickStepNumber">{{ '✓' if planned_actions or published_posts else '4' }}</span><div><b>{{ t('dash.quick.plan.title') }}</b>{% if generated_posts and not (planned_actions or published_posts) %}<em>{{ t('dash.quick.now') }}</em>{% endif %}<small>{{ t('dash.quick.plan.text') }}</small></div>
+      <a href="/app/strategies">{{ t('dash.quick.plan.cta') }}</a>
+    </li>
+  </ol>
+</section>
+{% endif %}
 
 <section class="kpiGrid" aria-label="{{ t('dash.kpi.aria') }}">
   <article class="kpiCard">
