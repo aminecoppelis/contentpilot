@@ -490,19 +490,29 @@ def _strategy_context_for_normalizer(context: dict) -> dict:
     return out
 
 
-async def generate_strategy(context: dict) -> AIResult:
-    """Génère le plan puis les actions par petits lots parallèles.
-
-    Ce découpage permet d'imposer au moins trois posts par semaine sans demander
-    au modèle un unique JSON gigantesque et fragile.
-    """
-    normalized_context = _strategy_context_for_normalizer(context)
-    form_data = context.get("form_data") if isinstance(context.get("form_data"), dict) else {}
+def _strategy_generation_limits(form_data: dict) -> tuple[int, int, int]:
+    """Retourne durée, cadence hebdomadaire et minimum d'actions à générer."""
     try:
         duration = max(1, min(365, int(form_data.get("duration_days") or 30)))
     except (TypeError, ValueError):
         duration = 30
-    minimum_actions = min(duration, ((duration + 6) // 7) * 3)
+    try:
+        posts_per_week = max(1, min(7, int(form_data.get("posts_per_week") or 3)))
+    except (TypeError, ValueError):
+        posts_per_week = 3
+    minimum_actions = min(duration, ((duration + 6) // 7) * posts_per_week)
+    return duration, posts_per_week, minimum_actions
+
+
+async def generate_strategy(context: dict) -> AIResult:
+    """Génère le plan puis les actions par petits lots parallèles.
+
+    Ce découpage respecte la cadence hebdomadaire choisie sans demander au
+    modèle un unique JSON gigantesque et fragile.
+    """
+    normalized_context = _strategy_context_for_normalizer(context)
+    form_data = context.get("form_data") if isinstance(context.get("form_data"), dict) else {}
+    duration, posts_per_week, minimum_actions = _strategy_generation_limits(form_data)
     plan_context = {**normalized_context, "minimum_action_count": minimum_actions}
 
     plan_result = await _run_agent(

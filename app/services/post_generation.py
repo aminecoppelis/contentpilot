@@ -83,6 +83,13 @@ def normalize_request_payload(payload: dict[str, Any]) -> dict[str, Any]:
     blob = "\n".join(str(data.get(k) or "") for k in ("subject", "prompt", "theme", "constraints"))
     urls += [u.rstrip(".,;:!?") for u in URL_RE.findall(blob)]
     data["source_urls"] = list(dict.fromkeys(urls))[:5]
+    use_macaron = data.get("use_macaron")
+    if use_macaron is None:
+        data["use_macaron"] = True
+    elif isinstance(use_macaron, str):
+        data["use_macaron"] = use_macaron.lower() in ("true", "1", "on", "yes")
+    else:
+        data["use_macaron"] = bool(use_macaron)
     data["content_context"] = {
         **(_json(data.get("content_context"), {}) or {}),
         "domains": data["content_domains"],
@@ -121,6 +128,7 @@ async def enqueue_initial(*, payload: dict[str, Any], user_id: str, workspace_id
         raise ValueError("Le nombre de posts doit être compris entre 1 et 8.")
     data["post_count"] = count
     data["generation_mode"] = "initial"
+    use_macaron = bool(data.get("use_macaron", True))
     pool = get_pool()
     async with pool.acquire() as conn, conn.transaction():
         row = await conn.fetchrow(
@@ -128,8 +136,8 @@ async def enqueue_initial(*, payload: dict[str, Any], user_id: str, workspace_id
             INSERT INTO public.post_requests (
               title,subject,prompt,commercial_objective,target_sector,language,
               content_domains,target_audience,preferred_formats,constraints,source_urls,
-              post_count,form_data,status,user_id,workspace_id
-            ) VALUES ($1,$1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8::jsonb,$9,$10::jsonb,$11,$12::jsonb,'generating',$13::uuid,$14::uuid)
+              post_count,form_data,status,user_id,workspace_id,use_macaron
+            ) VALUES ($1,$1,$2,$3,$4,$5,$6::jsonb,$7::jsonb,$8::jsonb,$9,$10::jsonb,$11,$12::jsonb,'generating',$13::uuid,$14::uuid,$15)
             RETURNING id::text
             """,
             subject, str(data.get("prompt") or data.get("theme") or ""), objective,
@@ -137,6 +145,7 @@ async def enqueue_initial(*, payload: dict[str, Any], user_id: str, workspace_id
             json.dumps(domains), json.dumps(data.get("target_audience") or []),
             json.dumps(formats), str(data.get("constraints") or ""),
             json.dumps(data.get("source_urls") or []), count, json.dumps(data), user_id, workspace_id,
+            use_macaron,
         )
         request_id = row["id"]
         job = await conn.fetchrow(
@@ -291,13 +300,14 @@ async def process_job(job_id: str | None = None) -> dict[str, Any]:
                 await conn.execute("UPDATE public.post_requests SET status='ready',generated_at=COALESCE(generated_at,now()),last_error=NULL,updated_at=now() WHERE id=$1::uuid", request_id)
                 return {"stage": "already_saved", "request_id": request_id}
             created = 0
+            req_use_macaron = bool(req["use_macaron"]) if "use_macaron" in req and req["use_macaron"] is not None else True
             for offset, idea in enumerate(ideas, start=1):
                 ready = idea.get("ready_post") or {}
                 number = int(start_number or 0) + offset
                 idea_row = await conn.fetchrow(
                     """
-                    INSERT INTO public.post_ideas(request_id,user_id,workspace_id,number,status,title,hook,summary,recommended_format,target_sector,target_audience,scores,seo_keywords,raw_idea)
-                    VALUES($1::uuid,$2::uuid,$3::uuid,$4,'pending_review',$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,$13::jsonb)
+                    INSERT INTO public.post_ideas(request_id,user_id,workspace_id,number,status,title,hook,summary,recommended_format,target_sector,target_audience,scores,seo_keywords,raw_idea,use_macaron)
+                    VALUES($1::uuid,$2::uuid,$3::uuid,$4,'pending_review',$5,$6,$7,$8,$9,$10,$11::jsonb,$12::jsonb,$13::jsonb,$14)
                     RETURNING id::text
                     """,
                     request_id, str(job["user_id"]), str(job["workspace_id"]), number,
@@ -307,6 +317,7 @@ async def process_job(job_id: str | None = None) -> dict[str, Any]:
                         "virality_score","commercial_potential_score","implementation_difficulty_score",
                         "sme_interest_score","enterprise_interest_score","lead_generation_score")}),
                     json.dumps(idea.get("seo_keywords") or []), json.dumps(idea),
+                    req_use_macaron,
                 )
                 version = await conn.fetchrow(
                     """

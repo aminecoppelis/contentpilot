@@ -75,6 +75,9 @@ async def resolve_session(request: Request) -> AuthUser | None:
         active_workspace_name=row["active_workspace_name"] or "",
         active_workspace_role=row["active_workspace_role"] or "",
         workspaces=workspaces,
+        macaron_url=(row["macaron_url"] if "macaron_url" in row and row["macaron_url"] else "") or "",
+        macaron_position=(row["macaron_position"] if "macaron_position" in row and row["macaron_position"] else "bottom-right"),
+        macaron_enabled=bool(row["macaron_enabled"]) if "macaron_enabled" in row and row["macaron_enabled"] is not None else True,
     )
 
 

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Accueil · Post Generator{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/dashboard.css?v=2-current-step">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/dashboard.css?v=3-collapsible-guide">{% endblock %}
 {# Aucune CSS de page : dashboard est entièrement piloté par ui-kit.css
    (.kpiCard, .panel, .nextCard, .emptyState, .pgToast…). #}
 {% block content %}
@@ -11,11 +11,17 @@
   <p class="muted">{{ t('dash.subtitle') }}</p>
 </section>
 
-{% if quick_start_completed < 4 %}
-<section class="quickStart" aria-labelledby="quickStartTitle">
+<section class="quickStart {{ 'isCollapsed' if quick_start_completed >= 4 }}" id="quickStart"
+         data-user-id="{{ auth_user.id }}" data-completed="{{ quick_start_completed }}"
+         aria-labelledby="quickStartTitle">
+  <div class="quickStartCollapsed">
+    <div><span class="quickStartCheck" aria-hidden="true">{{ '✓' if quick_start_completed >= 4 else quick_start_completed }}</span><span><b>{{ t('dash.quick.reopen') }}</b><small>{{ t('dash.quick.progress', count=quick_start_completed) }}</small></span></div>
+    <button type="button" id="quickStartOpen">{{ t('dash.quick.review') }}</button>
+  </div>
+  <div class="quickStartExpanded">
   <div class="quickStartHead">
     <div><span>{{ t('dash.quick.eyebrow') }}</span><h2 id="quickStartTitle">{{ t('dash.quick.title') }}</h2><p>{{ t('dash.quick.subtitle') }}</p></div>
-    <div class="quickStartProgress"><b>{{ quick_start_completed }}/4</b><div><i style="width:{{ quick_start_completed * 25 }}%"></i></div></div>
+    <div class="quickStartHeadActions"><button type="button" id="quickStartHide">{{ t('dash.quick.hide') }}</button><div class="quickStartProgress"><b>{{ quick_start_completed }}/4</b><div><i style="width:{{ quick_start_completed * 25 }}%"></i></div></div></div>
   </div>
   <ol class="quickStartSteps">
     <li class="{{ 'done' if connected_accounts else 'current' }}">
@@ -35,8 +41,8 @@
       <a href="/app/strategies">{{ t('dash.quick.plan.cta') }}</a>
     </li>
   </ol>
+  </div>
 </section>
-{% endif %}
 
 <section class="kpiGrid" aria-label="{{ t('dash.kpi.aria') }}">
   <article class="kpiCard">
@@ -146,3 +152,4 @@
 </section>
 </div>
 {% endblock %}
+{% block scripts %}{{ super() }}<script src="/static/js/dashboard.js?v=1-quick-start-toggle"></script>{% endblock %}

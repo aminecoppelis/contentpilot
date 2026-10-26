@@ -8,7 +8,8 @@ WITH input AS (
     $3::text AS fallback_request_token
 ), matched AS (
   SELECT
-    u.id, u.email, u.first_name, u.last_name, u.full_name, u.role, u.timezone, u.last_workspace_id,
+    u.id, u.email, u.first_name, u.last_name, u.full_name, u.role, u.timezone,
+    u.macaron_url, u.macaron_position, u.macaron_enabled, u.last_workspace_id,
     s.id AS session_id, s.session_token_hash
   FROM input
   LEFT JOIN public.auth_sessions s
@@ -31,6 +32,9 @@ SELECT
   m.id::text AS user_id, m.email, m.first_name, m.last_name, m.full_name,
   COALESCE(m.role,'user') AS role,
   COALESCE(NULLIF(m.timezone,''),'Europe/Paris') AS timezone,
+  m.macaron_url,
+  COALESCE(NULLIF(m.macaron_position,''),'bottom-right') AS macaron_position,
+  COALESCE(m.macaron_enabled, true) AS macaron_enabled,
   m.session_id::text AS session_id,
   CASE WHEN m.session_id IS NULL THEN ''
        ELSE encode(digest(m.session_id::text || ':' || m.session_token_hash, 'sha256'), 'hex')

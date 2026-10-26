@@ -117,6 +117,37 @@
         <textarea id="mediaInstructions" maxlength="1200" data-char-limit="1200" placeholder="{{ t('pm.media.img_instr.ph') }}"></textarea>
       </div>
 
+      <div class="field" id="imageMacaronField" style="margin-top:14px;padding:12px 14px;background:rgba(248,250,252,0.92);border:1px solid #e2e8f0;border-radius:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:8px;background:#fff;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;padding:3px;flex-shrink:0;">
+              <img id="mediaMacaronThumbImg" src="{{ (auth_user and auth_user.macaron_url) or '/static/branding/coppelis-solutions-ia-badge.png' }}" alt="Macaron" style="max-width:100%;max-height:100%;object-fit:contain;">
+            </div>
+            <div>
+              <label for="mediaUseMacaron" style="display:block;font-size:13px;font-weight:700;color:var(--ink-1);cursor:pointer;margin:0;">
+                {{ t('pm.media.use_macaron') }}
+              </label>
+              <span style="display:block;font-size:11px;color:var(--ink-2);margin-top:2px;">
+                {{ t('pn.f.macaron.desc') }}
+              </span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <input type="checkbox" id="mediaUseMacaron" checked onchange="var w=document.getElementById('mediaMacaronPositionWrap');if(w)w.style.display=this.checked?'flex':'none';" style="width:18px;height:18px;accent-color:var(--brand);cursor:pointer;">
+          </div>
+        </div>
+        <div id="mediaMacaronPositionWrap" style="margin-top:10px;padding-top:10px;border-top:1px dashed #e2e8f0;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;">
+          <label for="mediaMacaronPosition" style="color:var(--ink-2);font-weight:600;margin:0;">{{ t('pm.media.macaron_pos') }}</label>
+          <select id="mediaMacaronPosition" class="mediaSelect" style="width:auto;min-width:130px;padding:4px 8px;font-size:12px;border-radius:8px;">
+            <option value="bottom-right">{{ t('macaron.pos.bottom_right') }}</option>
+            <option value="bottom-left">{{ t('macaron.pos.bottom_left') }}</option>
+            <option value="top-right">{{ t('macaron.pos.top_right') }}</option>
+            <option value="top-left">{{ t('macaron.pos.top_left') }}</option>
+            <option value="center">{{ t('macaron.pos.center') }}</option>
+          </select>
+        </div>
+      </div>
+
       <div id="videoOptions" style="display:none">
         <div class="field" id="videoStyleField">
           <label><b>{{ t('pm.media.vid_style') }} <span class="requiredStar">*</span></b></label>

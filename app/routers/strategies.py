@@ -37,6 +37,35 @@ STRATEGY_STATUS_LABELS = {
     "active": "Active", "failed": "Échec", "archived": "Archivée",
 }
 PLATFORM_LABELS = {"facebook": "Facebook", "instagram": "Instagram", "buffer": "Buffer", "linkedin": "LinkedIn"}
+
+STRATEGY_LANGUAGES = {
+    "fr": "French",
+    "en": "English",
+    "es": "Spanish",
+    "it": "Italian",
+    "de": "German",
+    "ru": "Russian",
+    "ar": "Arabic",
+}
+STRATEGY_LANGUAGE_ALIASES = {
+    "français": "fr", "francais": "fr", "french": "fr",
+    "anglais": "en", "english": "en",
+    "espagnol": "es", "spanish": "es",
+    "italien": "it", "italian": "it",
+    "allemand": "de", "german": "de",
+    "russe": "ru", "russian": "ru",
+    "arabe": "ar", "arabic": "ar",
+}
+
+
+def _normalize_strategy_language(value: object, fallback_locale: str = "fr") -> str:
+    raw = str(value or "").strip().lower()
+    code = raw if raw in STRATEGY_LANGUAGES else STRATEGY_LANGUAGE_ALIASES.get(raw)
+    if not code:
+        code = fallback_locale if fallback_locale in STRATEGY_LANGUAGES else "fr"
+    return STRATEGY_LANGUAGES[code]
+
+
 def _parse_future_planned_for(value: object, timezone_name: str) -> datetime:
     """Interprète la saisie dans le fuseau utilisateur puis retourne l'instant UTC."""
     parsed = parse_user_datetime(value, timezone_name)
@@ -630,15 +659,20 @@ async def _generate_strategy_in_background(payload: dict, user, strategy_id: str
 @router.post("/strategies/generate")
 async def post_strategy_generate(request: Request, payload: dict = Body(...), user=Depends(require_auth)):
     payload = dict(payload or {})
-    language_by_locale = {"fr": "français", "en": "anglais", "ar": "arabe"}
-    accepted_languages = set(language_by_locale.values())
-    if str(payload.get("language") or "").strip().lower() not in accepted_languages:
-        payload["language"] = language_by_locale.get(resolve_locale(request), "français")
+    payload["language"] = _normalize_strategy_language(
+        payload.get("language"), resolve_locale(request)
+    )
     instructions = str(payload.get("instructions") or "").strip()
     try:
         duration_days = max(1, min(365, int(payload.get("duration_days") or 30)))
     except (TypeError, ValueError):
         duration_days = 30
+    try:
+        posts_per_week = max(1, min(7, int(payload.get("posts_per_week") or 3)))
+    except (TypeError, ValueError):
+        posts_per_week = 3
+    payload["duration_days"] = duration_days
+    payload["posts_per_week"] = posts_per_week
     if not instructions:
         return JSONResponse({"success": False, "error": "VALIDATION_ERROR", "message": "Instructions manquantes."}, status_code=422)
     social_account_id = str(payload.get("social_account_id") or "").strip() or None
@@ -679,6 +713,8 @@ async def post_strategies_analyze(payload: dict = Body(...), user=Depends(requir
     social_account_id est optionnel : si absent, l'analyse de compte est sautée et
     la stratégie est créée sans compte lié (mode hors-réseau).
     """
+    payload = dict(payload or {})
+    payload["language"] = _normalize_strategy_language(payload.get("language"))
     background_strategy_id = str(payload.get("_background_strategy_id") or "").strip()
     payload = {key: value for key, value in payload.items() if key != "_background_strategy_id"}
     pool = get_pool()
@@ -929,7 +965,7 @@ async def post_strategies_action(payload: dict = Body(...), user=Depends(require
         "set_action_status", "bulk_set_action_status",
         "schedule_action_posts", "bulk_schedule_action_posts",
         "generate_action_posts", "bulk_generate_action_posts",
-        "set_strategy_status", "update_strategy", "delete_strategy", "archive",
+        "set_strategy_status", "update_strategy", "edit_strategy", "delete_strategy", "archive",
         "update_calendar_task", "clear_pending_calendar_tasks",
     }
     if action not in allowed_actions:
@@ -968,6 +1004,66 @@ async def post_strategies_action(payload: dict = Body(...), user=Depends(require
         return JSONResponse({"success": False, "error": "VALIDATION_ERROR", "message": "Statut d’action invalide."}, status_code=422)
     if action == "set_strategy_status" and status not in allowed_strategy_statuses:
         return JSONResponse({"success": False, "error": "VALIDATION_ERROR", "message": "Statut de stratégie invalide."}, status_code=422)
+
+    if action == "edit_strategy":
+        edit_title = str(effective_payload.get("title") or "").strip()[:180]
+        edit_prompt = str(effective_payload.get("instructions") or effective_payload.get("prompt") or "").strip()[:5000]
+        if not edit_title or not edit_prompt:
+            return JSONResponse({
+                "success": False, "error": "VALIDATION_ERROR",
+                "message": "Le nom et le prompt de la stratégie sont obligatoires.",
+            }, status_code=422)
+        try:
+            edit_duration = max(1, min(365, int(effective_payload.get("duration_days") or 30)))
+            edit_frequency = max(1, min(7, int(effective_payload.get("posts_per_week") or 3)))
+        except (TypeError, ValueError):
+            return JSONResponse({
+                "success": False, "error": "VALIDATION_ERROR",
+                "message": "La durée ou le nombre de publications par semaine est invalide.",
+            }, status_code=422)
+        edit_objective = str(effective_payload.get("objective_label") or "").strip()[:260]
+        edit_summary = str(effective_payload.get("executive_summary") or "").strip()[:1200]
+        edit_target = str(effective_payload.get("primary_target") or "").strip()[:500]
+        edit_notes = str(effective_payload.get("notes") or "").strip()[:1200]
+        form_patch = {
+            "instructions": edit_prompt,
+            "duration_days": edit_duration,
+            "posts_per_week": edit_frequency,
+            "manual_notes": edit_notes,
+            "objective_label": edit_objective,
+            "target_audience": edit_target,
+        }
+        async with pool.acquire() as conn:
+            edited = await conn.fetchrow(
+                """
+                UPDATE public.app_growth_strategies
+                SET title=$3,
+                    objective_label=$4,
+                    duration_days=$5,
+                    form_data=COALESCE(form_data,'{}'::jsonb)||$6::jsonb,
+                    strategy_data=COALESCE(strategy_data,'{}'::jsonb)
+                      || jsonb_build_object(
+                        'executive_summary',$7::text,
+                        'manual_notes',$8::text,
+                        'target_analysis',COALESCE(strategy_data->'target_analysis','{}'::jsonb)
+                          || jsonb_build_object('primary_target',$9::text),
+                        'objective',COALESCE(strategy_data->'objective','{}'::jsonb)
+                          || jsonb_build_object('duration_days',$5::int)
+                      ),
+                    current_version=COALESCE(current_version,1)+1,
+                    updated_at=now()
+                WHERE id=$1::uuid AND workspace_id=$2::uuid
+                RETURNING id::text,current_version
+                """,
+                strategy_id, user.active_workspace_id, edit_title, edit_objective,
+                edit_duration, json.dumps(form_patch), edit_summary, edit_notes, edit_target,
+            )
+        if edited is None:
+            return JSONResponse({"success": False, "error": "NOT_FOUND", "message": "Stratégie introuvable."}, status_code=404)
+        return JSONResponse({
+            "success": True, "message": "Stratégie modifiée.",
+            "data": {"strategy_id": strategy_id, "current_version": int(edited["current_version"] or 1)},
+        })
 
     calendar_id = str(effective_payload.get("calendar_id") or effective_payload.get("calendar_task_id") or effective_payload.get("task_id") or "").strip()
     planned_for = str(effective_payload.get("planned_for") or effective_payload.get("planned_at") or effective_payload.get("scheduled_for") or "").strip()
@@ -1193,7 +1289,11 @@ async def post_generate_instructions(payload: dict = Body(...), user=Depends(req
     pool = get_pool()
     account_id = str(payload.get("social_account_id") or "").strip() or None
     duration_days = payload.get("duration_days") or 30
-    language = payload.get("language", "français")
+    try:
+        posts_per_week = max(1, min(7, int(payload.get("posts_per_week") or 3)))
+    except (TypeError, ValueError):
+        posts_per_week = 3
+    language = _normalize_strategy_language(payload.get("language"))
     seed_instructions = str(payload.get("instructions") or payload.get("prompt") or "").strip()
     if not seed_instructions:
         return JSONResponse({
@@ -1223,9 +1323,11 @@ async def post_generate_instructions(payload: dict = Body(...), user=Depends(req
         "prompt": seed_instructions,
         "prompt_mode": "improve",
         "language": language,
+        "posts_per_week": posts_per_week,
         "commercial_objective": f"croissance organique sur {duration_days} jours",
         "target_sector": "",
-        "constraints": "Conserve fidèlement l'intention de la phrase saisie. Rédige une instruction "
+        "constraints": f"Prévois environ {posts_per_week} publication(s) par semaine. "
+                       "Conserve fidèlement l'intention de la phrase saisie. Rédige une instruction "
                        "de stratégie contenant une section Problématique et une section Objectif "
                        "quantifiable, adaptée au réseau s'il est connu et à la durée.",
     }

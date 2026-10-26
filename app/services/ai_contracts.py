@@ -539,10 +539,11 @@ def normalize_strategy_plan(parsed: Any, context: dict | None = None) -> dict:
         raise AIContractError("L'objectif n'est pas indiqué comme atteint : action_blueprints ne peut pas être vide.")
 
     minimum_actions = _int(context.get("minimum_action_count"), 0, duration, 0)
+    posts_per_week = _int(form_data.get("posts_per_week"), 1, 7, 3)
     if not strategy["objective_already_reached"] and len(blueprints) < minimum_actions:
         raise AIContractError(
             f"Plan trop court : {len(blueprints)} action(s), {minimum_actions} requises "
-            "pour assurer au moins trois posts par semaine."
+            f"pour assurer {posts_per_week} publication(s) par semaine."
         )
 
     # Une stratégie de N jours ne peut matériellement pas avoir davantage d'actions

@@ -350,6 +350,16 @@ ai_planned_actions AS (
     COALESCE(NULLIF(s.objective_label,''),'croissance du compte') AS objective_label,
     COALESCE(s.strategy_data,'{}'::jsonb) AS strategy_data,
     COALESCE(s.form_data,'{}'::jsonb) AS form_data,
+    CASE lower(COALESCE(NULLIF(s.form_data->>'language',''),'fr'))
+      WHEN 'fr' THEN 'French' WHEN 'français' THEN 'French' WHEN 'francais' THEN 'French'
+      WHEN 'en' THEN 'English' WHEN 'anglais' THEN 'English'
+      WHEN 'es' THEN 'Spanish' WHEN 'espagnol' THEN 'Spanish'
+      WHEN 'it' THEN 'Italian' WHEN 'italien' THEN 'Italian'
+      WHEN 'de' THEN 'German' WHEN 'allemand' THEN 'German'
+      WHEN 'ru' THEN 'Russian' WHEN 'russe' THEN 'Russian'
+      WHEN 'ar' THEN 'Arabic' WHEN 'arabe' THEN 'Arabic'
+      ELSE COALESCE(NULLIF(s.form_data->>'language',''),'French')
+    END AS output_language,
     COALESCE(s.network_snapshot,'{}'::jsonb) AS network_snapshot,
     COALESCE(s.duration_days,90) AS duration_days
   FROM owned_strategy s
@@ -606,7 +616,7 @@ calendar_inserted AS (
           WHEN sp.deliverable_kind='carousel' THEN jsonb_build_array('image simple')
           ELSE jsonb_build_array('post')
         END,
-      'language', 'français',
+      'language', sp.output_language,
       'strategy_id', sp.id::text,
       'strategy_title', sp.strategy_title,
       'objective_label', sp.objective_label,
@@ -683,6 +693,7 @@ calendar_inserted AS (
     MAX(sp.max_horizon_days)::int AS max_horizon_days,
     MAX(sp.objective_label) AS objective_label,
     MAX(sp.strategy_title) AS strategy_title,
+    MAX(sp.output_language) AS output_language,
     (jsonb_agg(sp.strategy_data)->0) AS strategy_data,
     (jsonb_agg(sp.network_snapshot)->0) AS network_snapshot
   FROM schedule_payload sp
@@ -747,7 +758,7 @@ calendar_inserted AS (
         COALESCE(NULLIF(ac.strategy_data#>>'{target_analysis,awareness_level}',''), 'problem_aware')
       ),
       'preferred_formats',jsonb_build_array('post','reel','carrousel'),
-      'language','français',
+      'language',ac.output_language,
       'strategy_id',ac.strategy_id::text,
       'strategy_title',ac.strategy_title,
       'objective_label',ac.objective_label,

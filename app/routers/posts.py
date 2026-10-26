@@ -128,6 +128,17 @@ async def post_ideas_action(request: Request, payload: dict = Body(...), user=De
     idea = json.loads(idea_row["raw_idea"]) if isinstance(idea_row["raw_idea"], str) else idea_row["raw_idea"]
     generation_context = json.loads(idea_row["form_data"]) if isinstance(idea_row["form_data"], str) else (idea_row["form_data"] or {})
 
+    # Action de configuration du macaron
+    if action == "set_macaron":
+        from app.services.image_result import parse_boolean
+        use_macaron = parse_boolean(payload.get("use_macaron"), default=True)
+        async with pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE public.post_ideas SET use_macaron = $2, updated_at = now() WHERE id = $1::uuid AND workspace_id = $3::uuid",
+                idea_id, use_macaron, user.active_workspace_id,
+            )
+        return JSONResponse({"success": True, "data": {"idea_id": idea_id, "use_macaron": use_macaron}})
+
     # Actions de statut simples (port des boutons Valider / Refuser / Demander validation)
     STATUS_ACTIONS = {
         "validate": ("approved", "Valider"),
@@ -452,6 +463,7 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
             """
             SELECT pi.id::text AS idea_id, pi.title, pi.hook, pi.summary, pi.status,
                    pi.recommended_format, pi.scores, pi.seo_keywords, pi.raw_idea,
+                   pi.use_macaron,
                    pi.request_id::text, pr.subject AS request_subject,
                    COALESCE(pr.form_data->>'website', pr.form_data->>'site_web', '') AS website,
                    pv.id::text AS version_id, pv.post_text, pv.hashtags, pv.cta,
@@ -538,6 +550,7 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
             "selected_media_id": (selected or {}).get("id"),
             "review_note": raw_idea.get("review_note", ""),
             "review_action": raw_idea.get("review_action", ""),
+            "use_macaron": bool(d.get("use_macaron") if d.get("use_macaron") is not None else True),
         })
 
     page_heading = (request_row["subject"] if request_row else None) or (rows[0]["request_subject"] if rows else None) or "Sujet"
@@ -603,6 +616,7 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
                 "concrete_application_example": i["concrete_application_example"],
                 "selected_media_id": i["selected_media_id"], "media": i["media"],
                 "media_count": i["media_count"],
+                "use_macaron": i.get("use_macaron", True),
             }
             for i in ideas
         ],
@@ -1008,14 +1022,17 @@ async def post_post_edit(request: Request, user=Depends(require_auth)):
             "default_tags": [t for t in str(form.get("default_tags", "")).replace(",", " ").split() if t],
         })
 
+        use_macaron = str(form.get("use_macaron") or "").lower() in ("1", "true", "on", "yes")
+        form_data["use_macaron"] = use_macaron
+
         await conn.execute(
             """
             UPDATE public.post_requests
             SET subject=$2, title=$2, prompt=$3, commercial_objective=$4, target_sector=$5,
                 language=$6, constraints=$7, post_count=$8,
                 content_domains=$9, target_audience=$10, preferred_formats=$11,
-                form_data=$12, updated_at=now()
-            WHERE id=$1::uuid AND workspace_id=$13::uuid
+                form_data=$12, use_macaron=$13, updated_at=now()
+            WHERE id=$1::uuid AND workspace_id=$14::uuid
             """,
             request_id, form.get("subject", ""), form.get("prompt", ""),
             form.get("commercial_objective", ""), form.get("target_sector", ""),
@@ -1023,7 +1040,7 @@ async def post_post_edit(request: Request, user=Depends(require_auth)):
             json.dumps(form.getlist("content_domains")),
             json.dumps(form.getlist("target_audience")),
             json.dumps(form.getlist("preferred_formats")),
-            json.dumps(form_data), user.active_workspace_id,
+            json.dumps(form_data), use_macaron, user.active_workspace_id,
         )
     return RedirectResponse("/app/posts", status_code=302)
 

@@ -18,7 +18,7 @@
         {% endif %}
         <details class="strategyMoreMenu">
           <summary aria-label="{{ t('common.actions') }}">•••</summary>
-          <div>{% if selected.status != 'archived' %}<button type="button" class="strategyStatusBtn" data-strategy-action="archive">{{ t('sd.archive') }}</button>{% endif %}<button type="button" class="strategyDetailDeleteBtn danger" data-strategy-id="{{ selected.id }}" data-strategy-title="{{ selected.title or t('sd.default_title') }}">{{ t('common.delete') }}</button></div>
+          <div><button type="button" id="openStrategyEditBtn">{{ t('sd.edit.open') }}</button>{% if selected.status != 'archived' %}<button type="button" class="strategyStatusBtn" data-strategy-action="archive">{{ t('sd.archive') }}</button>{% endif %}<button type="button" class="strategyDetailDeleteBtn danger" data-strategy-id="{{ selected.id }}" data-strategy-title="{{ selected.title or t('sd.default_title') }}">{{ t('common.delete') }}</button></div>
         </details>
       </div>
     </div>
@@ -54,7 +54,7 @@
         {% endif %}
       </aside>
       <div class="strategyHeroStats">
-        <button type="button" data-strategy-jump="actions"><span>{{ t('sd.stats.actions') }}</span><b>{{ actions_total }}</b><small>{{ t('sd.stats.actions_hint') }}</small></button>
+        <button type="button" data-strategy-jump="actions"><span>{{ t('sd.stats.actions') }}</span><b>{{ actions_total }}</b><small>{{ t('sd.stats.actions_hint', count=selected.form_data.posts_per_week or 3) }}</small></button>
         <button type="button" data-strategy-jump="posts"><span>{{ t('sd.stats.posts') }}</span><b>{{ posts_total }} <small>/ {{ actions_total }}</small></b><small>{{ t('sd.stats.posts_hint') }}</small></button>
         <button type="button" data-strategy-jump="calendar"><span>{{ t('sd.stats.plans') }}</span><b>{{ calendar|length }}</b><small>{{ t('sd.stats.plans_hint') }}</small></button>
         <div><span>{{ t('sd.stats.duration') }}</span><b>{{ t('sd.days', n=selected.duration_days or 30) }}</b><small>{{ t('sd.stats.duration_hint') }}</small></div>
@@ -296,5 +296,23 @@
     </div>
   </div>
 </div>
+
+<div class="strategyEditModal" id="strategyEditModal" aria-hidden="true">
+  <form class="strategyEditModalBox" id="strategyEditForm" role="dialog" aria-modal="true" aria-labelledby="strategyEditTitle" data-success="{{ t('sd.edit.saved') }}" data-error="{{ t('sd.edit.error') }}">
+    <div class="strategyEditModalHead"><div><span>{{ t('sd.edit.eyebrow') }}</span><h2 id="strategyEditTitle">{{ t('sd.edit.title') }}</h2><p>{{ t('sd.edit.subtitle') }}</p></div><button type="button" id="strategyEditClose" aria-label="{{ t('common.close') }}">×</button></div>
+    <div class="strategyEditGrid">
+      <label class="strategyEditWide"><span>{{ t('sd.edit.name') }}</span><input name="title" maxlength="180" required value="{{ selected.title or '' }}"></label>
+      <label><span>{{ t('strat.modal.duration') }}</span><select name="duration_days" required>{% for days in [15,30,60,90,120] %}<option value="{{ days }}" {{ 'selected' if (selected.duration_days or 30) == days }}>{{ days }} {{ t('strat.modal.days') }}</option>{% endfor %}</select></label>
+      <label><span>{{ t('strat.modal.posts_per_week') }}</span><select name="posts_per_week" required>{% for count in range(1,8) %}<option value="{{ count }}" {{ 'selected' if (selected.form_data.posts_per_week or 3) == count }}>{{ t('strat.modal.posts_count', count=count) }}</option>{% endfor %}</select></label>
+      <label class="strategyEditWide"><span>{{ t('sd.edit.objective') }}</span><input name="objective_label" maxlength="260" value="{{ selected.objective_label or selected.objective.goal or '' }}"></label>
+      <label class="strategyEditWide"><span>{{ t('sd.edit.summary') }}</span><textarea name="executive_summary" maxlength="1200" rows="3">{{ selected.executive_summary or '' }}</textarea></label>
+      <label class="strategyEditWide"><span>{{ t('sd.edit.target') }}</span><textarea name="primary_target" maxlength="500" rows="2">{{ selected.target_analysis.primary_target or '' }}</textarea></label>
+      <label class="strategyEditWide strategyPromptField"><span>{{ t('sd.edit.prompt') }}</span><textarea name="instructions" maxlength="5000" rows="7" required>{{ selected.form_data.instructions or '' }}</textarea><small>{{ t('sd.edit.prompt_hint') }}</small></label>
+      <label class="strategyEditWide"><span>{{ t('sd.edit.notes') }}</span><textarea name="notes" maxlength="1200" rows="2">{{ selected.form_data.manual_notes or '' }}</textarea></label>
+    </div>
+    <p class="strategyEditNotice">{{ t('sd.edit.notice') }}</p>
+    <div class="strategyEditActions"><button type="button" class="btn secondary" id="strategyEditCancel">{{ t('common.cancel') }}</button><button type="submit" class="btn primary" id="strategyEditSave">{{ t('common.save') }}</button></div>
+  </form>
+</div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/strategies.js?v=31-manual-planning"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/strategies.js?v=32-strategy-edit"></script>{% endblock %}

@@ -8,7 +8,7 @@ from __future__ import annotations
 import time
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Request, Form, Depends
+from fastapi import APIRouter, Request, Form, Depends, UploadFile, File, Body
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
@@ -278,14 +278,26 @@ async def get_account(request: Request, user=Depends(require_auth),
     pool = get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(
-            "SELECT activation_sent_at, created_at, timezone FROM public.app_users WHERE id=$1::uuid", user.id,
+            "SELECT activation_sent_at, created_at, timezone, macaron_url, macaron_position, macaron_enabled "
+            "FROM public.app_users WHERE id=$1::uuid", user.id,
         )
     activated_at = ""
     if row and row["created_at"]:
         activated_at = format_user_datetime(row["created_at"], user.timezone, "%d/%m/%Y")
 
+    user_macaron_url = (row["macaron_url"] if row and row["macaron_url"] else "") or user.macaron_url
+    user_macaron_position = (row["macaron_position"] if row and row["macaron_position"] else "bottom-right") or user.macaron_position or "bottom-right"
+    user_macaron_enabled = bool(row["macaron_enabled"]) if row and row["macaron_enabled"] is not None else user.macaron_enabled
+
+    user.macaron_url = user_macaron_url
+    user.macaron_position = user_macaron_position
+    user.macaron_enabled = user_macaron_enabled
+
     return templates.TemplateResponse(request, "account.html", {
         "auth_user": user, "active_nav": "account", "activated_at": activated_at,
+        "user_macaron_url": user_macaron_url,
+        "user_macaron_position": user_macaron_position,
+        "user_macaron_enabled": user_macaron_enabled,
         "banner_message": success or error,
         "banner_type": "success" if success else ("error" if error else ""),
     })
@@ -320,14 +332,17 @@ async def post_account(
     current_password: str = Form(""),
     new_password: str = Form(""),
     confirm_password: str = Form(""),
+    macaron_position: str = Form("bottom-right"),
+    macaron_enabled: str = Form(""),
+    delete_macaron: str = Form(""),
+    macaron_file: UploadFile | None = File(None),
     user=Depends(require_auth),
 ):
     """
-    Port fidèle de "AUTH - POST Account" : deux actions distinctes.
-      - action='profile'  : met à jour prénom/nom/email. Un changement d'email
-        exige le mot de passe actuel, DÉSACTIVE le compte (is_active=false) et
-        déclenche l'envoi d'un nouveau lien d'activation à la nouvelle adresse.
-      - action='password' : exige le mot de passe actuel + confirmation, min 10 car.
+    Port fidèle de "AUTH - POST Account" :
+      - action='profile'  : met à jour prénom/nom/email.
+      - action='password' : mot de passe actuel + confirmation, min 10 car.
+      - action='macaron'  : import d'un macaron personnalisé (PNG/ICO/WEBP/JPG) + position.
     """
     from urllib.parse import urlencode
     pool = get_pool()
@@ -341,8 +356,58 @@ async def post_account(
             user.id, current_password,
         ))
 
-    if action not in ("profile", "password"):
+    if action not in ("profile", "password", "macaron"):
         return redirect_with("error", "Action de compte non reconnue.")
+
+    if action == "macaron":
+        from app.services.image_result import process_and_save_macaron, parse_boolean, VALID_POSITIONS
+        clean_pos = str(macaron_position or "bottom-right").strip().lower()
+        if clean_pos not in VALID_POSITIONS:
+            clean_pos = "bottom-right"
+        enabled = parse_boolean(macaron_enabled)
+        delete_req = parse_boolean(delete_macaron)
+
+        async with pool.acquire() as conn:
+            if delete_req:
+                await conn.execute(
+                    """
+                    UPDATE public.app_users
+                    SET macaron_url = NULL, macaron_position = $2::text, macaron_enabled = $3::boolean, updated_at = now()
+                    WHERE id = $1::uuid
+                    """,
+                    user.id, clean_pos, enabled,
+                )
+                return redirect_with("success", "Macaron personnalisé supprimé. Le logo officiel par défaut sera utilisé.")
+
+            new_url = None
+            if macaron_file is not None and getattr(macaron_file, "filename", None):
+                content = await macaron_file.read()
+                if content:
+                    try:
+                        new_url, _ = process_and_save_macaron(user.id, content)
+                    except Exception as exc:
+                        return redirect_with("error", f"Format de macaron invalide ou corrompu : {exc}")
+
+            if new_url is not None:
+                await conn.execute(
+                    """
+                    UPDATE public.app_users
+                    SET macaron_url = $2::text, macaron_position = $3::text, macaron_enabled = $4::boolean, updated_at = now()
+                    WHERE id = $1::uuid
+                    """,
+                    user.id, new_url, clean_pos, enabled,
+                )
+                return redirect_with("success", "Nouveau macaron importé et paramètres enregistrés avec succès.")
+
+            await conn.execute(
+                """
+                UPDATE public.app_users
+                SET macaron_position = $2::text, macaron_enabled = $3::boolean, updated_at = now()
+                WHERE id = $1::uuid
+                """,
+                user.id, clean_pos, enabled,
+            )
+        return redirect_with("success", "Paramètres du macaron enregistrés.")
 
     if action == "password":
         if not new_password or len(new_password) < 10:
@@ -426,3 +491,90 @@ async def post_account(
             user.id, first_name, last_name, full_name,
         )
     return redirect_with("success", "Informations mises à jour.")
+
+
+@router.post("/account/macaron")
+async def post_account_macaron_api(request: Request, user=Depends(require_auth)):
+    """API JSON / multipart pour mettre à jour le macaron et sa position."""
+    import base64
+    from app.services.image_result import process_and_save_macaron, parse_boolean, VALID_POSITIONS
+
+    content_type = str(request.headers.get("content-type") or "").lower()
+    pool = get_pool()
+    pos = "bottom-right"
+    enabled = True
+    new_url = None
+
+    if "application/json" in content_type:
+        try:
+            payload = await request.json()
+        except Exception:
+            payload = {}
+        pos = str(payload.get("position") or "bottom-right").strip().lower()
+        enabled = parse_boolean(payload.get("enabled"), default=True)
+        delete_req = parse_boolean(payload.get("delete"))
+        if delete_req:
+            new_url = ""
+        elif payload.get("image_data"):
+            raw_text = str(payload.get("image_data")).strip()
+            if "," in raw_text:
+                raw_text = raw_text.split(",", 1)[1]
+            try:
+                content = base64.b64decode(raw_text)
+                new_url, _ = process_and_save_macaron(user.id, content)
+            except Exception as exc:
+                return JSONResponse({"success": False, "error": "INVALID_IMAGE", "message": str(exc)}, status_code=422)
+    else:
+        form = await request.form()
+        pos = str(form.get("macaron_position") or "bottom-right").strip().lower()
+        enabled = parse_boolean(form.get("macaron_enabled"))
+        delete_req = parse_boolean(form.get("delete_macaron"))
+        if delete_req:
+            new_url = ""
+        else:
+            file_item = form.get("macaron_file")
+            if file_item and hasattr(file_item, "read"):
+                content = await file_item.read()
+                if content:
+                    try:
+                        new_url, _ = process_and_save_macaron(user.id, content)
+                    except Exception as exc:
+                        return JSONResponse({"success": False, "error": "INVALID_IMAGE", "message": str(exc)}, status_code=422)
+
+    if pos not in VALID_POSITIONS:
+        pos = "bottom-right"
+
+    async with pool.acquire() as conn:
+        if new_url is not None:
+            await conn.execute(
+                """
+                UPDATE public.app_users
+                SET macaron_url = NULLIF($2::text, ''), macaron_position = $3::text,
+                    macaron_enabled = $4::boolean, updated_at = now()
+                WHERE id = $1::uuid
+                """,
+                user.id, new_url, pos, enabled,
+            )
+        else:
+            await conn.execute(
+                """
+                UPDATE public.app_users
+                SET macaron_position = $2::text, macaron_enabled = $3::boolean, updated_at = now()
+                WHERE id = $1::uuid
+                """,
+                user.id, pos, enabled,
+            )
+        row = await conn.fetchrow(
+            "SELECT macaron_url, macaron_position, macaron_enabled FROM public.app_users WHERE id=$1::uuid",
+            user.id,
+        )
+
+    return JSONResponse({
+        "success": True,
+        "data": {
+            "macaron_url": row["macaron_url"] or "",
+            "macaron_position": row["macaron_position"] or "bottom-right",
+            "macaron_enabled": bool(row["macaron_enabled"]),
+        },
+        "message": "Paramètres du macaron enregistrés.",
+    })

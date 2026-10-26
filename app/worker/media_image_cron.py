@@ -7,7 +7,7 @@ import logging
 
 from app.database import get_pool
 from app.services import media_generation as media_gen
-from app.services.image_result import find_image_source, image_bytes
+from app.services.image_result import branded_image_bytes, find_image_source
 from app.services.media_storage import public_url, write_media
 
 logger = logging.getLogger("worker.media_image")
@@ -70,7 +70,42 @@ async def run_image_generation_cycle(media_id: str | None = None) -> dict:
             except Exception:
                 finish = ""
             raise ValueError("Aucune image exploitable n'a été renvoyée par OpenRouter" + (f" (finish_reason={finish})" if finish else "") + ".")
-        data, suffix, mime = await image_bytes(source)
+        pool = get_pool()
+        async with pool.acquire() as conn:
+            macaron_info = await conn.fetchrow(
+                """
+                SELECT pi.use_macaron, u.macaron_url, u.macaron_position, u.macaron_enabled
+                FROM public.post_media pm
+                JOIN public.post_ideas pi ON pi.id = pm.idea_id
+                LEFT JOIN public.app_users u ON u.id = pi.user_id
+                WHERE pm.id = $1::uuid
+                """,
+                mid,
+            )
+        use_macaron = True
+        badge_source = None
+        position = "bottom-right"
+        if macaron_info:
+            if macaron_info["use_macaron"] is not None:
+                use_macaron = bool(macaron_info["use_macaron"])
+            elif macaron_info["macaron_enabled"] is not None:
+                use_macaron = bool(macaron_info["macaron_enabled"])
+            badge_source = macaron_info["macaron_url"] or None
+            position = macaron_info["macaron_position"] or "bottom-right"
+
+        from app.services.image_result import parse_boolean
+        if "use_macaron" in job:
+            use_macaron = parse_boolean(job["use_macaron"], default=True)
+        elif "use_macaron" in metadata:
+            use_macaron = parse_boolean(metadata["use_macaron"], default=True)
+        if job.get("macaron_position"):
+            position = str(job["macaron_position"])
+        elif metadata.get("macaron_position"):
+            position = str(metadata["macaron_position"])
+
+        data, suffix, mime = await branded_image_bytes(
+            source, use_macaron=use_macaron, badge_source=badge_source, position=position
+        )
         file_path, file_name, size_bytes = write_media(mid, data, suffix)
         url = public_url(file_name)
         pool = get_pool()

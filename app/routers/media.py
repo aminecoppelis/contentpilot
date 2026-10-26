@@ -19,6 +19,7 @@ from fastapi.responses import JSONResponse
 from app.database import get_pool
 from app.dependencies.auth import require_auth
 from app.services import media_generation as media_gen
+from app.services.image_result import apply_brand_badge
 from app.services.media_storage import public_url as _public_url, write_media as _write_media, persist_video_download
 
 router = APIRouter(tags=["Media"])
@@ -177,7 +178,28 @@ async def post_ideas_image(payload: dict = Body(...), user=Depends(require_auth)
     aspect_ratio = str(payload.get("aspect_ratio") or "4:5").strip()
     quality = "haute" if str(payload.get("quality") or "standard").lower() == "haute" else "standard"
     image_refs = [str(v).strip() for v in (payload.get("image_refs") or []) if str(v).strip()]
+    use_macaron = payload.get("use_macaron")
+    macaron_position = payload.get("macaron_position")
     pool = get_pool()
+
+    async with pool.acquire() as conn:
+        idea_row = await conn.fetchrow(
+            "SELECT use_macaron FROM public.post_ideas WHERE id=$1::uuid AND workspace_id=$2::uuid",
+            idea_id, user.active_workspace_id,
+        )
+    if use_macaron is None:
+        if idea_row and idea_row["use_macaron"] is not None:
+            use_macaron = bool(idea_row["use_macaron"])
+        else:
+            use_macaron = bool(user.macaron_enabled)
+    else:
+        from app.services.image_result import parse_boolean
+        use_macaron = parse_boolean(use_macaron)
+
+    from app.services.image_result import VALID_POSITIONS
+    macaron_position = str(macaron_position or "").strip().lower().replace("_", "-")
+    if macaron_position not in VALID_POSITIONS:
+        macaron_position = user.macaron_position or "bottom-right"
 
     async with pool.acquire() as conn:
         media_row = await conn.fetchrow(
@@ -202,6 +224,11 @@ async def post_ideas_image(payload: dict = Body(...), user=Depends(require_auth)
             suffix_reason = f" (finish_reason={finish_reason})" if finish_reason else ""
             raise ValueError("Aucune image exploitable n'a été renvoyée par OpenRouter" + suffix_reason + ".")
         image_data, suffix, mime_type = await _image_bytes(image_url)
+        if use_macaron:
+            badge_source = user.macaron_url or None
+            image_data, suffix, mime_type = apply_brand_badge(
+                image_data, suffix, badge_source=badge_source, position=macaron_position
+            )
         file_path, file_name, size_bytes = _write_media(media_row["media_id"], image_data, suffix)
         public_url = _public_url(file_name)
         async with pool.acquire() as conn:
@@ -219,10 +246,18 @@ async def post_ideas_image(payload: dict = Body(...), user=Depends(require_auth)
                             "visual_style": payload.get("visual_style") or payload.get("image_style") or "",
                             "user_instructions": str(payload.get("user_instructions") or "").strip(),
                             "edit_source_media_id": str(payload.get("edit_source_media_id") or "").strip() or None,
-                            "inspiration_used": bool(image_refs)}),
+                            "inspiration_used": bool(image_refs),
+                            "use_macaron": bool(use_macaron),
+                            "macaron_position": macaron_position if use_macaron else None}),
+            )
+            await conn.execute(
+                "UPDATE public.post_ideas SET use_macaron=$2, updated_at=now() WHERE id=$1::uuid",
+                idea_id, bool(use_macaron),
             )
         return JSONResponse({"success": True, "data": {"media_id": media_row["media_id"], "url": public_url,
-                                                         "media_type": "image", "status": "ready"}})
+                                                         "media_type": "image", "status": "ready",
+                                                         "use_macaron": bool(use_macaron),
+                                                         "macaron_position": macaron_position if use_macaron else None}})
     except Exception as exc:  # noqa: BLE001
         async with pool.acquire() as conn:
             await conn.execute(

@@ -66,6 +66,11 @@ class StructuredJSONRetryTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ContractNormalizationTests(unittest.TestCase):
+    def test_strategy_generation_limits_follow_selected_weekly_frequency(self):
+        self.assertEqual(ai._strategy_generation_limits({"duration_days": 15, "posts_per_week": 1}), (15, 1, 3))
+        self.assertEqual(ai._strategy_generation_limits({"duration_days": 15, "posts_per_week": 3}), (15, 3, 9))
+        self.assertEqual(ai._strategy_generation_limits({"duration_days": 30, "posts_per_week": 2}), (30, 2, 10))
+
     def test_strategy_plan_requires_three_posts_per_week(self):
         parsed = {
             "strategy": {

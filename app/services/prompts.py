@@ -250,6 +250,7 @@ Retourne uniquement un JSON valide, sans markdown, au format :
 REFORMULATE_PROMPT_SYSTEM = "Tu es un assistant de reformulation de prompts marketing B2B. Réponds uniquement en JSON valide, sans markdown."
 
 def build_reformulate_prompt(context: dict[str, Any]) -> str:
+    output_language = str(context.get("language") or "French").strip()
     return f"""Tu dois aider une personne à transformer un sujet court et les paramètres déjà remplis dans un formulaire en prompt complet pour générer des idées de posts B2B.
 
 Objectif : produire un prompt métier clair, complet, lisible et directement exploitable par une IA pour générer des idées de posts prêts à publier.
@@ -258,11 +259,12 @@ Retourne uniquement un JSON valide, sans markdown, au format :
 {{ "prompt": "prompt complet reformulé" }}
 
 Règles de rédaction du prompt reformulé :
+- Rédige l'intégralité du prompt reformulé en {output_language}. Ne mélange jamais cette langue avec le français, sauf si la langue demandée est le français.
 - Utilise le champ prompt_mode pour choisir le comportement.
 - Si prompt_mode = "generate" : génère un prompt complet à partir du sujet et des champs du formulaire.
 - Si prompt_mode = "improve" : améliore le prompt existant sans repartir de zéro, sans supprimer son intention, ses angles spécifiques, ses URL ou ses contraintes utiles.
 - Dans le mode improve, enrichis, clarifie, structure et complète le prompt existant avec les champs du formulaire, mais ne le remplace pas par une version générique.
-- Le prompt doit commencer par : "Tu es un expert en...".
+- Le prompt doit commencer par l'équivalent naturel de « Tu es un expert en... » dans la langue {output_language}.
 - Le prompt doit être structuré avec des titres de sections en majuscules et des retours à la ligne.
 - N'écris pas un seul bloc compact.
 - Utilise des sections courtes et lisibles.
@@ -505,6 +507,7 @@ Contexte de la demande :
 - Contexte stratégique complet : {prompt}
 
 Règles impératives :
+- Rédige l'intégralité des valeurs visibles, notamment ready_post.title, ready_post.text et ready_post.simple_action, en {language}. Ne mélange jamais cette langue avec le français, sauf si la langue demandée est le français.
 - Utilise le contexte stratégique pour comprendre l’angle, mais ne recopie jamais les instructions internes dans le post.
 - Le texte final ne doit jamais contenir les libellés « Objectif stratégique », « Action à transformer en contenu », « Livrable attendu », « Persona » ou « Contrainte de planning IA ».
 - Ne transforme pas la liste des métriques brutes en paragraphe. Utilise-les seulement pour choisir un angle crédible.
@@ -566,17 +569,26 @@ def build_generate_strategy_plan_prompt(context: dict[str, Any]) -> str:
             + "\nCorrige le diagnostic/plan précédent sans recopier une erreur."
         )
     minimum_actions = int(context.get("minimum_action_count") or 0)
+    form_data = context.get("form_data") if isinstance(context.get("form_data"), dict) else {}
+    output_language = str(form_data.get("language") or "French")
+    try:
+        posts_per_week = max(1, min(7, int(form_data.get("posts_per_week") or 3)))
+    except (TypeError, ValueError):
+        posts_per_week = 3
     return f"""Tu es un consultant senior en stratégie de croissance organique pour les réseaux sociaux.
 
 MISSION
 Construis le DIAGNOSTIC COMPLET et le PLAN COMPACT des actions. Les détails de chaque action seront générés ensuite par d'autres appels : ta réponse doit donc rester compacte.
+
+LANGUE DE SORTIE OBLIGATOIRE
+Rédige toutes les valeurs destinées à l'utilisateur en {output_language}. Ne mélange jamais cette langue avec le français. Seuls les codes techniques restent en anglais.
 
 RÈGLES FACTUELLES
 - Utilise uniquement les faits du contexte. Toute déduction non vérifiée va dans assumptions_to_validate.
 - N'invente aucun chiffre, client, résultat, concurrent ou tendance.
 - Respecte form_data.language et duration_days.
 - objective_already_reached=true UNIQUEMENT si les données observées prouvent explicitement que l'objectif quantifiable est déjà atteint.
-- Si objective_already_reached=false, action_blueprints doit contenir au moins {minimum_actions} actions, soit au minimum 3 posts par semaine.
+- Si objective_already_reached=false, action_blueprints doit contenir au moins {minimum_actions} actions, soit {posts_per_week} publication(s) par semaine.
 - Toutes les actions sont des posts publiables : category="content" et requires_post_generation=true.
 - Ne propose jamais de créer un calendrier, un planning, un audit, un reporting, un profil ou une tâche manuelle.
 - Ne crée aucune routine autonome de likes/commentaires/follows.
@@ -633,7 +645,11 @@ def build_generate_strategy_actions_prompt(*, context: dict[str, Any], strategy:
         "network_snapshot": compact_network,
         "research_context": context.get("research_context") or {},
     }
+    output_language = str(compact_context["form_data"].get("language") or "French")
     return f"""Tu transformes un petit lot de blueprints d'une stratégie déjà validée en actions opérationnelles complètes.
+
+LANGUE DE SORTIE OBLIGATOIRE
+Rédige toutes les valeurs destinées à l'utilisateur en {output_language}. Ne mélange jamais cette langue avec le français. Seuls les codes techniques restent en anglais.
 
 RÈGLES ABSOLUES
 - Retourne EXACTEMENT {len(blueprints)} actions, dans le même ordre.

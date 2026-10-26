@@ -37,6 +37,20 @@ class AuthUser(BaseModel):
     active_workspace_name: str = ""
     active_workspace_role: str = ""
     workspaces: list[WorkspaceRef] = []
+    macaron_url: str = ""
+    macaron_position: str = "bottom-right"
+    macaron_enabled: bool = True
+
+    @property
+    def macaron_position_display(self) -> str:
+        pos_map = {
+            "bottom-right": "Bas droite",
+            "bottom-left": "Bas gauche",
+            "top-right": "Haut droite",
+            "top-left": "Haut gauche",
+            "center": "Centre",
+        }
+        return pos_map.get(self.macaron_position, "Bas droite")
 
     @property
     def active_workspace_display_name(self) -> str:

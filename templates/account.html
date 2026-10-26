@@ -39,6 +39,53 @@
     font-size:13px;line-height:1.45;margin-top:12px}
   .editPanel[hidden]{display:none!important}
   .req{color:#ef4444}
+  /* Macaron section styles */
+  .macaronCard{margin-top:24px;position:relative;overflow:hidden;background:linear-gradient(145deg,#fff 0%,#fbfdff 100%)}
+  .macaronHead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+  .macaronGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.86fr);gap:24px;align-items:stretch}
+  .macaronControls{display:flex;flex-direction:column;min-width:0}
+  .macaronPreviewBox{border:1px solid #e2e8f0;border-radius:16px;padding:14px 16px;background:#f8fafc;display:flex;align-items:center;gap:14px}
+  .macaronThumbFrame{width:80px;height:80px;border-radius:16px;background:#fff;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;padding:8px;box-shadow:0 6px 16px rgba(15,23,42,0.06);flex-shrink:0}
+  .macaronThumbFrame img{max-width:100%;max-height:100%;object-fit:contain}
+  .macaronThumbDetails{flex:1;min-width:0}
+  .macaronThumbDetails b{display:block;font-size:15px;color:#0f172a;margin-bottom:6px}
+  .macaronBadgeStatus{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em}
+  .macaronBadgeStatus.custom{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+  .macaronBadgeStatus.default{background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}
+  .macaronDropZone{margin-top:14px;border:1.5px dashed #b9c5d6;border-radius:16px;padding:20px 18px;text-align:center;background:#fff;transition:all .2s ease;cursor:pointer;position:relative}
+  .macaronDropZone:hover,.macaronDropZone.dragover{border-color:#635bff;background:rgba(99,91,255,0.03)}
+  .macaronDropZone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2}
+  .macaronDropZone .dropIcon{width:36px;height:36px;margin:0 auto 8px;display:flex;align-items:center;justify-content:center;color:#635bff}
+  .macaronDropZone .dropTitle{font-weight:800;font-size:14px;color:#0f172a}
+  .macaronDropZone .dropHint{font-size:12px;color:#64748b;margin-top:4px}
+  .macaronFileSelectedInfo{display:none;margin-top:10px;padding:8px 12px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;font-size:12px;color:#166534;font-weight:700}
+
+  /* Simulator styles */
+  .simulatorWrap{background:#f8fafc;border-radius:18px;padding:18px;border:1px solid #dbe3ee;box-shadow:none}
+  .simulatorTitle{color:#64748b;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .simulatorCanvas{width:100%;aspect-ratio:4/3;background:linear-gradient(145deg,#e9eff8 0%,#dce6f3 100%);border-radius:14px;position:relative;overflow:hidden;border:1px solid #cbd5e1;box-shadow:inset 0 1px 8px rgba(15,23,42,.06)}
+  .simulatedContent{position:absolute;inset:18px;display:flex;flex-direction:column;justify-content:center;gap:10px;pointer-events:none;opacity:0.22}
+  .simBar{height:10px;background:#64748b;border-radius:6px;width:75%}
+  .simBar.short{width:45%}
+  .simBar.title{height:18px;width:88%;background:linear-gradient(90deg,#334155,#64748b)}
+  .simBadge{position:absolute;width:24%;max-width:72px;aspect-ratio:1;transition:all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);z-index:5;filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));display:flex;align-items:center;justify-content:center}
+  .simBadge img{width:100%;height:100%;object-fit:contain}
+
+  /* Position buttons */
+  .positionGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+  .posBtn{border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .18s ease;font-family:inherit}
+  .posBtn:hover{background:#eff6ff;color:#2563eb;border-color:#93c5fd}
+  .posBtn.active{background:#3b82f6;color:#fff;border-color:#3b82f6;box-shadow:0 3px 10px rgba(59,130,246,.22)}
+  .posBtn.centerBtn{grid-column:1 / -1}
+
+  /* Switch & toggles */
+  .toggleWrap{display:flex;align-items:center;gap:14px;margin-top:18px;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;cursor:pointer;user-select:none}
+  .toggleWrap input[type="checkbox"]{width:20px;height:20px;accent-color:#635bff;cursor:pointer}
+  .toggleText b{display:block;font-size:13px;color:#0f172a}
+  .toggleText span{display:block;font-size:12px;color:#64748b;margin-top:2px;line-height:1.4}
+  .deleteMacaronBtn{background:transparent;color:#ef4444;border:1px solid #fecaca;border-radius:14px;padding:11px 16px;font-size:13px;font-weight:800;cursor:pointer;transition:all .15s ease;display:inline-flex;align-items:center;gap:6px}
+  .deleteMacaronBtn:hover{background:#fef2f2;border-color:#ef4444}
+  @media(max-width:960px){.macaronGrid{grid-template-columns:1fr}.simulatorWrap{max-width:620px;width:100%}}
   @media(max-width:760px){.grid2,.formGrid{grid-template-columns:1fr}.header h1{font-size:32px}
     .accountHead{align-items:flex-start;flex-direction:column}.field.full{grid-column:auto}}
 </style>
@@ -118,6 +165,102 @@
     </div>
   </form>
 </section>
+
+<section class="card macaronCard" id="macaronCard">
+  <div class="macaronHead">
+    <div>
+      <div class="eyebrow">{{ t('acc.macaron.eyebrow') }}</div>
+      <h2 class="sectionTitle" style="margin:0 0 6px">{{ t('acc.macaron.title') }}</h2>
+      <p class="hint" style="margin:0">{{ t('acc.macaron.subtitle') }}</p>
+    </div>
+  </div>
+
+  <form method="post" action="/app/account" enctype="multipart/form-data" id="macaronForm">
+    <input type="hidden" name="action" value="macaron">
+    {% set current_pos = user_macaron_position or auth_user.macaron_position or 'bottom-right' %}
+    <input type="hidden" id="macaronPositionInput" name="macaron_position" value="{{ current_pos }}">
+
+    <div class="macaronGrid">
+      <div class="macaronControls">
+        <div class="macaronPreviewBox">
+          <div class="macaronThumbFrame">
+            {% set macaron_src = user_macaron_url or auth_user.macaron_url or '/static/branding/coppelis-solutions-ia-badge.png' %}
+            <img id="currentMacaronThumb" src="{{ macaron_src }}" alt="{{ t('acc.macaron.image_alt') }}">
+          </div>
+          <div class="macaronThumbDetails">
+            <b>{{ t('acc.macaron.current') }}</b>
+            {% if user_macaron_url or auth_user.macaron_url %}
+              <span class="macaronBadgeStatus custom"><span style="width:6px;height:6px;border-radius:99px;background:#10b981"></span>{{ t('acc.macaron.custom_badge') }}</span>
+            {% else %}
+              <span class="macaronBadgeStatus default">{{ t('acc.macaron.default_badge') }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="macaronDropZone" id="macaronDropZone">
+          <input type="file" name="macaron_file" id="macaronFileInput" accept=".png,.ico,.webp,.jpg,.jpeg,.bmp,image/*" data-size-error="{{ t('acc.macaron.upload_too_large') }}">
+          <div class="dropIcon">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+          <div class="dropTitle">{{ t('acc.macaron.upload_label') }}</div>
+          <div class="dropHint">{{ t('acc.macaron.upload_hint') }}</div>
+          <div id="fileSelectedInfo" class="macaronFileSelectedInfo"></div>
+        </div>
+
+        <label class="toggleWrap">
+          <input type="checkbox" name="macaron_enabled" value="1" {% if user_macaron_enabled %}checked{% endif %}>
+          <div class="toggleText">
+            <b>{{ t('acc.macaron.default_enable') }}</b>
+            <span>{{ t('acc.macaron.default_enable_hint') }}</span>
+          </div>
+        </label>
+
+        <div class="actions" style="margin-top:20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <button class="btn save" type="submit">{{ t('acc.macaron.save') }}</button>
+          {% if user_macaron_url or auth_user.macaron_url %}
+            <button class="deleteMacaronBtn" type="submit" name="delete_macaron" value="1" onclick="return confirm('{{ t('acc.macaron.delete_confirm') }}')">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              {{ t('acc.macaron.delete_btn') }}
+            </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="simulatorWrap">
+        <div class="simulatorTitle">
+          <span>{{ t('acc.macaron.preview_title') }}</span>
+          <span id="simulatorPosLabel" style="color:var(--brand);font-weight:900">{{ auth_user.macaron_position_display }}</span>
+        </div>
+
+        <div class="simulatorCanvas" id="simulatorCanvas">
+          <div class="simulatedContent">
+            <div class="simBar title"></div>
+            <div class="simBar"></div>
+            <div class="simBar short"></div>
+          </div>
+          <div class="simBadge" id="simBadge">
+            <img id="simBadgeImg" src="{{ macaron_src }}" alt="{{ t('acc.macaron.preview_alt') }}">
+          </div>
+        </div>
+
+        <div style="margin-top:14px">
+          <div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">{{ t('acc.macaron.pos_label') }}</div>
+          <div class="positionGrid" id="positionPickerGrid">
+            <button type="button" class="posBtn {% if current_pos == 'top-left' %}active{% endif %}" data-pos="top-left" data-label="{{ t('macaron.pos.top_left') }}">↖ {{ t('macaron.pos.top_left') }}</button>
+            <button type="button" class="posBtn {% if current_pos == 'top-right' %}active{% endif %}" data-pos="top-right" data-label="{{ t('macaron.pos.top_right') }}">↗ {{ t('macaron.pos.top_right') }}</button>
+            <button type="button" class="posBtn centerBtn {% if current_pos == 'center' %}active{% endif %}" data-pos="center" data-label="{{ t('macaron.pos.center') }}">● {{ t('macaron.pos.center') }}</button>
+            <button type="button" class="posBtn {% if current_pos == 'bottom-left' %}active{% endif %}" data-pos="bottom-left" data-label="{{ t('macaron.pos.bottom_left') }}">↙ {{ t('macaron.pos.bottom_left') }}</button>
+            <button type="button" class="posBtn {% if current_pos == 'bottom-right' %}active{% endif %}" data-pos="bottom-right" data-label="{{ t('macaron.pos.bottom_right') }}">↘ {{ t('macaron.pos.bottom_right') }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</section>
 {% endblock %}
 {% block scripts %}
 <script>
@@ -138,6 +281,97 @@
   document.addEventListener('click',function(event){
     document.querySelectorAll('details.userMenu[open]').forEach(function(menu){ if(!menu.contains(event.target))menu.removeAttribute('open'); });
   });
+})();
+
+/* Script de gestion interactive du Macaron (simulateur temps réel & upload) */
+(function(){
+  const posInput = document.getElementById('macaronPositionInput');
+  const simBadge = document.getElementById('simBadge');
+  const simLabel = document.getElementById('simulatorPosLabel');
+  const posButtons = document.querySelectorAll('#positionPickerGrid .posBtn');
+
+  const POS_LABELS = {};
+  posButtons.forEach(btn => { POS_LABELS[btn.dataset.pos] = btn.dataset.label; });
+
+  function updateBadgePosition(pos) {
+    if (!simBadge) return;
+    simBadge.style.top = '';
+    simBadge.style.bottom = '';
+    simBadge.style.left = '';
+    simBadge.style.right = '';
+    simBadge.style.transform = '';
+
+    if (pos === 'top-left') {
+      simBadge.style.top = '14px';
+      simBadge.style.left = '14px';
+    } else if (pos === 'top-right') {
+      simBadge.style.top = '14px';
+      simBadge.style.right = '14px';
+    } else if (pos === 'bottom-left') {
+      simBadge.style.bottom = '14px';
+      simBadge.style.left = '14px';
+    } else if (pos === 'center') {
+      simBadge.style.top = '50%';
+      simBadge.style.left = '50%';
+      simBadge.style.transform = 'translate(-50%, -50%)';
+    } else {
+      simBadge.style.bottom = '14px';
+      simBadge.style.right = '14px';
+    }
+    if (simLabel) simLabel.textContent = POS_LABELS[pos] || pos;
+  }
+
+  posButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      posButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const pos = btn.getAttribute('data-pos');
+      if (posInput) posInput.value = pos;
+      updateBadgePosition(pos);
+    });
+  });
+
+  const initialPos = posInput ? posInput.value : 'bottom-right';
+  updateBadgePosition(initialPos);
+
+  // File upload preview
+  const fileInput = document.getElementById('macaronFileInput');
+  const fileInfo = document.getElementById('fileSelectedInfo');
+  const currentThumb = document.getElementById('currentMacaronThumb');
+  const simBadgeImg = document.getElementById('simBadgeImg');
+  const dropZone = document.getElementById('macaronDropZone');
+
+  if (fileInput) {
+    fileInput.addEventListener('change', function() {
+      const file = this.files && this.files[0];
+      if (file) {
+        if (file.size > 10 * 1024 * 1024) {
+          this.value = '';
+          if (fileInfo) { fileInfo.style.display = 'block'; fileInfo.textContent = this.dataset.sizeError; }
+          return;
+        }
+        if (fileInfo) {
+          fileInfo.style.display = 'block';
+          fileInfo.textContent = '✓ ' + file.name + ' (' + (file.size / 1024).toFixed(1) + ' Ko)';
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          if (currentThumb) currentThumb.src = e.target.result;
+          if (simBadgeImg) simBadgeImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (dropZone) {
+    ['dragenter', 'dragover'].forEach(name => {
+      dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(name => {
+      dropZone.addEventListener(name, (e) => { e.preventDefault(); dropZone.classList.remove('dragover'); });
+    });
+  }
 })();
 </script>
 {% endblock %}

@@ -216,7 +216,8 @@
         default_tags:getFieldValue('default_tags'),
         content_domains:domains,
         target_audience:getMultiValues('target_audience'),
-        preferred_formats:formats
+        preferred_formats:formats,
+        use_macaron:document.getElementById('useMacaronCheckbox')?document.getElementById('useMacaronCheckbox').checked:true
       };
       var r=await fetch(WEBHOOK_BASE+'/post-ideas-generate',{
         method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});

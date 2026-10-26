@@ -30,7 +30,7 @@
   <link rel="stylesheet" href="/static/css/toast.css?v={{ request.query_params.get('v', '23') }}">
   {% block extra_style %}{% endblock %}
   <!-- ui-kit.css : système visuel unifié, doit rester le DERNIER pour l'emporter -->
-  <link rel="stylesheet" href="/static/css/ui-kit.css?v={{ request.query_params.get('v', '23') }}">
+  <link rel="stylesheet" href="/static/css/ui-kit.css?v={{ request.query_params.get('v', '24') }}">
 </head>
 <body class="{% if auth_user %}has-sidebar{% endif %}">
 <div class="app-layout">
@@ -202,13 +202,13 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M2 12h20"></path><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
               <span>{{ t('menu.language') }}</span>
               {% set current_full_path = request.url.path ~ ('?' ~ request.url.query if request.url.query else '') %}
-              <span class="pgLangPills">
+              <select class="pgLangSelect" aria-label="{{ t('menu.language') }}"
+                      onchange="if(this.value){window.location.href=this.value;}">
                 {% for lc in supported_locales %}
-                <a class="pgLangPill {{ 'isActive' if lc == locale }}"
-                   href="/app/locale?to={{ lc }}&next={{ current_full_path | urlencode }}"
-                   aria-current="{{ 'true' if lc == locale else 'false' }}">{{ locale_short[lc] }}</a>
+                <option value="/app/locale?to={{ lc }}&next={{ current_full_path | urlencode }}"
+                        {{ 'selected' if lc == locale }}>{{ locale_names[lc] }}</option>
                 {% endfor %}
-              </span>
+              </select>
             </div>
 
             <div class="dropdown-divider"></div>

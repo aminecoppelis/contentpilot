@@ -23,9 +23,17 @@ logger = logging.getLogger("app.i18n")
 TRANSLATIONS_DIR = Path(__file__).resolve().parent.parent / "translations"
 
 DEFAULT_LOCALE = "fr"
-SUPPORTED_LOCALES = ["fr", "en", "ar"]
-LOCALE_NAMES = {"fr": "Français", "en": "English", "ar": "العربية"}
-LOCALE_SHORT = {"fr": "FR", "en": "EN", "ar": "AR"}
+SUPPORTED_LOCALES = ["fr", "en", "es", "it", "de", "ru", "ar"]
+LOCALE_NAMES = {
+    "fr": "Français",
+    "en": "English",
+    "es": "Español",
+    "it": "Italiano",
+    "de": "Deutsch",
+    "ru": "Русский",
+    "ar": "العربية",
+}
+LOCALE_SHORT = {"fr": "FR", "en": "EN", "es": "ES", "it": "IT", "de": "DE", "ru": "RU", "ar": "AR"}
 RTL_LOCALES = {"ar", "he", "fa", "ur"}
 
 COOKIE_NAME = "pg_lang"

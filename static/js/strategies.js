@@ -51,7 +51,12 @@
     var duration=String(form.duration_days&&form.duration_days.value||'').trim();
     var instructions=String(form.instructions&&form.instructions.value||'').trim();
     if(submitBtn) submitBtn.disabled=!(duration&&instructions);
-    if(aiBtn) aiBtn.disabled=!(duration&&instructions);
+    if(aiBtn){
+      aiBtn.disabled=!instructions;
+      aiBtn.title=aiBtn.getAttribute(aiBtn.disabled?'data-disabled-title':'data-ready-title')||'';
+      var aiHint=document.getElementById('strategyAiDisabledHint');
+      if(aiHint)aiHint.hidden=!aiBtn.disabled;
+    }
   }
   if(form){
     form.addEventListener('input',syncFormState);
@@ -61,14 +66,17 @@
 
   if(aiBtn)aiBtn.addEventListener('click',async function(){
     if(!form)return;
-    var previous=aiBtn.textContent;
-    aiBtn.disabled=true; aiBtn.textContent=window.t('js.generating');
+    var aiLabel=aiBtn.querySelector('span');
+    var previous=aiLabel?aiLabel.textContent:aiBtn.textContent;
+    aiBtn.disabled=true; aiBtn.classList.add('isGenerating');
+    if(aiLabel)aiLabel.textContent=window.t('js.generating');else aiBtn.textContent=window.t('js.generating');
     try{
       var r=await fetch(WEBHOOK_BASE+'/strategies/instructions/generate',{
         method:'POST',headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
           social_account_id:form.social_account_id.value,
           duration_days:Number(form.duration_days.value||0)||null,
+          posts_per_week:Number(form.posts_per_week&&form.posts_per_week.value||3),
           language:form.language.value,
           instructions:String(form.instructions.value||'').trim()
         })});
@@ -78,7 +86,7 @@
       if(text){ form.instructions.value=text; syncFormState(); }
       else toast(window.t('js.strat.no_instructions'),'error');
     }catch(e){ toast(e.message||window.t('js.strat.gen_failed'),'error'); }
-    finally{ aiBtn.textContent=previous; syncFormState(); }
+    finally{ if(aiLabel)aiLabel.textContent=previous;else aiBtn.textContent=previous;aiBtn.classList.remove('isGenerating');syncFormState(); }
   });
 
   if(form)form.addEventListener('submit',async function(event){
@@ -92,6 +100,7 @@
       var payload={
         objective_type:form.objective_type.value,
         duration_days:Number(form.duration_days.value||30),
+        posts_per_week:Number(form.posts_per_week&&form.posts_per_week.value||3),
         language:form.language.value,
         instructions:form.instructions.value,
         research_depth:form.research_depth.value,
@@ -261,6 +270,53 @@
         setTimeout(function(){window.location.reload();},300);
       }catch(e){detailToast(e.message||window.t('js.update_failed'),'error');btn.disabled=false;}
     });
+  });
+
+  var strategyEditModal=document.getElementById('strategyEditModal');
+  var strategyEditForm=document.getElementById('strategyEditForm');
+  var strategyEditOpen=document.getElementById('openStrategyEditBtn');
+  function setStrategyEditOpen(open){
+    if(!strategyEditModal)return;
+    strategyEditModal.classList.toggle('isOpen',Boolean(open));
+    strategyEditModal.setAttribute('aria-hidden',open?'false':'true');
+    document.body.classList.toggle('modalOpen',Boolean(open));
+    if(open&&strategyEditForm&&strategyEditForm.elements.title){
+      setTimeout(function(){strategyEditForm.elements.title.focus();},40);
+    }
+  }
+  if(strategyEditOpen)strategyEditOpen.addEventListener('click',function(){setStrategyEditOpen(true);});
+  ['strategyEditClose','strategyEditCancel'].forEach(function(id){
+    var button=document.getElementById(id);
+    if(button)button.addEventListener('click',function(){setStrategyEditOpen(false);});
+  });
+  if(strategyEditModal)strategyEditModal.addEventListener('click',function(event){
+    if(event.target===strategyEditModal)setStrategyEditOpen(false);
+  });
+  document.addEventListener('keydown',function(event){
+    if(event.key==='Escape'&&strategyEditModal&&strategyEditModal.classList.contains('isOpen'))setStrategyEditOpen(false);
+  });
+  if(strategyEditForm)strategyEditForm.addEventListener('submit',async function(event){
+    event.preventDefault();
+    var save=document.getElementById('strategyEditSave');
+    if(save)save.disabled=true;
+    try{
+      await detailApi({
+        action:'edit_strategy',strategy_id:strategyId,
+        title:String(strategyEditForm.elements.title.value||'').trim(),
+        objective_label:String(strategyEditForm.elements.objective_label.value||'').trim(),
+        executive_summary:String(strategyEditForm.elements.executive_summary.value||'').trim(),
+        primary_target:String(strategyEditForm.elements.primary_target.value||'').trim(),
+        instructions:String(strategyEditForm.elements.instructions.value||'').trim(),
+        notes:String(strategyEditForm.elements.notes.value||'').trim(),
+        duration_days:Number(strategyEditForm.elements.duration_days.value||30),
+        posts_per_week:Number(strategyEditForm.elements.posts_per_week.value||3)
+      });
+      detailToast(strategyEditForm.getAttribute('data-success')||window.t('js.updated'));
+      setTimeout(function(){window.location.reload();},350);
+    }catch(error){
+      detailToast(error.message||strategyEditForm.getAttribute('data-error')||window.t('js.update_failed'),'error');
+      if(save)save.disabled=false;
+    }
   });
 
   async function schedulePostsFromActions(actionIds,trigger){
