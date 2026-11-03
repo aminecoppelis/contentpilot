@@ -569,6 +569,9 @@
       else{document.getElementById('mediaInstructions').value=String(metadata.user_instructions||'');mediaInspirationDataUrl=String(target.url||'');document.getElementById('mediaInspirationStatus').textContent=window.t('js.ff.current_as_ref');}
     }
     document.querySelectorAll('input[name="media_type"]').forEach(function(r){r.checked=r.value===requested;r.disabled=!!target&&r.value!==requested;var label=r.closest('.mediaTypeOption');if(label)label.style.opacity=r.disabled?'0.45':'1';});
+    var badge=document.getElementById('mediaUseMacaron');badge.checked=typeof metadata.use_macaron==='boolean'?metadata.use_macaron:ideaAt(i).use_macaron!==false;
+    document.getElementById('mediaMacaronPosition').value=metadata.macaron_position||'bottom-right';
+    window.syncMediaMacaron();
     var idea=ideaAt(i);document.getElementById('mediaModalIdea').innerHTML='<b>#'+(Number(i)+1)+' · '+esc(idea.post_title||idea.title||window.t('js.post'))+'</b><br><span>'+esc(idea.recommended_format||'post')+'</span>';
     var title=document.getElementById('mediaModalTitle'),desc=document.getElementById('mediaModalDescription');
     if(title)title.textContent=target?window.t('js.media.edit_title'):window.t('pv.media.generate');
@@ -610,7 +613,7 @@
     if(!styles.length){status.textContent=window.t('js.pick_style',{type:(type==='video'?window.t('js.video').toLowerCase():window.t('js.image').toLowerCase())});status.className='modalStatus error';return false;}
     var aspect=type==='video'?document.getElementById('videoAspect').value:document.getElementById('imageAspect').value;
     var rawInstructions=type==='video'?(document.getElementById('modalVideoScenarioText').value||''):(document.getElementById('mediaInstructions').value||'');
-    var payload={idea_id:idea.idea_id,prompt:buildMediaPrompt(i,type),aspect_ratio:aspect,quality:document.getElementById('mediaQuality').value,visual_style:styles.join(', '),user_instructions:rawInstructions};
+    var payload={idea_id:idea.idea_id,prompt:buildMediaPrompt(i,type),aspect_ratio:aspect,quality:document.getElementById('mediaQuality').value,visual_style:styles.join(', '),user_instructions:rawInstructions,use_macaron:document.getElementById('mediaUseMacaron').checked,macaron_position:document.getElementById('mediaMacaronPosition').value};
     if(currentMediaMode==='edit'&&currentMediaTarget)payload.edit_source_media_id=String(currentMediaTarget.id||'');
     if(type==='image'){payload.image_model=document.getElementById('imageModel').value;if(mediaInspirationDataUrl)payload.image_refs=[mediaInspirationDataUrl];}
     else{payload.video_model='x-ai/grok-imagine-video';payload.duration=Number(document.getElementById('videoDuration').value||6);payload.scenario=rawInstructions;var ffSource=document.getElementById('videoFirstFrameSource').value,ff='';if(ffSource==='selected_image')ff=document.getElementById('videoFirstFrameCarouselImage').value||'';else if(ffSource==='upload')ff=mediaFirstFrameDataUrl;else if(ffSource==='generate_image')ff=mediaFirstFrameGeneratedUrl;if(ff)payload.first_frame_url=ff;}
@@ -619,9 +622,37 @@
     catch(e){status.textContent=e.message||window.t('js.gen_failed');status.className='modalStatus error';}
     finally{if(loader)loader.classList.remove('show');if(confirm)confirm.disabled=false;}return false;
   };
-  window.importMedia=async function(i){
-    var url=prompt(window.t('js.import.prompt'));if(!url)return false;var idea=ideaAt(i);
-    try{var r=await fetch(WEBHOOK_BASE+'/post-ideas-media-import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idea_id:idea.idea_id,image_url:url})});var d=await r.json().catch(function(){return {};});if(!r.ok||d.success===false)throw new Error(d.message||window.t('js.import_failed'));showToast(window.t('js.image.imported'),'success');await window.loadIdeaMedia(i,1,null);}catch(e){showToast(e.message||window.t('js.import_failed'),'error');}return false;
+  window.syncMediaMacaron=function(){
+    var enabled=document.getElementById('mediaUseMacaron').checked;
+    document.getElementById('mediaMacaronPositionWrap').style.display=enabled?'flex':'none';
+    document.getElementById('mediaMacaronThumbImg').parentElement.style.display=enabled?'flex':'none';
+  };
+  var mediaUploadsInProgress=new Set();
+  window.importMedia=function(i){
+    if(mediaUploadsInProgress.has(i))return false;
+    var input=document.createElement('input');input.type='file';input.multiple=true;
+    input.accept='image/jpeg,image/png,image/webp,video/mp4,video/quicktime,.mov';
+    input.onchange=async function(){
+      var files=Array.from(input.files||[]);if(!files.length)return;
+      mediaUploadsInProgress.add(i);
+      var imported=0;
+      try{
+        for(var file of files){
+          var limit=file.type.startsWith('image/')?20:100;
+          if(file.size>limit*1024*1024){showToast(file.name+' : '+limit+' Mo maximum.','error');continue;}
+          showToast('Import de '+file.name+' en cours?','info');
+          var form=new FormData();form.append('idea_id',ideaAt(i).idea_id);form.append('file',file);
+          try{
+            var r=await fetch(WEBHOOK_BASE+'/post-ideas-media-upload',{method:'POST',body:form});
+            var d=await r.json().catch(function(){return {};});
+            if(!r.ok||d.success===false)throw new Error(d.message||window.t('js.import_failed'));
+            imported++;
+          }catch(e){showToast(file.name+' : '+(e.message||window.t('js.import_failed')),'error');}
+        }
+        if(imported){await window.loadIdeaMedia(i,1,null);showToast(imported+' m?dia(s) import?(s).','success');}
+      }finally{mediaUploadsInProgress.delete(i);}
+    };
+    input.click();return false;
   };
 
   /* ---------- Publication — parité du modal n8n V90 ---------- */

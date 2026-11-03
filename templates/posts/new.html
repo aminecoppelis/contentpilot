@@ -115,14 +115,14 @@
     <div class="field" style="margin-top:20px;padding:16px 18px;background:rgba(248,250,252,0.92);border:1px solid #e2e8f0;border-radius:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:14px">
         <label style="display:inline-flex;align-items:center;cursor:pointer">
-          <input type="checkbox" name="use_macaron" id="useMacaronCheckbox" value="true" {% if auth_user.macaron_enabled %}checked{% endif %} style="width:20px;height:20px;accent-color:var(--brand);cursor:pointer">
+          <input type="checkbox" name="use_macaron" id="useMacaronCheckbox" onchange="document.getElementById('newMacaronPreview').style.display=this.checked?'flex':'none'" value="true" {% if auth_user.macaron_enabled %}checked{% endif %} style="width:20px;height:20px;accent-color:var(--brand);cursor:pointer">
         </label>
         <div>
           <b style="display:block;font-size:14px;color:var(--ink-1)">{{ t('pn.f.macaron.title') }}</b>
           <span style="display:block;font-size:12px;color:var(--ink-2);margin-top:2px">{{ t('pn.f.macaron.desc') }}</span>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
+      <div id="newMacaronPreview" style="display:{{ 'flex' if auth_user.macaron_enabled else 'none' }};align-items:center;gap:10px">
         <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;padding:4px;box-shadow:0 2px 6px rgba(0,0,0,0.05)">
           <img src="{{ auth_user.macaron_url or '/static/branding/coppelis-solutions-ia-badge.png' }}" alt="Macaron" style="max-width:100%;max-height:100%;object-fit:contain">
         </div>

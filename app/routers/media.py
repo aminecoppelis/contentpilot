@@ -10,10 +10,13 @@ from __future__ import annotations
 import base64
 import json
 import re
+from io import BytesIO
+from uuid import UUID, uuid4
 
 import httpx
 
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, UploadFile, File, Form
+from PIL import Image, UnidentifiedImageError
 from fastapi.responses import JSONResponse
 
 from app.database import get_pool
@@ -412,6 +415,74 @@ async def get_video_status(media_id: str, user=Depends(require_auth)):
     except Exception as exc:  # noqa: BLE001
         return JSONResponse({"success": False, "error": "VIDEO_STATUS_FAILED",
                              "message": str(exc) or "Lecture du statut vidéo impossible."}, status_code=502)
+
+
+MAX_IMAGE_UPLOAD = 20 * 1024 * 1024
+MAX_VIDEO_UPLOAD = 100 * 1024 * 1024
+
+
+def _uploaded_media_format(data: bytes) -> tuple[str, str, str]:
+    """Identify supported media from content, never from the supplied filename."""
+    if len(data) >= 12 and data[4:8] == b"ftyp":
+        brands = data[8:64]
+        if b"qt  " in brands:
+            return "video", ".mov", "video/quicktime"
+        if any(brand in brands for brand in (b"isom", b"iso2", b"mp41", b"mp42", b"avc1", b"M4V ")):
+            return "video", ".mp4", "video/mp4"
+    try:
+        with Image.open(BytesIO(data)) as image:
+            image.verify()
+            formats = {"JPEG": (".jpg", "image/jpeg"), "PNG": (".png", "image/png"),
+                       "WEBP": (".webp", "image/webp")}
+            if image.format in formats:
+                suffix, mime = formats[image.format]
+                return "image", suffix, mime
+    except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError):
+        pass
+    raise ValueError("Format non pris en charge. Choisissez une photo JPG, PNG, WebP ou une vidéo MP4, MOV.")
+
+
+@router.post("/post-ideas-media-upload")
+async def post_ideas_media_upload(idea_id: str = Form(...), file: UploadFile = File(...),
+                                  user=Depends(require_auth)):
+    try:
+        UUID(idea_id)
+    except ValueError:
+        await file.close()
+        return JSONResponse({"success": False, "message": "Idée invalide."}, status_code=422)
+    try:
+        if not await _idea_exists(idea_id, user.active_workspace_id):
+            return JSONResponse({"success": False, "message": "Idée introuvable."}, status_code=404)
+        data = await file.read(MAX_VIDEO_UPLOAD + 1)
+        if len(data) > MAX_VIDEO_UPLOAD:
+            return JSONResponse({"success": False, "message": "Vidéo trop volumineuse (100 Mo maximum)."}, status_code=413)
+        try:
+            media_type, suffix, mime = _uploaded_media_format(data)
+        except ValueError as exc:
+            return JSONResponse({"success": False, "message": str(exc)}, status_code=422)
+        if media_type == "image" and len(data) > MAX_IMAGE_UPLOAD:
+            return JSONResponse({"success": False, "message": "Photo trop volumineuse (20 Mo maximum)."}, status_code=413)
+        media_id = str(uuid4())
+        file_path, file_name, size_bytes = _write_media(media_id, data, suffix)
+        url = _public_url(file_name)
+        try:
+            async with get_pool().acquire() as conn:
+                await conn.execute(
+                    """INSERT INTO public.post_media
+                       (id, idea_id, workspace_id, media_type, source, status, generation_status,
+                        file_path, file_name, public_url, mime_type, size_bytes)
+                       VALUES ($1::uuid,$2::uuid,$3::uuid,$4,'imported','ready','done',$5,$6,$7,$8,$9)""",
+                    media_id, idea_id, user.active_workspace_id, media_type,
+                    file_path, file_name, url, mime, size_bytes,
+                )
+        except Exception:
+            from pathlib import Path
+            Path(file_path).unlink(missing_ok=True)
+            raise
+        return JSONResponse({"success": True, "data": {"media_id": media_id, "url": url,
+                            "media_type": media_type, "status": "ready"}})
+    finally:
+        await file.close()
 
 
 @router.post("/post-ideas-media-import")
