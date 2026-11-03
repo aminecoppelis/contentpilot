@@ -38,7 +38,7 @@
         <td>{{ r.media_count }}</td>
         <td>{{ history_publication_badges(r.publications) }}</td>
         <td><div class="actions">
-          <a class="btn light" href="/app/posts/view?request_id={{ r.request_id }}&idea_id={{ r.idea_id }}">{{ t('strat.open') }}</a>
+          <a class="openPostButton btn primary" href="/app/posts/view?request_id={{ r.request_id }}&idea_id={{ r.idea_id }}">{{ t('strat.open') }}</a>
         </div></td>
       </tr>
     {% else %}

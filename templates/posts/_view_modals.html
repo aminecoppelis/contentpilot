@@ -323,3 +323,25 @@
 </div>
 
 <div id="toastContainer" class="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+<div class="modalOverlay" id="pixabayModal" role="dialog" aria-modal="true" aria-labelledby="pixabayTitle">
+  <div class="modal pixabayModalBox">
+    <div class="modalTop"><div><h2 id="pixabayTitle">Choisir des photos Pixabay</h2><p>Recherchez des photos et ajoutez celles de votre choix au post.</p></div>
+      <button type="button" class="modalClose" aria-label="Fermer" onclick="window.closePixabay()">×</button>
+    </div>
+    <div class="modalBody">
+      <form id="pixabaySearchForm" class="pixabaySearchForm">
+        <label for="pixabayQuery">Recherche liée au post</label>
+        <input type="search" id="pixabayQuery" maxlength="100" placeholder="Ex. équipe, bureau, nature…" required>
+        <button type="submit" class="mediaBtn" id="pixabaySearchBtn">Rechercher</button>
+      </form>
+      <div id="pixabaySuggestions" class="pixabaySuggestions" aria-label="Recherches suggérées pour ce post"></div>
+      <p class="mediaFieldHelp">Sélectionnez plusieurs suggestions pour les combiner, puis cliquez sur Rechercher. Cliquez à nouveau sur une suggestion pour la retirer.</p>
+      <p>Photos proposées par <a href="https://pixabay.com/" target="_blank" rel="noopener noreferrer">Pixabay</a> · <a href="https://pixabay.com/service/license-summary/" target="_blank" rel="noopener noreferrer">Licence des contenus</a></p>
+      <div id="pixabayStatus" role="status" aria-live="polite"></div>
+      <div id="pixabayResults" class="pixabayResults"></div>
+      <div class="pixabayPagination"><button type="button" class="mediaDownload" id="pixabayPrev" disabled>Précédent</button><span id="pixabayPage"></span><button type="button" class="mediaDownload" id="pixabayNext" disabled>Suivant</button></div>
+      <div class="modalActions"><button type="button" class="modalCancel" onclick="window.closePixabay()">Fermer</button><button type="button" class="modalConfirm" id="pixabayImportBtn" disabled>Ajouter les photos sélectionnées</button></div>
+    </div>
+  </div>
+</div>

@@ -63,7 +63,7 @@
           {% if s.status == 'generating' %}
           <button class="btn secondary tiny strategyTableActionBtn" type="button" disabled>{{ t('strat.loader') }}</button>
           {% else %}
-          <a class="btn secondary tiny strategyTableActionBtn" href="/app/strategies?strategy_id={{ s.id }}">{{ t('strat.open') }}</a>
+          <a class="openPostButton btn secondary tiny strategyTableActionBtn" href="/app/strategies?strategy_id={{ s.id }}">{{ t('strat.open') }}</a>
           {% endif %}
           <button type="button" class="btn danger tiny strategyListDeleteBtn"
                   data-strategy-id="{{ s.id }}" data-strategy-title="{{ s.title or t('strat.default_title') }}">{{ t('common.delete') }}</button>

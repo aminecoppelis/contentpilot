@@ -192,7 +192,7 @@
     if(ok||err||link){
       f.className='notice'+(err?' error':'');
       f.textContent=err||ok||(link?{{ t('ws.invite.created') | tojson }}:'');
-      if(link){const a=document.createElement('a');a.href=link;a.textContent={{ (' ' ~ t('ws.invite.open_link')) | tojson }};a.style.marginLeft='8px';f.appendChild(a);}
+      if(link){const a=document.createElement('a');a.href=link;a.className='btn openPostButton';a.textContent={{ (' ' ~ t('ws.invite.open_link')) | tojson }};a.style.marginLeft='8px';f.appendChild(a);}
       u.searchParams.delete('success');u.searchParams.delete('error');u.searchParams.delete('invite_link');
       history.replaceState({},'',u.pathname+(u.searchParams.toString()?'?'+u.searchParams.toString():''));
     }

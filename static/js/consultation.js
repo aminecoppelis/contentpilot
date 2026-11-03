@@ -338,6 +338,7 @@
     if(VIEW.readOnly)return '<div class="mediaHeader"><span class="mediaLabel">'+window.t('js.media')+'</span></div>';
     return '<div class="mediaHeader"><span class="mediaLabel">'+window.t('js.media')+'</span><div class="mediaHeaderActions">'+
       '<button type="button" class="mediaBtn" id="media-btn-inline-'+i+'" data-media-index="'+i+'" onclick="return window.openMediaModal('+i+')">'+window.t('js.media.generate')+'</button>'+
+      '<button type="button" class="mediaDownload" onclick="window.openPixabay('+i+')">Photos Pixabay</button>'+
       '<button type="button" class="mediaDownload" onclick="importMedia('+i+')">'+window.t('js.media.import')+'</button></div></div>';
   }
   function mediaCollapsedHtml(i,count){
@@ -640,7 +641,7 @@
         for(var file of files){
           var limit=file.type.startsWith('image/')?20:100;
           if(file.size>limit*1024*1024){showToast(file.name+' : '+limit+' Mo maximum.','error');continue;}
-          showToast('Import de '+file.name+' en cours?','info');
+          showToast('Import de '+file.name+' en cours…','info');
           var form=new FormData();form.append('idea_id',ideaAt(i).idea_id);form.append('file',file);
           try{
             var r=await fetch(WEBHOOK_BASE+'/post-ideas-media-upload',{method:'POST',body:form});
@@ -649,11 +650,116 @@
             imported++;
           }catch(e){showToast(file.name+' : '+(e.message||window.t('js.import_failed')),'error');}
         }
-        if(imported){await window.loadIdeaMedia(i,1,null);showToast(imported+' m?dia(s) import?(s).','success');}
+        if(imported){await window.loadIdeaMedia(i,1,null);showToast(imported+' média(s) importé(s).','success');}
       }finally{mediaUploadsInProgress.delete(i);}
     };
     input.click();return false;
   };
+
+  var pixabayState={idea:null,page:1,total:0,query:'',selected:new Set(),busy:false};
+  function pixabayStatus(message,error){var el=document.getElementById('pixabayStatus');el.textContent=message;el.className=error?'error':'';}
+  function syncPixabaySuggestions(){
+    var value=' '+document.getElementById('pixabayQuery').value.trim().replace(/\s+/g,' ').toLocaleLowerCase()+' ';
+    document.querySelectorAll('#pixabaySuggestions button').forEach(function(button){
+      button.setAttribute('aria-pressed',String(value.includes(' '+button.dataset.query.toLocaleLowerCase()+' ')));
+    });
+  }
+  function syncPixabayButtons(){
+    var state=pixabayState;
+    document.getElementById('pixabayPrev').disabled=state.busy||state.page<=1;
+    document.getElementById('pixabayNext').disabled=state.busy||state.page*12>=state.total;
+    document.getElementById('pixabayImportBtn').disabled=state.busy||!state.selected.size;
+    document.getElementById('pixabaySearchBtn').disabled=state.busy;
+    document.querySelectorAll('#pixabaySuggestions button').forEach(function(button){button.disabled=state.busy;});
+    document.querySelectorAll('#pixabayResults input').forEach(function(input){input.disabled=state.busy;});
+  }
+  window.openPixabay=async function(i){
+    if(pixabayState.busy)return false;
+    pixabayState.idea=i;pixabayState.selected.clear();pixabayState.page=1;pixabayState.total=0;
+    document.getElementById('pixabayResults').replaceChildren();document.getElementById('pixabayPage').textContent='';
+    document.getElementById('pixabayQuery').value='';document.getElementById('pixabaySuggestions').replaceChildren();
+    pixabayStatus('Analyse du sujet du post pour trouver des photos adaptées…');syncPixabayButtons();
+    document.getElementById('pixabayModal').classList.add('isVisible');document.getElementById('pixabayQuery').focus();
+    pixabayState.busy=true;syncPixabayButtons();
+    try{
+      var idea=ideaAt(i),editor=postBox(i);
+      var r=await fetch(WEBHOOK_BASE+'/media/pixabay/keywords',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idea_id:idea.idea_id,title:idea.post_title||idea.title||'',post_text:editor?editor.value:(idea.full_text||idea.summary||'')})});
+      var d=await r.json().catch(function(){return {};});if(!r.ok||d.success===false)throw new Error(d.message||'Analyse du post impossible.');
+      d.data.queries.forEach(function(query){
+        var button=document.createElement('button');button.type='button';button.className='mediaDownload';button.textContent=query;button.dataset.query=query;button.setAttribute('aria-pressed','false');
+        button.onclick=function(){
+          if(pixabayState.busy)return;
+          var input=document.getElementById('pixabayQuery'),value=input.value.trim().replace(/\s+/g,' ');
+          if(button.getAttribute('aria-pressed')==='true'){
+            var padded=' '+value+' ',index=padded.toLocaleLowerCase().indexOf(' '+query.toLocaleLowerCase()+' ');
+            value=(padded.slice(0,index)+' '+padded.slice(index+query.length+2)).trim().replace(/\s+/g,' ');
+          }else{value=(value+' '+query).trim();}
+          if(value.length>100){pixabayStatus('La recherche est limitée à 100 caractères. Retirez une suggestion avant d’en ajouter une autre.',true);return;}
+          input.value=value;syncPixabaySuggestions();
+          pixabayStatus('Vous pouvez combiner plusieurs suggestions. Cliquez sur Rechercher pour actualiser les photos.');
+        };
+        document.getElementById('pixabaySuggestions').append(button);
+      });
+      document.getElementById('pixabayQuery').value=d.data.queries[0];
+      syncPixabaySuggestions();
+    }catch(e){pixabayStatus(e.message||'Analyse du post impossible.',true);return false;}
+    finally{pixabayState.busy=false;syncPixabayButtons();}
+    searchPixabay(1);return false;
+  };
+  window.closePixabay=function(){
+    if(pixabayState.busy)return false;
+    document.getElementById('pixabayModal').classList.remove('isVisible');
+    var trigger=document.querySelector('#media-slot-'+pixabayState.idea+' [onclick*="openPixabay"]');if(trigger)trigger.focus();return false;
+  };
+  async function searchPixabay(page){
+    if(pixabayState.busy)return;
+    var query=page===1?document.getElementById('pixabayQuery').value.trim():pixabayState.query;if(!query)return;
+    pixabayState.busy=true;syncPixabayButtons();pixabayStatus('Recherche en cours…');
+    try{
+      var r=await fetch(WEBHOOK_BASE+'/media/pixabay?q='+encodeURIComponent(query)+'&page='+page);
+      var d=await r.json().catch(function(){return {};});if(!r.ok||d.success===false)throw new Error(d.message||'Recherche impossible.');
+      if(query!==pixabayState.query)pixabayState.selected.clear();
+      pixabayState.query=query;pixabayState.page=page;pixabayState.total=d.data.total;
+      var results=document.getElementById('pixabayResults');results.replaceChildren();
+      d.data.photos.forEach(function(photo){
+        var card=document.createElement('div');card.className='pixabayPhoto';
+        var label=document.createElement('label'),image=document.createElement('img');image.src=photo.preview;image.alt=photo.tags;image.loading='lazy';
+        var text=document.createElement('span'),check=document.createElement('input');check.type='checkbox';check.dataset.photoId=photo.id;check.checked=pixabayState.selected.has(photo.id);
+        check.addEventListener('change',function(){if(check.checked)pixabayState.selected.add(photo.id);else pixabayState.selected.delete(photo.id);syncPixabayButtons();});
+        text.append(check,document.createTextNode('Choisir cette photo'));label.append(image,text);
+        var credit=document.createElement('a');credit.href=photo.page_url;credit.target='_blank';credit.rel='noopener noreferrer';credit.textContent=photo.author+' · Pixabay';
+        card.append(label,credit);results.append(card);
+      });
+      document.getElementById('pixabayPage').textContent='Page '+page;
+      pixabayStatus(d.data.photos.length?'Sélectionnez une ou plusieurs photos.':'Aucune photo trouvée. Essayez d’autres mots-clés.');
+    }catch(e){pixabayStatus(e.message||'Recherche impossible.',true);}
+    finally{pixabayState.busy=false;syncPixabayButtons();}
+  }
+  var pixabayForm=document.getElementById('pixabaySearchForm');
+  if(pixabayForm){
+    document.getElementById('pixabayQuery').addEventListener('input',syncPixabaySuggestions);
+    pixabayForm.addEventListener('submit',function(e){e.preventDefault();searchPixabay(1);});
+    document.getElementById('pixabayPrev').onclick=function(){searchPixabay(pixabayState.page-1);};
+    document.getElementById('pixabayNext').onclick=function(){searchPixabay(pixabayState.page+1);};
+    document.getElementById('pixabayImportBtn').onclick=async function(){
+      if(pixabayState.busy||!pixabayState.selected.size)return;
+      var i=pixabayState.idea,ids=Array.from(pixabayState.selected),count=0,errors=[];
+      pixabayState.busy=true;syncPixabayButtons();
+      try{
+        for(var id of ids){
+          pixabayStatus('Import de la photo '+(count+1)+' / '+ids.length+'…');
+          try{
+            var r=await fetch(WEBHOOK_BASE+'/media/pixabay/import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idea_id:ideaAt(i).idea_id,image_id:id})});
+            var d=await r.json().catch(function(){return {};});if(!r.ok||d.success===false)throw new Error(d.message||'Import impossible.');
+            count++;pixabayState.selected.delete(id);
+          }catch(e){errors.push(e.message||'Import impossible.');}
+        }
+        if(count)await window.loadIdeaMedia(i,1,null);
+        document.querySelectorAll('#pixabayResults input').forEach(function(input){input.checked=pixabayState.selected.has(Number(input.dataset.photoId));});
+        pixabayStatus(count+' photo(s) ajoutée(s).'+(errors.length?' '+errors.join(' '):' Choisissez le média à publier dans la galerie.'),errors.length>0);
+      }finally{pixabayState.busy=false;syncPixabayButtons();}
+    };
+  }
 
   /* ---------- Publication — parité du modal n8n V90 ---------- */
   var publishAccountsCache={loaded:false,loading:null,items:[]};

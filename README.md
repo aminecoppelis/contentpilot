@@ -641,3 +641,21 @@ sudo journalctl -u post-generator | grep -i mailer | tail -20
 | Message classé indésirable | Vérifier le dossier spam du destinataire |
 | Absence de SPF/DKIM sur le domaine expéditeur | Consulter les logs de rejet du fournisseur |
 | `SMTP_USER` incorrect | Chez OVH, c'est l'adresse email complète, pas un identifiant court |
+
+
+## Photos Pixabay
+
+Dans la galerie des médias d’un post, **Photos Pixabay** ouvre une recherche
+automatique liée au contenu actuel du post. L’IA déjà configurée via OpenRouter
+propose cinq recherches photo courtes et distinctes ; la première est lancée
+automatiquement et les autres sont cliquables. La recherche reste modifiable.
+La sélection de plusieurs photos et la pagination sont disponibles. Les photos ajoutées sont
+copiées dans le stockage local, puis se choisissent dans la galerie pour publication.
+Les photos importées sont conservées telles quelles, sans ajout de macaron.
+
+Créer une clé gratuite sur https://pixabay.com/api/docs/, renseigner
+`PIXABAY_API_KEY` dans `.env`, puis redémarrer le serveur. La clé reste côté
+serveur. Les réponses sont mises en cache pendant 24 heures dans `.cache/pixabay`
+(hors des fichiers publics). La recherche affiche la source et les photographes.
+Pixabay est un service externe gratuit sous sa licence de contenus, pas un
+service open source. Cette intégration n’ajoute aucune dépendance payante.

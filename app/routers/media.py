@@ -15,7 +15,7 @@ from uuid import UUID, uuid4
 
 import httpx
 
-from fastapi import APIRouter, Depends, Body, UploadFile, File, Form
+from fastapi import APIRouter, Depends, Body, UploadFile, File, Form, Query
 from PIL import Image, UnidentifiedImageError
 from fastapi.responses import JSONResponse
 
@@ -26,6 +26,81 @@ from app.services.image_result import apply_brand_badge
 from app.services.media_storage import public_url as _public_url, write_media as _write_media, persist_video_download
 
 router = APIRouter(tags=["Media"])
+
+
+@router.post("/media/pixabay/keywords")
+async def pixabay_post_keywords(payload: dict = Body(...), user=Depends(require_auth)):
+    from app.services import pixabay
+    from app.services.ai import AIGenerationError
+    idea_id = str(payload.get("idea_id") or "")
+    try:
+        UUID(idea_id)
+    except ValueError:
+        return JSONResponse({"success": False, "message": "Post invalide."}, status_code=422)
+    async with get_pool().acquire() as conn:
+        row = await conn.fetchrow(
+            """SELECT pi.title, pi.summary, pv.post_text FROM public.post_ideas pi
+               LEFT JOIN public.post_versions pv ON pv.id=pi.current_version_id
+               WHERE pi.id=$1::uuid AND pi.workspace_id=$2::uuid AND pi.deleted_at IS NULL""",
+            idea_id, user.active_workspace_id,
+        )
+    if row is None:
+        return JSONResponse({"success": False, "message": "Post introuvable."}, status_code=404)
+    text = str(payload.get("post_text") or row["post_text"] or row["summary"] or "").strip()
+    title = str(payload.get("title") or row["title"] or "").strip()
+    if not text and not title:
+        return JSONResponse({"success": False, "message": "Le post est vide. Saisissez une recherche photo."}, status_code=422)
+    try:
+        queries = await pixabay.post_queries(title, text)
+    except (AIGenerationError, ValueError, httpx.HTTPError):
+        return JSONResponse({"success": False, "message": "Analyse du post indisponible. Saisissez une recherche photo ou réessayez."}, status_code=502)
+    return JSONResponse({"success": True, "data": {"queries": queries}})
+
+
+@router.get("/media/pixabay")
+async def search_pixabay(q: str = Query(..., min_length=1, max_length=100),
+                         page: int = Query(1, ge=1, le=42), user=Depends(require_auth)):
+    from app.services import pixabay
+    try:
+        data = pixabay.search_results(await pixabay.photos(query=q, page=page))
+        return JSONResponse({"success": True, "data": data})
+    except ValueError as exc:
+        return JSONResponse({"success": False, "message": str(exc)}, status_code=422)
+
+
+@router.post("/media/pixabay/import")
+async def import_pixabay(payload: dict = Body(...), user=Depends(require_auth)):
+    from app.services import pixabay
+    idea_id = str(payload.get("idea_id") or "")
+    try:
+        UUID(idea_id)
+        image_id = int(payload.get("image_id") or 0)
+        if image_id <= 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        return JSONResponse({"success": False, "message": "Photo ou post invalide."}, status_code=422)
+    if not await _idea_exists(idea_id, user.active_workspace_id):
+        return JSONResponse({"success": False, "message": "Idée introuvable."}, status_code=404)
+    try:
+        data = await pixabay.photos(image_id=image_id)
+        hit = next((h for h in data.get("hits", []) if h["id"] == image_id), None)
+        if not hit:
+            raise ValueError("Photo introuvable sur Pixabay.")
+        url = pixabay.photo_url(hit.get("largeImageURL") or hit["webformatURL"])
+    except ValueError as exc:
+        return JSONResponse({"success": False, "message": str(exc)}, status_code=422)
+    result = await post_ideas_media_import({"idea_id": idea_id, "image_url": url}, user)
+    if result.status_code == 200:
+        media_id = json.loads(result.body)["data"]["media_id"]
+        async with get_pool().acquire() as conn:
+            await conn.execute(
+                "UPDATE public.post_media SET metadata=COALESCE(metadata,'{}'::jsonb) || $2::jsonb "
+                "WHERE id=$1::uuid AND workspace_id=$3::uuid",
+                media_id, json.dumps({"provider": "pixabay", "pixabay_id": image_id,
+                                     "author": hit.get("user", ""), "source_page": hit.get("pageURL", "")}),
+                user.active_workspace_id,
+            )
+    return result
 
 
 async def _idea_exists(idea_id: str, workspace_id: str) -> bool:

@@ -303,3 +303,18 @@ body{background:#f7f8fa}
 .block,.score{border-color:#e6eaf0;border-radius:10px;background:#fafbfc}.scores{gap:7px}
 .actions{margin-top:12px;padding-top:12px}.reviewNote{border-radius:10px;background:#fafbfc}
 @media(max-width:760px){.card{padding:13px}.postReady,.mediaSection{padding:11px}.mediaHeader{align-items:flex-start;flex-direction:column}.mediaHeaderActions{width:100%}.mediaHeaderActions>*{flex:1}.mediaActionRow .mediaUiBtn{flex:1}.h1{font-size:28px}}
+
+.pixabayModalBox{width:min(960px,96vw);max-height:90vh;overflow:auto}
+.pixabaySearchForm{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pixabaySearchForm input{flex:1;min-width:180px;padding:10px;border:1px solid #cbd5e1;border-radius:8px}
+.pixabayResults{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin:16px 0}
+.pixabayPhoto{border:1px solid #cbd5e1;border-radius:12px;overflow:hidden;background:#fff}
+.pixabayPhoto label{display:block;cursor:pointer}.pixabayPhoto img{display:block;width:100%;height:145px;object-fit:cover}
+.pixabayPhoto label span{display:flex;align-items:center;gap:8px;padding:10px}
+.pixabayPhoto input{width:18px;height:18px;accent-color:#2563eb}
+.pixabayPhoto:has(input:checked){outline:3px solid #2563eb}
+.pixabayPhoto>a{display:block;padding:0 10px 10px;color:#2563eb;font-size:12px}
+.pixabayPagination{display:flex;align-items:center;justify-content:center;gap:16px}
+.pixabaySuggestions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.pixabaySuggestions button[aria-pressed="true"]{background:#2563eb!important;border-color:#2563eb!important;color:#fff!important}
+#pixabayStatus{margin-top:12px}#pixabayStatus.error{color:#b91c1c}

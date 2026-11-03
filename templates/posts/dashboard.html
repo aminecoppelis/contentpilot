@@ -38,7 +38,7 @@
     </li>
     <li class="{{ 'done' if planned_actions or published_posts else ('current' if generated_posts else '') }}">
       <span class="quickStepNumber">{{ '✓' if planned_actions or published_posts else '4' }}</span><div><b>{{ t('dash.quick.plan.title') }}</b>{% if generated_posts and not (planned_actions or published_posts) %}<em>{{ t('dash.quick.now') }}</em>{% endif %}<small>{{ t('dash.quick.plan.text') }}</small></div>
-      <a href="/app/strategies">{{ t('dash.quick.plan.cta') }}</a>
+      <a class="openPostButton btn" href="/app/strategies">{{ t('dash.quick.plan.cta') }}</a>
     </li>
   </ol>
   </div>

@@ -48,7 +48,7 @@
         {% elif not planned_actions_total %}
           <button type="button" class="btn primary" data-strategy-jump="actions">{{ t('sd.next.plan') }}</button>
         {% elif not posts_total %}
-          <button type="button" class="btn primary" data-strategy-jump="calendar">{{ t('sd.next.open_calendar') }}</button>
+          <button type="button" class="openPostButton btn primary" data-strategy-jump="calendar">{{ t('sd.next.open_calendar') }}</button>
         {% else %}
           <button type="button" class="btn primary" data-strategy-jump="posts">{{ t('sd.next.view_posts') }}</button>
         {% endif %}
@@ -234,7 +234,7 @@
           </article></div>
           <div class="spNav">{% if preview_type == 'li' %}<span>⌂</span><span>◉</span><span>⊕</span><span>◎</span><span>▣</span>{% elif preview_type == 'fb' %}<span>⌂</span><span>◉</span><span>▶</span><span>▣</span><span>◎</span><span>☰</span>{% else %}<span>⌂</span><span>⌕</span><span>⊕</span><span>▷</span><span>●</span>{% endif %}</div><i class="spHome"></i>
         </div></div>
-        <div class="strategyPhoneMeta"><div><span class="statusPill {{ post.status }}">{{ t('post.status.' ~ post.status) }}</span>{% if post.planned_label %}<small>{{ post.planned_label }}</small>{% endif %}</div><p>{{ t('sd.posts.intervention', title=post.action_title) }}</p><a class="btn primary tiny" href="/app/posts/view?request_id={{ post.request_id }}{% if post.idea_id %}&idea_id={{ post.idea_id }}{% endif %}">{{ t('sd.posts.open') }}</a></div>
+        <div class="strategyPhoneMeta"><div><span class="statusPill {{ post.status }}">{{ t('post.status.' ~ post.status) }}</span>{% if post.planned_label %}<small>{{ post.planned_label }}</small>{% endif %}</div><p>{{ t('sd.posts.intervention', title=post.action_title) }}</p><a class="openPostButton btn primary tiny" href="/app/posts/view?request_id={{ post.request_id }}{% if post.idea_id %}&idea_id={{ post.idea_id }}{% endif %}">{{ t('sd.posts.open') }}</a></div>
       </article>
       {% endfor %}
     </div>{% else %}<div class="strategyEmptyState">{{ t('sd.posts.empty') }}</div>{% endif %}

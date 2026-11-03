@@ -68,6 +68,7 @@ class Settings(BaseSettings):
 
     # OpenRouter (agents IA — voir Cahier technique §9)
     openrouter_api_key: str = ""
+    pixabay_api_key: str = ""
     openrouter_model: str = "openai/gpt-4o-mini"
     # Stratégie : paramètres identiques au nœud OpenRouter n8n validé en production.
     openrouter_strategy_model: str = "openai/gpt-4o-mini"

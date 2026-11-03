@@ -2321,3 +2321,19 @@ summary:focus-visible,
 .pgPaginationButton:disabled{cursor:not-allowed;opacity:.38}
 .pgPaginationButton{text-decoration:none}.pgPaginationButton.isDisabled{pointer-events:none;opacity:.38}
 @media(max-width:640px){.pgPagination{align-items:flex-start;flex-direction:column}.pgPaginationButtons{width:100%;overflow-x:auto}.pgPaginationButton{flex:0 0 36px}}
+
+/* Explicit blue action for Ouvrir links, including table overrides. */
+.has-sidebar .openPostButton,
+.has-sidebar td .actions:not(.networkActions) a.openPostButton,
+.has-sidebar td .actions:not(.networkActions) button.openPostButton,
+.has-sidebar td .strategyTableActions .openPostButton {
+  background:#2563eb!important;border-color:#2563eb!important;color:#fff!important;
+}
+.has-sidebar .openPostButton:hover:not(:disabled),
+.has-sidebar td .actions:not(.networkActions) a.openPostButton:hover,
+.has-sidebar td .actions:not(.networkActions) button.openPostButton:hover:not(:disabled),
+.has-sidebar td .strategyTableActions .openPostButton:hover:not(:disabled) {
+  background:#1d4ed8!important;border-color:#1d4ed8!important;color:#fff!important;
+}
+
+.has-sidebar .openPostButton:disabled { opacity:.45;cursor:not-allowed; }

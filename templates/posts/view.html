@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ page_heading }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/consultation.css?v=20261007-format-preview-fix">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/consultation.css?v=20261103-pixabay-multi-keywords">{% endblock %}
 {% block content %}
 <header class="header" id="posts-view-header">
   <div>
@@ -112,6 +112,7 @@
         {% if not read_only %}<div class="mediaHeaderActions">
           <button type="button" class="mediaBtn" id="media-btn-inline-{{ i }}" data-media-index="{{ i }}"
                   onclick="return window.openMediaModal({{ i }})">{{ t('pv.media.generate') }}</button>
+          <button type="button" class="mediaDownload" onclick="window.openPixabay({{ i }})">Photos Pixabay</button>
           <button type="button" class="mediaDownload" onclick="importMedia({{ i }})">{{ t('pv.media.import') }}</button>
         </div>{% endif %}
       </div>
@@ -278,5 +279,5 @@ window.__PG_VIEW = {
   backgroundJobs: {{ background_jobs | tojson }}
 };
 </script>
-<script src="/static/js/consultation.js?v=26-local-media-macaron"></script>
+<script src="/static/js/consultation.js?v=30-pixabay-multi-keywords"></script>
 {% endblock %}
