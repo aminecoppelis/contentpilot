@@ -504,6 +504,105 @@ def _strategy_generation_limits(form_data: dict) -> tuple[int, int, int]:
     return duration, posts_per_week, minimum_actions
 
 
+def _normalize_additional_blueprints(parsed: Any, context: dict | None = None) -> dict:
+    """Valide le plan compact demandé pour compléter une stratégie existante."""
+    context = context or {}
+    expected = max(1, min(10, int(context.get("additional_action_count") or 1)))
+    duration = max(1, min(365, int(context.get("duration_days") or 30)))
+    data = parsed if isinstance(parsed, dict) else {}
+    raw_blueprints = data.get("action_blueprints")
+    if not isinstance(raw_blueprints, list) or len(raw_blueprints) != expected:
+        received = len(raw_blueprints) if isinstance(raw_blueprints, list) else 0
+        raise AIContractError(f"Nouvelles actions incomplètes : {received} reçue(s), {expected} attendue(s).")
+    priorities = {"low", "medium", "high"}
+    blueprints: list[dict] = []
+    seen_ids: set[str] = set()
+    seen_titles: set[str] = set()
+    for index, raw in enumerate(raw_blueprints, start=1):
+        item = raw if isinstance(raw, dict) else {}
+        plan_id = str(item.get("plan_id") or f"add_{index}").strip()[:40]
+        title = str(item.get("title") or "").strip()[:180]
+        title_key = re.sub(r"[\W_]+", " ", title.casefold(), flags=re.UNICODE).strip()
+        if not title or not title_key or plan_id in seen_ids or title_key in seen_titles:
+            raise AIContractError("Les nouvelles actions doivent avoir des titres et identifiants uniques.")
+        try:
+            due_day = max(1, min(duration, int(item.get("due_day") or 1)))
+        except (TypeError, ValueError):
+            due_day = 1
+        priority = str(item.get("priority") or "medium").strip().lower()
+        seen_ids.add(plan_id)
+        seen_titles.add(title_key)
+        blueprints.append({
+            "plan_id": plan_id,
+            "title": title,
+            "category": "content",
+            "priority": priority if priority in priorities else "medium",
+            "due_day": due_day,
+            "requires_post_generation": True,
+            "reason": str(item.get("reason") or "").strip()[:500],
+            "evidence": str(item.get("evidence") or "").strip()[:500],
+        })
+    return {"action_blueprints": blueprints}
+
+
+async def generate_additional_strategy_actions(
+    *, context: dict, strategy: dict, existing_actions: list[dict],
+    count: int, guidance: str = "",
+) -> AIResult:
+    """Génère exactement ``count`` actions inédites pour une stratégie existante."""
+    count = max(1, min(10, int(count)))
+    normalized_context = _strategy_context_for_normalizer(context)
+    form_data = normalized_context.get("form_data") if isinstance(normalized_context.get("form_data"), dict) else {}
+    try:
+        duration = max(1, min(365, int(form_data.get("duration_days") or 30)))
+    except (TypeError, ValueError):
+        duration = 30
+    blueprint_context = {
+        **normalized_context,
+        "additional_action_count": count,
+        "duration_days": duration,
+    }
+    plan_result = await _run_agent(
+        prompts.GENERATE_ADDITIONAL_ACTION_BLUEPRINTS_SYSTEM,
+        prompts.build_additional_action_blueprints_prompt(
+            context=normalized_context,
+            strategy=strategy,
+            existing_actions=existing_actions,
+            count=count,
+            guidance=guidance,
+        ),
+        max_tokens=3500,
+        temperature=0.45,
+        validator=_normalize_additional_blueprints,
+        context=blueprint_context,
+        agent_name="strategy_additional_blueprints",
+    )
+    blueprints = plan_result.parsed["action_blueprints"]
+    batches = [blueprints[index:index + 4] for index in range(0, len(blueprints), 4)]
+    batch_semaphore = asyncio.Semaphore(3)
+
+    async def generate_batch(batch: list[dict]) -> AIResult:
+        batch_context = {**normalized_context, "strategy": strategy, "blueprints": batch}
+        async with batch_semaphore:
+            return await _run_agent(
+                prompts.GENERATE_STRATEGY_ACTIONS_SYSTEM,
+                prompts.build_generate_strategy_actions_prompt(
+                    context=normalized_context, strategy=strategy, blueprints=batch,
+                ),
+                max_tokens=5000,
+                temperature=0.35,
+                validator=normalize_strategy_action_batch,
+                context=batch_context,
+                agent_name="strategy_additional_actions_batch",
+            )
+
+    results = await asyncio.gather(*(generate_batch(batch) for batch in batches))
+    actions = [action for result in results for action in result.parsed["actions"]]
+    if len(actions) != count:
+        raise AIGenerationError(f"Nouvelles actions incomplètes : {len(actions)} reçue(s), {count} attendue(s).")
+    return AIResult(parsed={"actions": actions}, raw_text=json.dumps({"actions": actions}, ensure_ascii=False))
+
+
 async def generate_strategy(context: dict) -> AIResult:
     """Génère le plan puis les actions par petits lots parallèles.
 

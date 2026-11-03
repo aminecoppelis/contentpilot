@@ -319,6 +319,77 @@
     }
   });
 
+  var moreActionsModal=document.getElementById('moreActionsModal');
+  var moreActionsForm=document.getElementById('moreActionsForm');
+  var moreActionsOpen=document.getElementById('openMoreActionsBtn');
+  function setMoreActionsOpen(open){
+    if(!moreActionsModal)return;
+    moreActionsModal.classList.toggle('isOpen',Boolean(open));
+    moreActionsModal.setAttribute('aria-hidden',open?'false':'true');
+    document.body.classList.toggle('modalOpen',Boolean(open));
+    if(open&&moreActionsForm&&moreActionsForm.elements.count)setTimeout(function(){moreActionsForm.elements.count.focus();},40);
+  }
+  if(moreActionsOpen)moreActionsOpen.addEventListener('click',function(){setMoreActionsOpen(true);});
+  ['moreActionsClose','moreActionsCancel'].forEach(function(id){
+    var button=document.getElementById(id);if(button)button.addEventListener('click',function(){setMoreActionsOpen(false);});
+  });
+  if(moreActionsModal)moreActionsModal.addEventListener('click',function(event){if(event.target===moreActionsModal)setMoreActionsOpen(false);});
+  if(moreActionsForm)moreActionsForm.addEventListener('submit',async function(event){
+    event.preventDefault();
+    var submit=document.getElementById('moreActionsSubmit');
+    var cancel=document.getElementById('moreActionsCancel');
+    var close=document.getElementById('moreActionsClose');
+    var progress=document.getElementById('moreActionsProgress');
+    var progressBar=document.getElementById('moreActionsProgressBar');
+    var progressTrack=progress?progress.querySelector('[role="progressbar"]'):null;
+    var progressPercent=document.getElementById('moreActionsProgressPercent');
+    var elapsedLabel=document.getElementById('moreActionsElapsed');
+    var original=submit?submit.textContent:'';
+    var count=Math.max(1,Math.min(10,Number(moreActionsForm.elements.count.value||3)));
+    var startedAt=Date.now();
+    var progressTimer=null;
+    function renderGenerationProgress(percent){
+      var safe=Math.max(0,Math.min(100,Math.round(percent)));
+      var elapsed=Math.max(0,Math.floor((Date.now()-startedAt)/1000));
+      var time=String(Math.floor(elapsed/60)).padStart(2,'0')+':'+String(elapsed%60).padStart(2,'0');
+      if(progressBar)progressBar.style.width=safe+'%';
+      if(progressPercent)progressPercent.textContent=safe+'%';
+      if(progressTrack)progressTrack.setAttribute('aria-valuenow',String(safe));
+      if(elapsedLabel)elapsedLabel.textContent=(moreActionsForm.getAttribute('data-elapsed-label')||'{time}').replace('{time}',time);
+    }
+    if(progress){progress.hidden=false;progress.classList.remove('isComplete');}
+    renderGenerationProgress(2);
+    progressTimer=window.setInterval(function(){
+      var seconds=(Date.now()-startedAt)/1000;
+      var expectedSeconds=18+(count*7);
+      renderGenerationProgress(5+(87*(1-Math.exp(-seconds/expectedSeconds))));
+    },500);
+    if(submit){submit.disabled=true;submit.textContent=moreActionsForm.getAttribute('data-loading')||original;}
+    if(cancel)cancel.disabled=true;
+    if(close)close.disabled=true;
+    try{
+      var response=await fetch('/app/strategies/actions/generate-more',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({strategy_id:strategyId,count:count,guidance:String(moreActionsForm.elements.guidance.value||'').trim()})
+      });
+      var data=await response.json().catch(function(){return {};});
+      if(!response.ok||data.success===false)throw new Error(data.message||('HTTP '+response.status));
+      window.clearInterval(progressTimer);
+      renderGenerationProgress(100);
+      if(progress)progress.classList.add('isComplete');
+      var success=(moreActionsForm.getAttribute('data-success')||'').replace('{count}',String(count));
+      detailToast(success||data.message,'success');
+      setTimeout(function(){window.location.reload();},650);
+    }catch(error){
+      window.clearInterval(progressTimer);
+      detailToast(error.message||window.t('js.strat.gen_failed'),'error');
+      if(submit){submit.disabled=false;submit.textContent=original;}
+      if(cancel)cancel.disabled=false;
+      if(close)close.disabled=false;
+      if(progress)progress.hidden=true;
+    }
+  });
+
   async function schedulePostsFromActions(actionIds,trigger){
     actionIds=(actionIds||[]).filter(Boolean);
     if(!strategyId){detailToast(window.t('js.strat.not_found'),'error');return;}

@@ -155,7 +155,11 @@ def js_catalog(locale: str = DEFAULT_LOCALE) -> dict[str, str]:
     catalog = _CATALOGS.get(loc) or {}
     fallback = _CATALOGS.get(DEFAULT_LOCALE) or {}
     keys = set(catalog) | set(fallback)
-    return {k: catalog.get(k, fallback.get(k, k)) for k in keys if k.startswith("js.")}
+    return {
+        k: catalog.get(k, fallback.get(k, k))
+        for k in keys
+        if k.startswith(("js.", "common."))
+    }
 
 
 def _accept_language_locale(header: str | None) -> str | None:

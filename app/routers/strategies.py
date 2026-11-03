@@ -929,6 +929,164 @@ async def post_strategies_analyze(payload: dict = Body(...), user=Depends(requir
     return JSONResponse({"success": True, "data": {"strategy_id": strategy_row["strategy_id"], "strategy": strategy_data, "actions": actions}})
 
 
+@router.post("/strategies/actions/generate-more")
+async def post_strategy_generate_more_actions(payload: dict = Body(...), user=Depends(require_auth)):
+    """Ajoute des actions inédites à une stratégie sans modifier les actions existantes."""
+    strategy_id = str(payload.get("strategy_id") or "").strip()
+    if not strategy_calendar_n8n.is_uuid(strategy_id):
+        return JSONResponse({"success": False, "error": "VALIDATION_ERROR", "message": "strategy_id invalide."}, status_code=422)
+    try:
+        count = int(payload.get("count") or 3)
+    except (TypeError, ValueError):
+        count = 0
+    if count < 1 or count > 10:
+        return JSONResponse({
+            "success": False, "error": "VALIDATION_ERROR",
+            "message": "Le nombre de nouvelles actions doit être compris entre 1 et 10.",
+        }, status_code=422)
+    guidance = str(payload.get("guidance") or "").strip()[:1000]
+    pool = get_pool()
+    async with pool.acquire() as conn:
+        strategy_row = await conn.fetchrow(
+            """
+            SELECT id::text, status, duration_days, current_version, form_data,
+                   strategy_data, network_snapshot, research_context
+            FROM public.app_growth_strategies
+            WHERE id=$1::uuid AND workspace_id=$2::uuid
+            """,
+            strategy_id, user.active_workspace_id,
+        )
+        if strategy_row is None:
+            return JSONResponse({"success": False, "error": "NOT_FOUND", "message": "Stratégie introuvable."}, status_code=404)
+        if str(strategy_row["status"] or "").lower() in {"generating", "failed", "archived"}:
+            return JSONResponse({
+                "success": False, "error": "INVALID_STATE",
+                "message": "Cette stratégie ne peut pas recevoir de nouvelles actions dans son état actuel.",
+            }, status_code=409)
+        existing_rows = await conn.fetch(
+            """
+            SELECT title, description, category, priority, status, due_day
+            FROM public.app_growth_strategy_actions
+            WHERE strategy_id=$1::uuid AND workspace_id=$2::uuid
+            ORDER BY created_at, id
+            """,
+            strategy_id, user.active_workspace_id,
+        )
+
+    def as_object(value) -> dict:
+        if isinstance(value, dict):
+            return dict(value)
+        if isinstance(value, str) and value.strip():
+            try:
+                parsed = json.loads(value)
+                return dict(parsed) if isinstance(parsed, dict) else {}
+            except (TypeError, ValueError, json.JSONDecodeError):
+                return {}
+        return {}
+
+    form_data = as_object(strategy_row["form_data"])
+    form_data["duration_days"] = int(strategy_row["duration_days"] or form_data.get("duration_days") or 30)
+    strategy_data = as_object(strategy_row["strategy_data"])
+    network_snapshot = as_object(strategy_row["network_snapshot"])
+    research_context = as_object(strategy_row["research_context"])
+    existing_actions = [dict(row) for row in existing_rows]
+    context = {
+        "form_data": form_data,
+        "profile_snapshot": {
+            "profile": as_object(network_snapshot.get("profile")),
+            "fetch_status": network_snapshot.get("profile_fetch_status", "unavailable"),
+        },
+        "research_context": research_context,
+    }
+    try:
+        result = await ai.generate_additional_strategy_actions(
+            context=context,
+            strategy=strategy_data,
+            existing_actions=existing_actions,
+            count=count,
+            guidance=guidance,
+        )
+    except AIGenerationError as exc:
+        logger.error("Additional strategy actions generation failed: %s", exc)
+        return JSONResponse({"success": False, "error": "AI_GENERATION_FAILED", "message": str(exc)}, status_code=502)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Unexpected additional strategy actions error strategy_id=%s", strategy_id)
+        return JSONResponse({"success": False, "error": "INTERNAL_ERROR", "message": str(exc)}, status_code=500)
+
+    generated_actions = list(result.parsed.get("actions") or [])
+    if len(generated_actions) != count:
+        return JSONResponse({
+            "success": False, "error": "AI_GENERATION_FAILED",
+            "message": f"L’IA a retourné {len(generated_actions)} action(s) au lieu de {count}.",
+        }, status_code=502)
+
+    def title_key(value: object) -> str:
+        import re
+        return re.sub(r"[\W_]+", " ", str(value or "").casefold(), flags=re.UNICODE).strip()
+
+    async with pool.acquire() as conn:
+      async with conn.transaction():
+        # Le verrou empêche deux générations simultanées d'insérer les mêmes titres.
+        locked = await conn.fetchrow(
+            "SELECT current_version FROM public.app_growth_strategies WHERE id=$1::uuid AND workspace_id=$2::uuid FOR UPDATE",
+            strategy_id, user.active_workspace_id,
+        )
+        if locked is None:
+            return JSONResponse({"success": False, "error": "NOT_FOUND", "message": "Stratégie introuvable."}, status_code=404)
+        current_titles = await conn.fetch(
+            "SELECT title FROM public.app_growth_strategy_actions WHERE strategy_id=$1::uuid AND workspace_id=$2::uuid",
+            strategy_id, user.active_workspace_id,
+        )
+        known_titles = {title_key(row["title"]) for row in current_titles if title_key(row["title"])}
+        new_titles: set[str] = set()
+        action_rows = []
+        target_analysis = strategy_data.get("target_analysis") if isinstance(strategy_data.get("target_analysis"), dict) else {}
+        for action in generated_actions:
+            normalized_title = title_key(action.get("title"))
+            if not normalized_title or normalized_title in known_titles or normalized_title in new_titles:
+                return JSONResponse({
+                    "success": False, "error": "DUPLICATE_ACTION",
+                    "message": "L’IA a proposé une action déjà présente. Aucune nouvelle action n’a été ajoutée.",
+                }, status_code=409)
+            new_titles.add(normalized_title)
+            kpi_payload, media_payload = strategy_calendar_n8n.canonical_action_payload(
+                action, target_analysis=target_analysis, timezone_name=user.timezone
+            )
+            action_rows.append((
+                strategy_id, user.active_workspace_id, int(locked["current_version"] or 1),
+                str(action.get("title") or "")[:180], str(action.get("description") or "")[:5000],
+                str(action.get("category") or "content")[:80], str(action.get("priority") or "medium")[:30],
+                int(action.get("due_day") or 1), json.dumps(kpi_payload), json.dumps(media_payload),
+            ))
+        await conn.executemany(
+            """
+            INSERT INTO public.app_growth_strategy_actions (
+                strategy_id, workspace_id, version_no, title, description, category,
+                priority, status, due_day, kpi, media_prefill
+            ) VALUES ($1::uuid,$2::uuid,$3,$4,$5,$6,$7,'pending',$8,$9::jsonb,$10::jsonb)
+            """,
+            action_rows,
+        )
+        await conn.execute(
+            "UPDATE public.app_growth_strategies SET updated_at=now() WHERE id=$1::uuid",
+            strategy_id,
+        )
+        await conn.execute(
+            """
+            INSERT INTO public.post_activity_logs (workspace_id, entity_type, entity_id, action, details)
+            VALUES ($1::uuid,'growth_strategy',$2::uuid,'actions_added',
+                    jsonb_build_object('count',$3::int,'guidance',$4::text))
+            """,
+            user.active_workspace_id, strategy_id, count, guidance,
+        )
+
+    return JSONResponse({
+        "success": True,
+        "message": f"{count} nouvelle(s) action(s) ajoutée(s).",
+        "data": {"strategy_id": strategy_id, "added_count": count},
+    })
+
+
 
 @router.post("/strategies/action")
 async def post_strategies_action(payload: dict = Body(...), user=Depends(require_auth)):

@@ -139,7 +139,7 @@
   </section>
 
   <section class="strategyTabPanel" data-strategy-panel="actions" hidden>
-    <div class="strategyPanelHeading"><div><span>{{ t('sd.actions.eyebrow') }}</span><h2>{{ t('sd.actions.title') }}</h2><p>{{ t('sd.actions.subtitle') }}</p></div><div class="strategyPanelBadge">{{ t('sd.actions.count', count=actions|length) }}</div></div>
+    <div class="strategyPanelHeading"><div><span>{{ t('sd.actions.eyebrow') }}</span><h2>{{ t('sd.actions.title') }}</h2><p>{{ t('sd.actions.subtitle') }}</p></div><div class="strategyPanelHeadingActions"><button type="button" class="btn primary tiny" id="openMoreActionsBtn">{{ t('sd.more_actions.open') }}</button><div class="strategyPanelBadge">{{ t('sd.actions.count', count=actions|length) }}</div></div></div>
     {% if actions %}
     <div class="actionBulkToolbar aiAutoPlanningToolbar">
       <div><b>{{ t('sd.a.ai_planning') }}</b><small id="bulkActionCount"></small></div>
@@ -194,7 +194,7 @@
               {% for post in action.linked_posts %}
                 <a class="strategyLinkedPost" href="/app/posts/view?request_id={{ post.request_id }}{% if post.idea_id %}&idea_id={{ post.idea_id }}{% endif %}">
                   <span><b>{{ post.title }}</b>{% if post.planned_label %}<small>{{ post.planned_label }}</small>{% endif %}</span>
-                  <span class="statusPill {{ post.status }}">{{ post.status }}</span>
+                  <span class="statusPill {{ post.status }}">{{ t('post.status.' ~ post.status) }}</span>
                   <strong>{{ t('sd.a.view_post') }}</strong>
                 </a>
               {% endfor %}
@@ -234,7 +234,7 @@
           </article></div>
           <div class="spNav">{% if preview_type == 'li' %}<span>⌂</span><span>◉</span><span>⊕</span><span>◎</span><span>▣</span>{% elif preview_type == 'fb' %}<span>⌂</span><span>◉</span><span>▶</span><span>▣</span><span>◎</span><span>☰</span>{% else %}<span>⌂</span><span>⌕</span><span>⊕</span><span>▷</span><span>●</span>{% endif %}</div><i class="spHome"></i>
         </div></div>
-        <div class="strategyPhoneMeta"><div><span class="statusPill {{ post.status }}">{{ post.status }}</span>{% if post.planned_label %}<small>{{ post.planned_label }}</small>{% endif %}</div><p>{{ t('sd.posts.intervention', title=post.action_title) }}</p><a class="btn primary tiny" href="/app/posts/view?request_id={{ post.request_id }}{% if post.idea_id %}&idea_id={{ post.idea_id }}{% endif %}">{{ t('sd.posts.open') }}</a></div>
+        <div class="strategyPhoneMeta"><div><span class="statusPill {{ post.status }}">{{ t('post.status.' ~ post.status) }}</span>{% if post.planned_label %}<small>{{ post.planned_label }}</small>{% endif %}</div><p>{{ t('sd.posts.intervention', title=post.action_title) }}</p><a class="btn primary tiny" href="/app/posts/view?request_id={{ post.request_id }}{% if post.idea_id %}&idea_id={{ post.idea_id }}{% endif %}">{{ t('sd.posts.open') }}</a></div>
       </article>
       {% endfor %}
     </div>{% else %}<div class="strategyEmptyState">{{ t('sd.posts.empty') }}</div>{% endif %}
@@ -314,5 +314,21 @@
     <div class="strategyEditActions"><button type="button" class="btn secondary" id="strategyEditCancel">{{ t('common.cancel') }}</button><button type="submit" class="btn primary" id="strategyEditSave">{{ t('common.save') }}</button></div>
   </form>
 </div>
+<div class="strategyEditModal" id="moreActionsModal" aria-hidden="true">
+  <form class="strategyEditModalBox additionalActionModalBox" id="moreActionsForm" role="dialog" aria-modal="true" aria-labelledby="moreActionsTitle" data-success="{{ t('sd.more_actions.success') }}" data-loading="{{ t('sd.more_actions.loading') }}" data-progress-label="{{ t('sd.more_actions.progress') }}" data-elapsed-label="{{ t('sd.more_actions.elapsed') }}">
+    <div class="strategyEditModalHead"><div><span>{{ t('sd.more_actions.eyebrow') }}</span><h2 id="moreActionsTitle">{{ t('sd.more_actions.title') }}</h2><p>{{ t('sd.more_actions.subtitle') }}</p></div><button type="button" id="moreActionsClose" aria-label="{{ t('common.close') }}">×</button></div>
+    <div class="strategyEditGrid">
+      <label><span>{{ t('sd.more_actions.count') }}</span><select name="count" required>{% for count in range(1,11) %}<option value="{{ count }}" {{ 'selected' if count == 3 }}>{{ count }}</option>{% endfor %}</select><small>{{ t('sd.more_actions.count_hint') }}</small></label>
+      <label class="strategyEditWide"><span>{{ t('sd.more_actions.guidance') }}</span><textarea name="guidance" maxlength="1000" rows="4" placeholder="{{ t('sd.more_actions.guidance_placeholder') }}"></textarea><small>{{ t('sd.more_actions.guidance_hint') }}</small></label>
+    </div>
+    <p class="strategyEditNotice">{{ t('sd.more_actions.notice') }}</p>
+    <div class="additionalActionProgress" id="moreActionsProgress" hidden aria-live="polite">
+      <div class="additionalActionProgressHead"><strong id="moreActionsProgressLabel">{{ t('sd.more_actions.progress') }}</strong><span id="moreActionsProgressPercent">0%</span></div>
+      <div class="additionalActionProgressTrack" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-labelledby="moreActionsProgressLabel"><span id="moreActionsProgressBar"></span></div>
+      <small id="moreActionsElapsed">{{ t('sd.more_actions.elapsed') | replace('{time}', '00:00') }}</small>
+    </div>
+    <div class="strategyEditActions"><button type="button" class="btn secondary" id="moreActionsCancel">{{ t('common.cancel') }}</button><button type="submit" class="btn primary" id="moreActionsSubmit">{{ t('sd.more_actions.submit') }}</button></div>
+  </form>
+</div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/strategies.js?v=32-strategy-edit"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/strategies.js?v=34-more-actions-progress"></script>{% endblock %}

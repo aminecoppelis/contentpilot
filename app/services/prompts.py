@@ -636,6 +636,60 @@ GENERATE_STRATEGY_ACTIONS_SYSTEM = (
     "Tu détailles exactement les actions demandées et conserves chaque plan_id à l'identique."
 )
 
+GENERATE_ADDITIONAL_ACTION_BLUEPRINTS_SYSTEM = (
+    "Tu produis uniquement un objet JSON strictement valide, sans markdown. "
+    "Tu ajoutes des actions originales à une stratégie existante sans modifier celle-ci."
+)
+
+
+def build_additional_action_blueprints_prompt(
+    *, context: dict[str, Any], strategy: dict, existing_actions: list[dict],
+    count: int, guidance: str = "",
+) -> str:
+    form_data = context.get("form_data") if isinstance(context.get("form_data"), dict) else {}
+    output_language = str(form_data.get("language") or "French")
+    duration = max(1, min(365, int(form_data.get("duration_days") or 30)))
+    existing_compact = [
+        {
+            "title": str(action.get("title") or "")[:180],
+            "description": str(action.get("description") or "")[:320],
+            "due_day": action.get("due_day"),
+            "status": action.get("status"),
+        }
+        for action in existing_actions
+    ]
+    return f"""Tu complètes une stratégie déjà validée avec de NOUVELLES actions éditoriales.
+
+LANGUE DE SORTIE OBLIGATOIRE
+Rédige toutes les valeurs destinées à l'utilisateur en {output_language}. Seuls les codes techniques restent en anglais.
+
+CONSIGNES ABSOLUES
+- Retourne EXACTEMENT {count} blueprints.
+- Ils doivent compléter la même stratégie, sans la réécrire ni modifier les actions existantes.
+- Ne reprends aucun titre, angle, livrable ou intention déjà présent dans ACTIONS EXISTANTES.
+- Chaque nouvelle action doit être suffisamment différente pour produire un nouveau contenu utile.
+- Toutes les actions sont des contenus publiables : category="content" et requires_post_generation=true.
+- Ne propose ni audit, ni calendrier, ni reporting, ni modification de profil, ni routine de likes/commentaires.
+- Répartis due_day entre 1 et {duration}, en tenant compte des jours déjà utilisés lorsque possible.
+- priority vaut low, medium ou high.
+- plan_id doit être unique et suivre le format add_1, add_2, etc.
+- N'invente aucun résultat, client ou preuve.
+- Consigne complémentaire de l'utilisateur : {guidance or "aucune"}.
+
+FORMAT STRICT
+{{"action_blueprints":[
+  {{"plan_id":"add_1","title":"","category":"content","priority":"medium","due_day":1,"requires_post_generation":true,"reason":"","evidence":""}}
+]}}
+
+STRATÉGIE EXISTANTE
+{json.dumps(strategy, ensure_ascii=False)}
+
+ACTIONS EXISTANTES À NE PAS DUPLIQUER
+{json.dumps(existing_compact, ensure_ascii=False)}
+
+CONTEXTE FACTUEL
+{json.dumps(context, ensure_ascii=False)}"""
+
 
 def build_generate_strategy_actions_prompt(*, context: dict[str, Any], strategy: dict, blueprints: list[dict]) -> str:
     compact_network = dict(context.get("network_snapshot") or {})
