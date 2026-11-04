@@ -26,7 +26,7 @@ from app.services import strategy_calendar_n8n
 from app.worker.calendar_worker import run_cycle
 from app.user_timezone import parse_user_datetime, to_user_datetime, format_user_datetime
 from app.pagination import page_meta
-from app.i18n import resolve_locale
+from app.i18n import resolve_locale, translate
 
 router = APIRouter(tags=["Strategies"])
 from app.templating import templates
@@ -476,7 +476,7 @@ async def get_strategies(request: Request, strategy_id: str | None = None, page:
                 "planned_time": item.get("planned_time") or "",
                 "planned_label": item.get("planned_label") or "",
                 "status": item.get("status") or "scheduled",
-                "title": item.get("action_title") or payload.get("action_title") or ((payload.get("action") or {}).get("title") if isinstance(payload.get("action"), dict) else "") or payload.get("subject") or payload.get("theme") or item.get("request_subject") or "Tâche planifiée",
+                "title": item.get("action_title") or payload.get("action_title") or ((payload.get("action") or {}).get("title") if isinstance(payload.get("action"), dict) else "") or payload.get("subject") or payload.get("theme") or item.get("request_subject") or translate("js.cal.planned_task", resolve_locale(request)),
                 "category": item.get("action_category") or "",
                 "error_message": item.get("error_message") or "",
                 "kind": "checkpoint" if str(payload.get("kind") or "") == "adaptive_checkpoint" else "action",

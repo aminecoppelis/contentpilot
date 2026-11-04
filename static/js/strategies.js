@@ -218,7 +218,7 @@
       toast(window.t('js.strat.slot_updated'));
       closeCalendarModal();
       setTimeout(function(){location.reload();},250);
-    }catch(e){ toast('Modification impossible : '+e.message,'error'); }
+    }catch(e){ toast(window.t('js.strat.plan_failed'),'error'); }
     finally{ calSave.disabled=false; }
   });
 })();
@@ -405,11 +405,11 @@
         action_ids:actionIds,
         auto_plan:true
       });
-      detailToast((result&&result.message)||window.t('js.strat.gen_planned'),'success');
+      detailToast(window.t('js.strat.actions_planned'),'success');
       setTimeout(function(){location.reload();},450);
     }catch(error){
       controls.forEach(function(el){if(el){el.disabled=false;el.classList.remove('isSaving');}});
-      detailToast(error.message||window.t('js.strat.plan_failed'),'error');
+      detailToast(window.t('js.strat.plan_failed'),'error');
     }
   }
 
@@ -450,7 +450,7 @@
     if(!(await window.pgConfirm(window.t('js.strat.confirm_clear',{count:clearableCount}),{danger:true})))return;
     try{
       var result=await detailApi({action:'clear_pending_calendar_tasks',strategy_id:strategyId});
-      detailToast((result&&result.message)||window.t('js.strat.cleared',{count:Number(result&&result.cleared_calendar_count||0)}),'success');
+      detailToast(window.t('js.strat.cleared',{count:Number(result&&result.cleared_calendar_count||0)}),'success');
       setTimeout(function(){location.reload();},450);
     }catch(error){detailToast(error&&error.message?error.message:window.t('js.strat.clear_failed'),'error');}
   }

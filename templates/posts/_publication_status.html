@@ -1,0 +1,8 @@
+<div class="postPublicationStatuses">
+  {% for badge in r.publication_badges %}
+    <span class="postPublicationBadge postPublicationBadge--{{ badge.status }}"
+          title="{{ t('posts.publication.count', count=badge.count) }}">{{ t('posts.publication.' ~ badge.status) }}{% if badge.count > 1 %} <b>×{{ badge.count }}</b>{% endif %}</span>
+  {% else %}
+    <span class="postPublicationBadge postPublicationBadge--none">{{ t('posts.publication.none') }}</span>
+  {% endfor %}
+</div>

@@ -7,17 +7,17 @@
         <span class="select2Chips" data-selected-labels>
           {% if all_selected %}<span class="select2Placeholder">{{ t('filter.all') }}</span>
           {% else %}{% for opt in options if opt.value != 'all' and opt.value in selected %}
-            <span class="select2Chip">{{ opt.label }}</span>{% endfor %}{% endif %}
+            <span class="select2Chip">{{ t('post.status.scheduled') if opt.value == 'scheduled' else opt.label }}</span>{% endfor %}{% endif %}
         </span>
         <span class="select2Arrow">▾</span>
       </button>
       <div class="select2Menu" data-select2-menu>
         {% for opt in options %}
           <label class="select2Option">
-            <input data-status-option type="checkbox" value="{{ opt.value }}" data-label="{{ opt.label }}"
+            <input data-status-option type="checkbox" value="{{ opt.value }}" data-label="{{ t('post.status.scheduled') if opt.value == 'scheduled' else opt.label }}"
               {% if (all_selected and opt.value == 'all') or (not all_selected and opt.value in selected) %}checked{% endif %}
               onchange="window.syncStatusSelect('{{ panel_id }}', this); window.applyStatusFilter('{{ panel_id }}')">
-            <span>{{ opt.label }}</span>
+            <span>{{ t('post.status.scheduled') if opt.value == 'scheduled' else opt.label }}</span>
           </label>
         {% endfor %}
       </div>

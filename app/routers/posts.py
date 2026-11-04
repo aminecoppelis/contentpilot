@@ -18,6 +18,7 @@ from app.services import post_generation
 from app.services.copy_ready import build_copy_ready_text
 from app.user_timezone import format_user_datetime
 from app.pagination import page_meta
+from app.i18n import resolve_locale, translate
 
 router = APIRouter(tags=["Posts"])
 from app.templating import templates, render_fragment
@@ -37,6 +38,40 @@ def _status_label(status: str, ideas_count: int) -> str:
     if status in ("generated_empty", "no_ideas"):
         return "Generated" if ideas_count > 0 else "Aucune idée"
     return STATUS_LABELS.get(status, (status or "draft").replace("_", " ").capitalize())
+
+
+PUBLICATION_STATUS_ORDER = ("published", "scheduled", "processing", "pending", "failed", "cancelled", "other")
+
+
+def _publication_badges(counts: dict[str, int]) -> list[dict]:
+    grouped: dict[str, int] = {}
+    for status, count in counts.items():
+        normalized = "failed" if status == "error" else status
+        if normalized not in PUBLICATION_STATUS_ORDER:
+            normalized = "other"
+        grouped[normalized] = grouped.get(normalized, 0) + int(count)
+    return [{"status": status, "count": grouped[status]} for status in PUBLICATION_STATUS_ORDER if grouped.get(status)]
+
+
+async def _add_publication_statuses(requests: list[dict], workspace_id: str) -> None:
+    """Load actual publication records for the visible requests in one query."""
+    if not requests:
+        return
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch(
+            """SELECT pi.request_id::text AS request_id, pp.status, count(*)::int AS count
+               FROM public.post_publications pp
+               JOIN public.post_ideas pi ON pi.id=pp.idea_id AND pi.workspace_id=pp.workspace_id
+               WHERE pp.workspace_id=$1::uuid AND pi.deleted_at IS NULL
+                 AND pi.request_id=ANY($2::uuid[])
+               GROUP BY pi.request_id, pp.status""",
+            workspace_id, [item["id"] for item in requests],
+        )
+    counts: dict[str, dict[str, int]] = {}
+    for row in rows:
+        counts.setdefault(row["request_id"], {})[row["status"]] = row["count"]
+    for item in requests:
+        item["publication_badges"] = _publication_badges(counts.get(item["id"], {}))
 
 
 @router.get("/posts/new", response_class=HTMLResponse)
@@ -345,6 +380,8 @@ async def get_posts(request: Request, status: str | None = None, page: int = 1,
         d["last_modified"] = format_user_datetime(d["updated_at"] or d["created_at"], user.timezone)
         d["status_label"] = _status_label(d["status"], d["ideas_count"])
         requests_out.append(d)
+
+    await _add_publication_statuses(requests_out, user.active_workspace_id)
 
     return templates.TemplateResponse(request, "posts/list.html", {
         "auth_user": user, "active_nav": "posts", "requests": requests_out, "status": status, "page": page,
@@ -804,7 +841,7 @@ async def get_dashboard(request: Request, user=Depends(require_auth)):
 
     next_actions = [
         {"url": f"/app/strategies?strategy_id={r['strategy_id']}#calendar",
-         "title": r["strategy_title"] or "Action planifiée",
+         "title": r["strategy_title"] or translate("js.cal.planned_task", resolve_locale(request)),
          "meta": format_user_datetime(r["planned_for"], user.timezone)}
         for r in next_actions_rows if r["strategy_id"]
     ]
@@ -1105,6 +1142,7 @@ async def get_posts_list_page(request: Request, page: int = 1, status: str | Non
         d["status_label"] = _status_label(d["status"], d["ideas_count"])
         out.append(d)
 
+    await _add_publication_statuses(out, user.active_workspace_id)
     html = render_fragment(request, "posts/_list_rows.html", requests=out)
     loaded = max(0, page - 1) * 20 + len(out)
     return JSONResponse({"success": True, "data": {

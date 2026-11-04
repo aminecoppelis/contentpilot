@@ -1024,7 +1024,9 @@
       setPublishModalStatus(mode==='scheduled'?window.t('js.pub.scheduling'):window.t('js.pub.publishing'));var scheduledAt=mode==='scheduled'?new Date(scheduledLocal).toISOString():null;
       var targets=getSelectedPublishTargets().map(function(t){return {provider:String(t.account.provider||'').toLowerCase(),platform:t.platform,account_id:t.socialAccountId,publish_content_type:t.contentType||'standard',publish_mode:mode==='scheduled'?'scheduled':'immediate',scheduled_at:scheduledAt};});
       var r=await fetch(WEBHOOK_BASE+'/post-ideas-publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idea_id:idea.idea_id,version_id:idea.version_id,media_id:(mediaState&&mediaState.effectiveMediaId)||null,timezone:(window.pgUserTimezone?window.pgUserTimezone():window.__PG_TIMEZONE||'UTC'),targets:targets})});var d=await r.json().catch(function(){return {};});if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
-      showToast(d.message||window.t('js.pub.processed'),'success');window.closePublishModal();setTimeout(function(){location.reload();},800);
+      var publicationResults=(d.data||{}).results||[];
+      var allScheduled=publicationResults.length>0&&publicationResults.every(function(result){return result.status==='scheduled';});
+      showToast(allScheduled?window.t('pv.act.scheduled'):(d.message||window.t('js.pub.processed')),'success');window.closePublishModal();setTimeout(function(){location.reload();},800);
     }catch(e){setPublishModalStatus(e.message||window.t('js.pub.failed'),true);if(btn)btn.disabled=false;}return false;
   };
   window.publishSelectedPost=window.confirmPublishModal;

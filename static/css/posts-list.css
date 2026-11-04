@@ -5,3 +5,9 @@
 .postListTableWrap .inlineForm button.danger{border:1px solid #fecaca!important;background:#fee2e2!important;color:#b91c1c!important;font-weight:750}.postListTableWrap .inlineForm button.danger:hover{border-color:#ef4444!important;background:#ef4444!important;color:#fff!important}
 body.has-sidebar #postRequestRows td .actions .inlineForm button.danger{border-color:var(--danger)!important;background:var(--danger)!important;color:#fff!important;font-weight:600!important}body.has-sidebar #postRequestRows td .actions .inlineForm button.danger:hover:not(:disabled){border-color:var(--danger)!important;background:var(--danger)!important;color:#fff!important;filter:brightness(.92)}
 @media(max-width:700px){.postListHero{align-items:flex-start}.postListFilters{align-items:stretch;flex-direction:column;padding:8px 10px}.postFilterTabs{width:100%;overflow-x:auto}.postListSearch{width:100%}}
+.postPublicationStatuses{display:flex;flex-wrap:wrap;gap:5px;min-width:130px;max-width:230px}
+.postPublicationBadge{display:inline-flex;align-items:center;gap:4px;padding:4px 7px;border-radius:6px;font-size:10px;font-weight:700;white-space:nowrap;background:#f1f5f9;color:#475569}
+.postPublicationBadge--published{background:#dcfce7;color:#166534}
+.postPublicationBadge--scheduled{background:#dbeafe;color:#1d4ed8}
+.postPublicationBadge--processing,.postPublicationBadge--pending{background:#fef3c7;color:#92400e}
+.postPublicationBadge--failed{background:#fee2e2;color:#b91c1c}

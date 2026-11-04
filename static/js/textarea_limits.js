@@ -95,4 +95,4 @@ try{
     mutations.forEach(function(m){Array.prototype.forEach.call(m.addedNodes||[],function(node){if(node&&node.nodeType===1)bindAll(node);});});
   }).observe(document.documentElement,{childList:true,subtree:true});
 }catch(e){}
-})();
+})(); 

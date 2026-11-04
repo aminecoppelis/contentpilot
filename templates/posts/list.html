@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Mes posts · Post Generator{% endblock %}
 {% block extra_style %}
-<link rel="stylesheet" href="/static/css/posts-list.css?v=4-strategy-red">
+<link rel="stylesheet" href="/static/css/posts-list.css?v=5-publication-status">
 <style>
   /* Tout le reste (hero, boutons, table, statuts, actions) vient d'ui-kit.css.
      Ici : seulement le centrage des colonnes numériques de CETTE table. */
-  #postRequestRows td:nth-child(4),
   #postRequestRows td:nth-child(5),
-  #postRequestRows td:nth-child(6) { text-align: center; }
+  #postRequestRows td:nth-child(6),
+  #postRequestRows td:nth-child(7) { text-align: center; }
   .postOriginBadge{display:inline-flex;align-items:center;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:900;text-decoration:none;white-space:nowrap}
   .postOriginBadge.strategy{background:#eef2ff;color:#4338ca;border:1px solid #c7d2fe}
   .postOriginBadge.manual{background:#f8fafc;color:#475569;border:1px solid #e2e8f0}
@@ -33,7 +33,7 @@
 <div class="tableWrap postListTableWrap">
   <table>
     <thead><tr>
-      <th>{{ t('posts.list.table.subject') }}</th><th>{{ t('posts.list.table.origin') }}</th><th>{{ t('common.status') }}</th><th>{{ t('posts.list.table.ideas') }}</th><th>{{ t('posts.list.table.approved') }}</th><th>{{ t('posts.list.table.media') }}</th>
+      <th>{{ t('posts.list.table.subject') }}</th><th>{{ t('posts.list.table.origin') }}</th><th>{{ t('common.status') }}</th><th title="{{ t('posts.publication.help') }}">{{ t('posts.list.table.publication') }}</th><th>{{ t('posts.list.table.ideas') }}</th><th>{{ t('posts.list.table.approved') }}</th><th>{{ t('posts.list.table.media') }}</th>
       <th>{{ t('posts.list.table.last_modified') }}</th><th>{{ t('posts.list.table.created_by') }}</th><th>{{ t('common.actions') }}</th>
     </tr></thead>
     <tbody id="postRequestRows">
@@ -41,7 +41,8 @@
       <tr id="request-row-{{ r.id }}">
         <td><b>{{ r.title or r.subject or t('posts.list.no_subject') }}</b><div class="mini">{{ r.id }}</div></td>
         <td>{% if r.generation_origin == 'strategy' %}<a class="postOriginBadge strategy" href="/app/strategies?strategy_id={{ r.strategy_id }}" title="{{ r.strategy_action_title or r.strategy_title }}">{{ t('posts.origin.strategy') }}</a>{% else %}<span class="postOriginBadge manual">{{ t('posts.origin.manual') }}</span>{% endif %}</td>
-        <td><span class="status {{ r.status }}">{{ r.status_label }}</span></td>
+        <td><span class="status {{ r.status }}">{{ t('post.status.scheduled') if r.status == 'scheduled' else r.status_label }}</span></td>
+        <td>{% include "posts/_publication_status.html" %}</td>
         <td>{{ r.ideas_count }}</td>
         <td>{{ r.approved_count }}</td>
         <td>{{ r.media_count }}</td>
@@ -59,7 +60,7 @@
         </td>
       </tr>
     {% else %}
-      <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:32px">{{ t('posts.list.empty') }}</td></tr>
+      <tr><td colspan="10" style="text-align:center;color:var(--muted);padding:32px">{{ t('posts.list.empty') }}</td></tr>
     {% endfor %}
     </tbody>
   </table>
