@@ -1220,5 +1220,8 @@
   "posts.publication.cancelled": "Annulée",
   "posts.publication.other": "Autre statut",
   "posts.publication.count": "{count} publication(s), tous réseaux confondus",
-  "posts.publication.help": "Statut des publications sur les réseaux. Plusieurs statuts peuvent coexister pour les posts et réseaux de cette ligne."
+  "posts.publication.help": "Statut des publications sur les réseaux. Plusieurs statuts peuvent coexister pour les posts et réseaux de cette ligne.",
+  "pn.f.macaron.title": "Ajouter mon macaron aux images",
+  "pn.f.macaron.desc": "Ajoute ton logo ou ton badge aux images générées pour ce post. Décoche cette option pour créer les images sans macaron.",
+  "pn.f.macaron.customize": "Personnaliser mon macaron"
 }

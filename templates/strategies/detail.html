@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ selected.title or t('sd.default_title') }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css?v=52-clean-calendar"><link rel="stylesheet" href="/static/css/strategy-calendar-clean.css?v=1">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css?v=41-published-media-preview"><link rel="stylesheet" href="/static/css/strategy-calendar-clean.css?v=1">{% endblock %}
 {% block content %}
 <section class="strategyWorkspace" data-strategy-id="{{ selected.id }}">
   <div class="strategyWorkspaceHeader">
@@ -228,7 +228,15 @@
           <div class="spFeed"><article class="spPost sp-{{ preview_type }}">
             <div class="spPostHead">{% if preview_type == 'ig' %}<span class="spAvatarRing"><i>{{ (selected.account_label or 'C')[:1]|upper }}</i></span>{% else %}<span class="spAvatar">{{ (selected.account_label or 'C')[:1]|upper }}</span>{% endif %}<span class="spWho"><b>{{ selected.account_label or 'Votre compte' }}</b><small>{% if preview_type == 'li' %}{{ selected.platform_label }} · {% endif %}2 h · ◎</small></span><strong>···</strong></div>
             {% if preview_type != 'ig' %}<div class="spText">{{ (post.post_text or post.action_title or 'Le contenu sera disponible après sa génération.')[:620] }}{% if (post.post_text or '')|length > 620 %}…{% endif %}</div>{% endif %}
-            {% if post.media_id %}<div class="spMedia {{ 'square' if preview_type == 'ig' else '' }}"><img src="/app/posts/media-image.jpg?media_id={{ post.media_id }}" alt="Aperçu du média" loading="lazy"></div>{% elif post.media_url %}<div class="spMedia {{ 'square' if preview_type == 'ig' else '' }}"><img src="{{ post.media_url }}" alt="Aperçu du média" loading="lazy"></div>{% else %}<div class="spMedia spMediaPlaceholder {{ 'square' if preview_type == 'ig' else '' }}"><span>{{ selected.platform_label }}</span><b>{{ post.title }}</b></div>{% endif %}
+            {% if post.media_id or post.media_url %}
+            <div class="spMedia {{ 'square' if preview_type == 'ig' else '' }}">
+              {% if post.media_type == 'video' %}
+              <video controls playsinline preload="metadata" src="{{ '/app/posts/media-video.mp4?media_id=' ~ post.media_id if post.media_id else post.media_url }}"></video>
+              {% else %}
+              <img src="{{ '/app/posts/media-image.jpg?media_id=' ~ post.media_id if post.media_id else post.media_url }}" alt="{{ t('js.media') }}" loading="lazy">
+              {% endif %}
+            </div>
+            {% else %}<div class="spMedia spMediaPlaceholder {{ 'square' if preview_type == 'ig' else '' }}"><span>{{ selected.platform_label }}</span><b>{{ post.title }}</b></div>{% endif %}
             {% if preview_type == 'ig' %}<div class="spIgActions"><span>♡</span><span>○</span><span>➤</span><span>⚑</span></div><div class="spLikes">{{ t('pv.preview.likes') }}</div><div class="spIgText"><b>{{ selected.account_label or t('strat.default_account') }}</b> {{ (post.post_text or post.action_title or '')[:330] }}{% if (post.post_text or '')|length > 330 %}…{% endif %}</div><div class="spAgo">{{ t('pv.preview.two_hours_ago') }}</div>
             {% else %}<div class="spPostStats"><span>● ● {{ 128 if preview_type == 'li' else 214 }}</span><span>{{ t('pv.preview.comments') }}</span></div><div class="spPostActions"><span>{{ t('pv.preview.like') }}</span><span>{{ t('pv.preview.comment') }}</span><span>{{ t('pv.preview.share') }}</span>{% if preview_type == 'li' %}<span>{{ t('pv.preview.send') }}</span>{% endif %}</div>{% endif %}
           </article></div>

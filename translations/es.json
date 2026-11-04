@@ -1220,5 +1220,8 @@
   "posts.publication.cancelled": "Cancelada",
   "posts.publication.other": "Otro estado",
   "posts.publication.count": "{count} publicación(es) entre todas las redes",
-  "posts.publication.help": "Estado de publicación en redes sociales. Los posts y las redes de esta fila pueden tener distintos estados."
+  "posts.publication.help": "Estado de publicación en redes sociales. Los posts y las redes de esta fila pueden tener distintos estados.",
+  "pn.f.macaron.title": "Añadir mi distintivo a las imágenes",
+  "pn.f.macaron.desc": "Añade tu logotipo o distintivo a las imágenes generadas para este post. Desmarca esta opción para crear imágenes sin distintivo.",
+  "pn.f.macaron.customize": "Personalizar mi distintivo"
 }

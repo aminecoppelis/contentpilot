@@ -1220,5 +1220,8 @@
   "posts.publication.cancelled": "Abgebrochen",
   "posts.publication.other": "Anderer Status",
   "posts.publication.count": "{count} Veröffentlichung(en) über alle Netzwerke",
-  "posts.publication.help": "Veröffentlichungsstatus in sozialen Netzwerken. Beiträge und Netzwerke dieser Zeile können unterschiedliche Status haben."
+  "posts.publication.help": "Veröffentlichungsstatus in sozialen Netzwerken. Beiträge und Netzwerke dieser Zeile können unterschiedliche Status haben.",
+  "pn.f.macaron.title": "Mein Logo zu Bildern hinzufügen",
+  "pn.f.macaron.desc": "Füge dein Logo oder Emblem zu den für diesen Beitrag generierten Bildern hinzu. Deaktiviere diese Option, um Bilder ohne Logo zu erstellen.",
+  "pn.f.macaron.customize": "Mein Logo anpassen"
 }

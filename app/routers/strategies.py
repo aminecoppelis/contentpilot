@@ -28,6 +28,20 @@ from app.user_timezone import parse_user_datetime, to_user_datetime, format_user
 from app.pagination import page_meta
 from app.i18n import resolve_locale, translate
 
+
+def _apply_publication_preview(preview: dict, row: dict) -> None:
+    """A published/scheduled post must show its saved media, even if the gallery changes."""
+    if not row.get("publication_id"):
+        return
+    preview["media_id"] = str(row.get("publication_media_id") or "")
+    preview["media_url"] = str(row.get("publication_media_url") or "")
+    preview["media_type"] = row.get("publication_media_type") or (
+        "video" if row.get("publication_type") == "reel" else "image"
+    )
+    if row.get("publication_text") is not None:
+        preview["post_text"] = str(row["publication_text"])
+    preview["status"] = row.get("publication_status") or preview.get("status")
+
 router = APIRouter(tags=["Strategies"])
 from app.templating import templates
 
@@ -260,7 +274,7 @@ async def get_strategies(request: Request, strategy_id: str | None = None, page:
                            WHERE pm.idea_id=pi.id AND pm.workspace_id=pi.workspace_id
                              AND pm.status='ready'
                              AND COALESCE(pm.public_url,pm.external_url,'')<>''
-                           ORDER BY (pm.media_role='cover') DESC, pm.created_at ASC
+                           ORDER BY (pm.media_role='cover') DESC NULLS LAST, pm.created_at ASC, pm.id ASC
                            LIMIT 1) AS media_url
                   FROM public.post_ideas pi
                   LEFT JOIN public.post_versions pv ON pv.id=pi.current_version_id
@@ -298,19 +312,31 @@ async def get_strategies(request: Request, strategy_id: str | None = None, page:
                        a.title AS action_title, pr.subject AS request_subject,
                        pi.id::text AS idea_id, pi.title AS idea_title,
                        pi.status AS idea_status, pv.post_text, pv.cta AS post_cta,
+                       publication.id::text AS publication_id,
+                       publication.media_id::text AS publication_media_id,
+                       publication.media_url_snapshot AS publication_media_url,
+                       publication.post_text_snapshot AS publication_text,
+                       publication.status AS publication_status,
+                       published_media.media_type AS publication_media_type,
+                       publication.publication_type,
+                       (SELECT pm.media_type FROM public.post_media pm
+                         WHERE pm.idea_id=pi.id AND pm.workspace_id=pi.workspace_id
+                           AND pm.status='ready' AND COALESCE(pm.public_url,pm.external_url,'')<>''
+                         ORDER BY (pm.media_role='cover') DESC NULLS LAST, pm.created_at ASC, pm.id ASC
+                         LIMIT 1) AS media_type,
                        (SELECT pm.id::text
                           FROM public.post_media pm
                          WHERE pm.idea_id=pi.id AND pm.workspace_id=pi.workspace_id
                            AND pm.status='ready'
                            AND COALESCE(pm.public_url,pm.external_url,'')<>''
-                         ORDER BY (pm.media_role='cover') DESC, pm.created_at ASC
+                         ORDER BY (pm.media_role='cover') DESC NULLS LAST, pm.created_at ASC, pm.id ASC
                          LIMIT 1) AS media_id,
                        (SELECT COALESCE(pm.public_url,pm.external_url)
                           FROM public.post_media pm
                          WHERE pm.idea_id=pi.id AND pm.workspace_id=pi.workspace_id
                            AND pm.status='ready'
                            AND COALESCE(pm.public_url,pm.external_url,'')<>''
-                         ORDER BY (pm.media_role='cover') DESC, pm.created_at ASC
+                         ORDER BY (pm.media_role='cover') DESC NULLS LAST, pm.created_at ASC, pm.id ASC
                          LIMIT 1) AS media_url
                 FROM public.app_growth_strategy_action_calendar c
                 JOIN public.app_growth_strategy_actions a ON a.id=c.action_id
@@ -321,6 +347,18 @@ async def get_strategies(request: Request, strategy_id: str | None = None, page:
                   ON pi.request_id=pr.id AND pi.workspace_id=c.workspace_id
                  AND pi.deleted_at IS NULL
                 LEFT JOIN public.post_versions pv ON pv.id=pi.current_version_id
+                LEFT JOIN LATERAL (
+                  SELECT pp.* FROM public.post_publications pp
+                  WHERE pp.idea_id=pi.id AND pp.workspace_id=pi.workspace_id
+                    AND pp.status IN ('published','scheduled','processing')
+                    AND (pp.response->>'social_account_id'=$4::text
+                         OR COALESCE(pp.response->>'social_account_id','')='')
+                  ORDER BY (pp.status='published') DESC, pp.published_at DESC NULLS LAST,
+                           pp.created_at DESC, pp.id DESC
+                  LIMIT 1
+                ) publication ON true
+                LEFT JOIN public.post_media published_media
+                  ON published_media.id=publication.media_id AND published_media.workspace_id=pi.workspace_id
                 WHERE c.strategy_id=$1::uuid AND c.workspace_id=$2::uuid
                 ORDER BY pi.id, c.created_at ASC
                 LIMIT 6 OFFSET $3
@@ -328,6 +366,7 @@ async def get_strategies(request: Request, strategy_id: str | None = None, page:
                 strategy_id,
                 user.active_workspace_id,
                 (post_page - 1) * 6,
+                str(selected_row["social_account_id"] or ""),
             )
 
         page = max(1, int(page or 1))
@@ -514,8 +553,10 @@ async def get_strategies(request: Request, strategy_id: str | None = None, page:
                 "post_cta": str(post_row.get("post_cta") or "").strip(),
                 "media_url": str(post_row.get("media_url") or "").strip(),
                 "media_id": str(post_row.get("media_id") or "").strip(),
+                "media_type": str(post_row.get("media_type") or "image"),
                 "action_title": post_row.get("action_title") or "",
             }
+            _apply_publication_preview(linked_post, post_row)
             action_links = posts_by_action.setdefault(str(post_row.get("action_id") or ""), [])
             if not any(item.get("idea_id") == linked_post["idea_id"] for item in action_links):
                 action_links.append(linked_post)

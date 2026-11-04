@@ -1220,5 +1220,8 @@
   "posts.publication.cancelled": "Cancelled",
   "posts.publication.other": "Other status",
   "posts.publication.count": "{count} publication(s) across all networks",
-  "posts.publication.help": "Publication status on social networks. Posts and networks in this row may have different statuses."
+  "posts.publication.help": "Publication status on social networks. Posts and networks in this row may have different statuses.",
+  "pn.f.macaron.title": "Add my badge to images",
+  "pn.f.macaron.desc": "Add your logo or badge to images generated for this post. Uncheck this option to create images without a badge.",
+  "pn.f.macaron.customize": "Customize my badge"
 }

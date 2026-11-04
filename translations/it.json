@@ -1220,5 +1220,8 @@
   "posts.publication.cancelled": "Annullata",
   "posts.publication.other": "Altro stato",
   "posts.publication.count": "{count} pubblicazioni su tutte le reti",
-  "posts.publication.help": "Stato di pubblicazione sui social network. I post e le reti di questa riga possono avere stati diversi."
+  "posts.publication.help": "Stato di pubblicazione sui social network. I post e le reti di questa riga possono avere stati diversi.",
+  "pn.f.macaron.title": "Aggiungi il mio marchio alle immagini",
+  "pn.f.macaron.desc": "Aggiungi il tuo logo o marchio alle immagini generate per questo post. Deseleziona questa opzione per creare immagini senza marchio.",
+  "pn.f.macaron.customize": "Personalizza il mio marchio"
 }
