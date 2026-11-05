@@ -89,7 +89,7 @@
 
 <section class="card">
   <h2>{{ t('ws.members.title') }}</h2>
-  <div class="tableWrap"><table>
+  <div class="tableWrap">{% include "partials/grid_loading.html" %}<table data-syncfusion="true" data-grid-view="members">
     <thead><tr><th>{{ t('ws.table.user') }}</th><th>{{ t('ws.table.role') }}</th><th>{{ t('ws.table.actions') }}</th></tr></thead>
     <tbody>
     {% for m in members %}
@@ -126,7 +126,7 @@
 {% if can_admin %}
 <section class="card">
   <h2>{{ t('ws.invites.title') }}</h2>
-  <div class="tableWrap"><table>
+  <div class="tableWrap">{% include "partials/grid_loading.html" %}<table data-syncfusion="true" data-grid-view="invitations">
     <thead><tr><th>{{ t('ws.table.email') }}</th><th>{{ t('ws.table.role') }}</th><th>{{ t('ws.table.expiration') }}</th><th></th></tr></thead>
     <tbody>
     {% for i in invitations %}

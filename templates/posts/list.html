@@ -31,14 +31,14 @@
 </div>
 
 <div class="tableWrap postListTableWrap">
-  <table>
+  {% include "partials/grid_loading.html" %}<table data-syncfusion="true" data-grid-view="posts">
     <thead><tr>
       <th>{{ t('posts.list.table.subject') }}</th><th>{{ t('posts.list.table.origin') }}</th><th>{{ t('common.status') }}</th><th title="{{ t('posts.publication.help') }}">{{ t('posts.list.table.publication') }}</th><th>{{ t('posts.list.table.ideas') }}</th><th>{{ t('posts.list.table.approved') }}</th><th>{{ t('posts.list.table.media') }}</th>
       <th>{{ t('posts.list.table.last_modified') }}</th><th>{{ t('posts.list.table.created_by') }}</th><th>{{ t('common.actions') }}</th>
     </tr></thead>
     <tbody id="postRequestRows">
     {% for r in requests %}
-      <tr id="request-row-{{ r.id }}">
+      <tr id="request-row-{{ r.id }}" {% if r.ideas_count|int > 0 or r.status in ['generating','generating_more'] %}data-row-url="/app/posts/view?request_id={{ r.id }}" tabindex="0" aria-label="{{ t('posts.list.ideas_link') }}"{% endif %}>
         <td><b>{{ r.title or r.subject or t('posts.list.no_subject') }}</b><div class="mini">{{ r.id }}</div></td>
         <td>{% if r.generation_origin == 'strategy' %}<a class="postOriginBadge strategy" href="/app/strategies?strategy_id={{ r.strategy_id }}" title="{{ r.strategy_action_title or r.strategy_title }}">{{ t('posts.origin.strategy') }}</a>{% else %}<span class="postOriginBadge manual">{{ t('posts.origin.manual') }}</span>{% endif %}</td>
         <td><span class="status {{ r.status }}">{{ t('post.status.scheduled') if r.status == 'scheduled' else r.status_label }}</span></td>
@@ -115,7 +115,8 @@ async function deleteRequestFromList(event, form){
       body: JSON.stringify({request_id:id})});
     var data = await resp.json();
     if(data.success){
-      document.getElementById('request-row-'+id)?.remove();
+      var row=document.getElementById('request-row-'+id);
+      if(row&&!(window.pgRemoveGridRow&&window.pgRemoveGridRow(row)))row.remove();
       showListToast(window.__I18N_POSTS_LIST.deleted);
     } else {
       showListToast(data.message || window.__I18N_POSTS_LIST.deleteError, 'error');

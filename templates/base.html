@@ -30,7 +30,25 @@
   <link rel="stylesheet" href="/static/css/toast.css?v={{ request.query_params.get('v', '23') }}">
   {% block extra_style %}{% endblock %}
   <!-- ui-kit.css : système visuel unifié, doit rester le DERNIER pour l'emporter -->
-  <link rel="stylesheet" href="/static/css/ui-kit.css?v=27-open-buttons-blue">
+  {% if post_flow %}
+  <script>
+    document.documentElement.classList.add('pg-post-flow');
+    window.__PG_POST_FLOW_TIMER=setTimeout(function(){document.documentElement.classList.remove('pg-post-flow');},12000);
+  </script>
+  {% endif %}
+  {% if auth_user and syncfusion_tables %}
+  <script>
+    document.documentElement.classList.add('pg-grid-loading');
+    window.__PG_GRID_BOOT_TIMER=setTimeout(function(){
+      window.__PG_SYNCFUSION_FAILED=true;
+      document.documentElement.classList.remove('pg-grid-loading');
+      if(window.pgInitPagination)window.pgInitPagination();
+    },12000);
+  </script>
+  {% endif %}
+  {% if auth_user and (syncfusion_tables or syncfusion_post_flow or syncfusion_calendar) %}<link rel="stylesheet" href="https://cdn.syncfusion.com/ej2/35.1.37/bootstrap5.3.css">{% endif %}
+  <link rel="stylesheet" href="/static/css/ui-kit.css?v=33-two-posts-per-row">
+  {% if auth_user and (syncfusion_tables or syncfusion_post_flow or syncfusion_calendar) %}<link rel="stylesheet" href="/static/css/syncfusion-grid.css?v=4-skeleton">{% endif %}
 </head>
 <body class="{% if auth_user %}has-sidebar{% endif %}">
 <div class="app-layout">
@@ -73,6 +91,7 @@
         <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2L15 22 11 13 2 9l20-7z"></path></svg>
         <span>{{ t('nav.published') }}</span>
       </a>
+
 
       <div class="sidebar-section-title">{{ t('nav.section.config') }}</div>
       <a href="/app/networks" class="sidebar-item {{ 'active' if active_nav=='networks' }}">
@@ -393,9 +412,23 @@
 <script src="/static/js/topbar.js?v={{ request.query_params.get('v', '23') }}"></script>
 <script src="/static/js/toast.js?v={{ request.query_params.get('v', '23') }}"></script>
 <script src="/static/js/pg-ui.js?v={{ request.query_params.get('v', '23') }}"></script>
+<script src="/static/js/row-navigation.js?v=1"></script>
+{% if auth_user and (syncfusion_tables or syncfusion_post_flow or syncfusion_calendar) %}
+<script src="https://cdn.syncfusion.com/ej2/35.1.37/dist/ej2.min.js"></script>
+<script>
+  {% if syncfusion_tables %}window.__PG_SYNCFUSION = {version:'35.1.37'};{% endif %}
+  if(window.ej && ej.base) ej.base.registerLicense({{ syncfusion_license_key | tojson }});
+</script>
+{% endif %}
+{% if auth_user and (syncfusion_tables or syncfusion_calendar) %}
+<script src="/static/js/table-preferences.js?v=3-calendar"></script>
+{% endif %}
+{% if auth_user and syncfusion_tables %}
+<script src="/static/js/syncfusion-grid.js?v=4-persisted-view"></script>
+{% endif %}
 <script src="/static/js/tables.js"></script>
-<script src="/static/js/pagination.js?v=2-hidden-fix"></script>
-<script src="/static/js/textarea_limits.js"></script>
+<script src="/static/js/pagination.js?v=4-grid-fallback"></script>
+<script src="/static/js/textarea_limits.js?v=2-no-clipboard-counter"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

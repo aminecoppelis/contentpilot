@@ -1,5 +1,5 @@
 {% for r in requests %}
-<tr id="request-row-{{ r.id }}">
+<tr id="request-row-{{ r.id }}" {% if r.ideas_count|int > 0 or r.status in ['generating','generating_more'] %}data-row-url="/app/posts/view?request_id={{ r.id }}" tabindex="0" aria-label="{{ t('posts.list.ideas_link') }}"{% endif %}>
   <td><b>{{ r.title or r.subject or t('posts.list.no_subject') }}</b><div class="mini">{{ r.id }}</div></td>
   <td>{% if r.generation_origin == 'strategy' %}<a class="postOriginBadge strategy" href="/app/strategies?strategy_id={{ r.strategy_id }}" title="{{ r.strategy_action_title or r.strategy_title }}">{{ t('posts.origin.strategy') }}</a>{% else %}<span class="postOriginBadge manual">{{ t('posts.origin.manual') }}</span>{% endif %}</td>
   <td><span class="status {{ r.status }}">{{ t('post.status.scheduled') if r.status == 'scheduled' else r.status_label }}</span></td>

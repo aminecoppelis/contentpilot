@@ -51,7 +51,7 @@
   }
 
   function rowCheckboxes(){
-    return Array.prototype.slice.call(tableBody.querySelectorAll('.publishedRowCheck'));
+    return Array.prototype.slice.call(document.querySelectorAll('.publishedRowCheck'));
   }
 
   function syncSelectionUi(){
@@ -87,8 +87,8 @@
     syncSelectionUi();
   }
 
-  tableBody.addEventListener('change',handleRowSelection);
-  tableBody.addEventListener('click',function(event){
+  document.addEventListener('change',handleRowSelection);
+  document.addEventListener('click',function(event){
     var target=event&&event.target?event.target:null;
     if(target&&target.matches&&target.matches('.publishedRowCheck')){
       setTimeout(function(){handleRowSelection({target:target});},0); return;
@@ -155,5 +155,6 @@
       .observe(tableBody,{childList:true,subtree:false});
   }catch(error){}
 
+  document.addEventListener('pg:grid-data-bound',syncSelectionUi);
   syncSelectionUi();
 })();

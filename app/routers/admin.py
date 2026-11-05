@@ -36,7 +36,7 @@ def _session_hash(request: Request) -> str:
     return session_token_hash(raw) if raw else ""
 
 
-async def _fetch_users(conn, offset: int = 0, limit: int = ADMIN_USERS_PAGE_SIZE):
+async def _fetch_users(conn, offset: int = 0, limit: int | None = ADMIN_USERS_PAGE_SIZE):
     return await conn.fetch(
         """
         SELECT id::text, email, first_name, last_name, full_name,
@@ -69,10 +69,11 @@ def _decorate_users(rows, current_user_id: str, timezone_name: str) -> list[dict
 @router.get("/admin/users", response_class=HTMLResponse)
 async def get_admin_users(request: Request, user=Depends(require_admin),
                            success: str | None = None, error: str | None = None, page: int = 1):
-    page = max(1, int(page or 1))
+    use_grid = bool(get_settings().syncfusion_license_key.strip())
+    page = 1 if use_grid else max(1, int(page or 1))
     pool = get_pool()
     async with pool.acquire() as conn:
-        rows = await _fetch_users(conn, offset=(page - 1) * ADMIN_USERS_PAGE_SIZE)
+        rows = await _fetch_users(conn, offset=(page - 1) * ADMIN_USERS_PAGE_SIZE, limit=None if use_grid else ADMIN_USERS_PAGE_SIZE)
         total = await conn.fetchval("SELECT count(*)::int FROM public.app_users WHERE deleted_at IS NULL")
 
     return templates.TemplateResponse(request, "admin/users.html", {

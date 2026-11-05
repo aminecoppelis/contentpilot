@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ selected.title or t('sd.default_title') }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css?v=41-published-media-preview"><link rel="stylesheet" href="/static/css/strategy-calendar-clean.css?v=1">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css?v=41-published-media-preview"><link rel="stylesheet" href="/static/css/strategy-calendar-clean.css?v=1"><link rel="stylesheet" href="/static/css/publication-calendar.css?v=5-soft-colors">{% endblock %}
 {% block content %}
 <section class="strategyWorkspace" data-strategy-id="{{ selected.id }}">
   <div class="strategyWorkspaceHeader">
@@ -250,43 +250,12 @@
   </section>
 
   <section class="strategyTabPanel" data-strategy-panel="calendar" hidden>
-    <div class="strategyPanelHeading"><div><span>{{ t('sd.calendar.eyebrow') }}</span><h2>{{ t('sd.calendar.title') }}</h2><p>{{ t('sd.calendar.subtitle') }}</p></div><div class="strategyPanelBadge">{{ t('sd.calendar.count', count=calendar|length) }}</div></div>
-    <div class="realCalendarPanel" id="strategyCalendarPanel" data-strategy-id="{{ selected.id }}">
-      <script type="application/json" id="strategyCalendarItemsJson">{{ calendar_view_items|tojson }}</script>
-      <div class="calendarSummary">
-        <div><small>{{ t('sd.cal.total') }}</small><b id="strategyCalTotal">{{ calendar|length }}</b></div>
-        <div><small>{{ t('sd.cal.current_view') }}</small><b id="strategyCalVisible">{{ calendar|length }}</b></div>
-        <div><small>{{ t('sd.cal.upcoming') }}</small><b id="strategyCalUpcoming">0</b></div>
-        <div><small>{{ t('sd.cal.completed') }}</small><b id="strategyCalCompleted">0</b></div>
-      </div>
-      <div class="calendarLegend" aria-label="{{ t('sd.cal.legend') }}">
-        <span class="action"><i></i>{{ t('sd.cal.legend.action') }}</span>
-        <span class="checkpoint"><i></i>{{ t('sd.cal.legend.checkpoint') }}</span>
-        <span class="generated"><i></i>{{ t('sd.cal.legend.generated') }}</span>
-        <span class="overdue"><i></i>{{ t('sd.cal.legend.overdue') }}</span>
-      </div>
-      <div class="realCalendarToolbar">
-        <div class="realCalendarTitle">
-          <b id="strategyCalTitle">{{ t('sd.tab.calendar') }}</b>
-          <small id="strategyCalVisibleLabel">{{ t('sd.cal.visible', count=calendar|length) }}</small>
-        </div>
-        <div class="realCalendarControls">
-          <button type="button" class="btn secondary tiny" data-cal-nav="prev">{{ t('sd.cal.prev') }}</button>
-          <button type="button" class="btn secondary tiny" data-cal-nav="today">{{ t('sd.cal.today') }}</button>
-          <button type="button" class="btn secondary tiny" data-cal-nav="next">{{ t('sd.cal.next') }}</button>
-        </div>
-        <div class="realCalendarModes" role="tablist" aria-label="{{ t('sd.cal.view') }}">
-          <button type="button" class="calendarModeBtn" data-cal-mode="month">{{ t('sd.cal.month') }}</button>
-          <button type="button" class="calendarModeBtn" data-cal-mode="week">{{ t('sd.cal.week') }}</button>
-          <button type="button" class="calendarModeBtn" data-cal-mode="workweek">{{ t('sd.cal.workweek') }}</button>
-          <button type="button" class="calendarModeBtn" data-cal-mode="day">{{ t('sd.cal.day') }}</button>
-          <button type="button" class="calendarModeBtn" data-cal-mode="schedule">{{ t('sd.cal.schedule') }}</button>
-        </div>
-      </div>
-      <div id="strategyCalendarBody" class="realCalendarBody">
-        <div class="strategyEmptyState">{{ t('sd.cal.loading') }}</div>
-      </div>
+    <div class="strategyCalendarKinds" role="group" aria-label="{{ t('sd.tab.calendar') }}">
+      <button type="button" class="btn primary" data-strategy-calendar-kind="all" aria-pressed="true">{{ t('common.all') }}</button>
+      <button type="button" class="btn secondary" data-strategy-calendar-kind="actions" aria-pressed="false">{{ t('sd.tab.actions') }}</button>
+      <button type="button" class="btn secondary" data-strategy-calendar-kind="publications" aria-pressed="false">{{ t('nav.published') }}</button>
     </div>
+    <div id="strategyPublicationCalendarRoot" data-publication-calendar>{% include "strategies/_publication_calendar.html" %}</div>
   </section>
 
 <div class="calendarTaskModal" id="calendarTaskModal" aria-hidden="true">
@@ -339,4 +308,8 @@
   </form>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/strategies.js?v=35-action-execution-copy"></script>{% endblock %}
+{% block scripts %}
+<script src="/static/js/strategies.js?v=35-action-execution-copy"></script>
+<script>window.__PG_PUBLICATION_CALENDAR={timezone:{{ auth_user.timezone|tojson }},strategyId:{{ selected.id|tojson }}};</script>
+<script src="/static/js/publication-calendar.js?v=5-skeleton"></script>
+{% endblock %}

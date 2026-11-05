@@ -19,6 +19,7 @@
   }
 
   function enhance(container,selector){
+    if(window.__PG_SYNCFUSION&&window.ej&&!window.__PG_SYNCFUSION_FAILED&&container.closest('table[data-syncfusion="true"]'))return;
     if(!container||container.dataset.paginationReady==='true')return;
     container.dataset.paginationReady='true';
     var page=1;
@@ -73,5 +74,6 @@
       enhance(container,container.dataset.paginateItems||':scope > *');
     });
   }
+  window.pgInitPagination=init;
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();

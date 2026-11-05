@@ -158,7 +158,8 @@ def js_catalog(locale: str = DEFAULT_LOCALE) -> dict[str, str]:
     return {
         k: catalog.get(k, fallback.get(k, k))
         for k in keys
-        if k.startswith(("js.", "common."))
+        if k.startswith(("js.", "common.", "sd.task.", "posts.publication.", "pm.pub.datetime"))
+        or k in {"sd.tab.actions", "nav.published", "pv.act.publish", "pm.pub.when.schedule"}
     }
 
 

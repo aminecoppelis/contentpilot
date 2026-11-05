@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     trust_proxy_headers: bool = True
     env: str = "development"
     log_level: str = "info"
+    syncfusion_license_key: str = ""
 
     # Session (voir Cahier technique §3.5 / §4.1)
     session_cookie_name: str = "pg_session"

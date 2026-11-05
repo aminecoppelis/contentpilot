@@ -67,7 +67,7 @@
 </nav>
 
 <section class="tableWrap">
-  <table>
+  {% include "partials/grid_loading.html" %}<table data-syncfusion="true" data-grid-view="users">
     <thead><tr><th>{{ t('adm.usr.col.user') }}</th><th>{{ t('adm.usr.col.role') }}</th><th>{{ t('common.status') }}</th><th>{{ t('adm.usr.col.created') }}</th><th>{{ t('common.actions') }}</th></tr></thead>
     <tbody id="adminUsersTbody">
     {% include "admin/_user_rows.html" %}

@@ -1,0 +1,53 @@
+const fs=require('fs');
+const assert=require('node:assert/strict');
+const {JSDOM,VirtualConsole}=require('../.cache/grid-tests/node_modules/jsdom');
+const root=process.cwd();
+const original={version:1,columnCount:4,filters:[{field:'c1',operator:'equal',value:'Scheduled',predicate:'and',matchCase:false,ignoreAccent:true}],sort:[{field:'c2',direction:'Descending'}],search:'Post',pageSize:20,columns:[{field:'c1',width:190,visible:true},{field:'c0',width:300,visible:true},{field:'c2',width:260,visible:false},{field:'c3',width:240,visible:true}],pageFilters:{}};
+let stored={state:original,revision:700},writes=[];
+const rows=Array.from({length:30},(_,i)=>`<tr id="row-${i}"><td>Post ${i}</td><td>${i%2===0?'Scheduled':'Published'}</td><td>${i}</td><td><button>Open</button></td></tr>`).join('');
+const dom=new JSDOM(`<html class="pg-grid-loading"><body><table data-syncfusion="true" data-grid-view="posts"><thead><tr><th>Post</th><th>Status</th><th>Count</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table></body></html>`,{url:'http://localhost/app/posts',runScripts:'outside-only',pretendToBeVisual:true,virtualConsole:new VirtualConsole()});
+const win=dom.window;
+const getStyle=win.getComputedStyle.bind(win);win.getComputedStyle=el=>getStyle(el);
+win.matchMedia=()=>({matches:false,addListener(){},removeListener(){}});
+win.HTMLElement.prototype.getBoundingClientRect=()=>({top:0,left:0,right:180,bottom:40,width:180,height:40,x:0,y:0});
+win.HTMLCanvasElement.prototype.getContext=()=>({measureText:s=>({width:String(s).length*8})});
+win.ResizeObserver=class{observe(){}disconnect(){}unobserve(){}};
+win.fetch=async(url,options={})=>{
+  if(url==='/app/table-preferences')return {ok:true,json:async()=>({success:true,data:{posts:stored}})};
+  if(url==='/app/table-preferences/posts'){
+    const payload=JSON.parse(options.body);writes.push(payload);
+    if(payload.revision>stored.revision)stored=payload;
+    return {ok:true,json:async()=>({success:true})};
+  }
+  return {ok:true,json:async()=>({})};
+};
+win.__PG_SYNCFUSION={};win.__LOCALE='en';win.__DIR='ltr';win.t=key=>key;
+win.eval(fs.readFileSync(root+'/.cache/grid-tests/ej2.min.js','utf8'));
+if(process.env.TEST_LICENSE)win.ej.base.registerLicense(process.env.TEST_LICENSE);
+win.eval(fs.readFileSync(root+'/static/js/table-preferences.js','utf8'));
+win.eval(fs.readFileSync(root+'/static/js/syncfusion-grid.js','utf8'));
+const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+(async()=>{
+  await wait(1000);
+  const grid=win.document.querySelector('.pgSyncfusionGrid').ej2_instances[0];
+  assert.equal(grid.getCurrentViewRecords().length,15);
+  assert.equal(grid.getCurrentViewRecords()[0].c2,28);
+  assert.equal(grid.pageSettings.pageSize,20);
+  assert.equal(grid.searchSettings.key,'Post');
+  assert.equal(grid.getColumnByField('c2').visible,false);
+  assert.equal(grid.getColumnByField('c2').width,260);
+  assert.deepEqual(Array.from(grid.getColumns(),c=>c.field),['__key','c1','c0','c2','c3']);
+  assert.equal(writes.length,0,'Opening a saved view must not overwrite newer preferences');
+  grid.clearFiltering();grid.search('Post 29');await wait(1100);
+  assert.equal(stored.state.search,'Post 29');assert.equal(stored.state.filters.length,0);
+  assert(stored.revision>700);
+  grid.search('Post 28');await wait(150);win.dispatchEvent(new win.Event('pagehide'));await wait(100);
+  assert.equal(stored.state.search,'Post 28','Pending changes flushed before leaving');
+  await grid.toolbarClick({item:{id:'pg-grid-0-reset'}});await wait(600);
+  assert.equal(stored.state.search,'');assert.equal(stored.state.pageSize,10);
+  assert.equal(stored.state.filters.length,0);assert.equal(stored.state.sort.length,0);
+  assert.equal(stored.state.columns[0].field,'c0');assert.equal(stored.state.columns.find(c=>c.field==='c2').visible,true);
+  fs.writeFileSync(root+'/.cache/grid-tests/preference-payload.json',JSON.stringify(stored));
+  console.log('PASS: saved filters, search, sorting, page size, column order/visibility/width restored; automatic saving, leave-page flush and reset persisted');
+  grid.destroy();win.close();
+})().catch(error=>{console.error(error.name+': '+error.message);win.close();process.exitCode=1;});

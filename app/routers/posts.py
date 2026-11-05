@@ -10,6 +10,7 @@ from fastapi import APIRouter, Request, Depends, Body
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from app.config import get_settings
 from app.database import get_pool
 from app.dependencies.auth import require_auth
 from app.services import ai
@@ -300,7 +301,8 @@ async def get_posts(request: Request, status: str | None = None, page: int = 1,
     (post_requests), pas les idées individuelles — chaque ligne agrège le
     nombre d'idées/approuvées/médias pour une demande de génération.
     """
-    page = max(1, int(page or 1))
+    use_grid = bool(get_settings().syncfusion_license_key.strip())
+    page = 1 if use_grid else max(1, int(page or 1))
     origin = origin if origin in {"all", "strategy", "manual"} else "all"
     q = (q or "").strip()[:120]
     pool = get_pool()
@@ -345,9 +347,9 @@ async def get_posts(request: Request, status: str | None = None, page: int = 1,
             GROUP BY pr.id, pr.workspace_id, u.first_name, u.last_name,
                      origin.strategy_id, origin.strategy_title, origin.action_title
             ORDER BY pr.updated_at DESC NULLS LAST, pr.created_at DESC
-            LIMIT 10 OFFSET $5
+            LIMIT $6 OFFSET $5
             """,
-            user.active_workspace_id, status, origin, q, (page - 1) * 10,
+            user.active_workspace_id, status, origin, q, (page - 1) * 10, None if use_grid else 10,
         )
         total = await conn.fetchval(
             "SELECT count(*)::int FROM public.post_requests WHERE workspace_id=$1::uuid AND deleted_at IS NULL "

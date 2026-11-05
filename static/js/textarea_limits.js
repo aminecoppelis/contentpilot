@@ -22,6 +22,9 @@ var NAME_LIMITS={
 };
 function closestLimit(textarea){
   if(!textarea||textarea.readOnly||textarea.disabled)return null;
+  // Syncfusion creates invisible clipboard fields; they are not user inputs.
+  if(textarea.matches('.e-clipboard,[aria-hidden="true"],[data-no-char-counter]'))return null;
+  if(!textarea.id&&!textarea.name&&!textarea.hasAttribute('data-char-limit')&&!textarea.hasAttribute('data-maxlength')&&!textarea.hasAttribute('maxlength'))return null;
   var explicit=Number(textarea.getAttribute('data-char-limit')||textarea.getAttribute('data-maxlength')||textarea.getAttribute('maxlength')||0);
   if(Number.isFinite(explicit)&&explicit>0)return Math.floor(explicit);
   var id=String(textarea.id||'');
@@ -89,10 +92,24 @@ function bindAll(root){
   else nodes=Array.prototype.slice.call(root.querySelectorAll?root.querySelectorAll('textarea'):[]);
   nodes.forEach(bind);
 }
+function removeOrphanCounters(){
+  if(typeof document==='undefined'||!document.documentElement)return;
+  document.querySelectorAll('.pgCharCounter').forEach(function(counter){
+    var field=counter.previousElementSibling;
+    if(!field||field.tagName!=='TEXTAREA'||!closestLimit(field)){
+      if(field&&field.tagName==='TEXTAREA'){
+        var described=(field.getAttribute('aria-describedby')||'').split(/\s+/).filter(function(id){return id&&id!==counter.id;});
+        if(described.length)field.setAttribute('aria-describedby',described.join(' '));else field.removeAttribute('aria-describedby');
+      }
+      counter.remove();
+    }
+  });
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){bindAll(document);});else bindAll(document);
 try{
   new MutationObserver(function(mutations){
     mutations.forEach(function(m){Array.prototype.forEach.call(m.addedNodes||[],function(node){if(node&&node.nodeType===1)bindAll(node);});});
+    if(mutations.some(function(m){return m.removedNodes.length;}))removeOrphanCounters();
   }).observe(document.documentElement,{childList:true,subtree:true});
 }catch(e){}
-})(); 
+})();

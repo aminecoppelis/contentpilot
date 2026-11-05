@@ -9,6 +9,7 @@ le contexte de traduction via un context_processor : chaque template reçoit
 from __future__ import annotations
 
 from fastapi.templating import Jinja2Templates
+from app.config import get_settings
 
 from app.i18n import (
     DEFAULT_LOCALE,
@@ -24,6 +25,12 @@ from app.i18n import (
 
 def _i18n_context(request) -> dict:
     locale = resolve_locale(request)
+    license_key = get_settings().syncfusion_license_key.strip()
+    grid_paths = {"/app/posts", "/app/published", "/app/strategies", "/app/networks", "/app/admin/users", "/app/workspace"}
+    use_grid = bool(license_key and request.url.path in grid_paths
+                    and not (request.url.path == "/app/strategies" and request.query_params.get("strategy_id")))
+    post_flow = request.url.path == "/app/posts/view"
+    publication_calendar = request.url.path == "/app/strategies" and bool(request.query_params.get("strategy_id"))
 
     def _t(key: str, **params) -> str:
         return translate(key, locale, **params)
@@ -36,6 +43,11 @@ def _i18n_context(request) -> dict:
         "locale_names": LOCALE_NAMES,
         "locale_short": LOCALE_SHORT,
         "js_catalog": js_catalog(locale),  # sous-ensemble js.* pour window.__I18N
+        "syncfusion_license_key": license_key,
+        "syncfusion_tables": use_grid,
+        "post_flow": post_flow,
+        "syncfusion_post_flow": bool(license_key and post_flow),
+        "syncfusion_calendar": bool(license_key and publication_calendar),
     }
 
 

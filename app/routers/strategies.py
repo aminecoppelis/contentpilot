@@ -14,6 +14,7 @@ from fastapi import APIRouter, Request, Depends, Body, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
+from app.config import get_settings
 from app.database import get_pool
 from app.dependencies.auth import require_auth
 from app.services import ai
@@ -159,6 +160,7 @@ async def get_strategies(request: Request, strategy_id: str | None = None, page:
                          action_page: int = 1, post_page: int = 1, status: str = "all",
                          q: str = "", user=Depends(require_auth)):
     """Liste des stratégies ou détail d'une stratégie lorsque strategy_id est fourni."""
+    use_grid = bool(get_settings().syncfusion_license_key.strip())
     pool = get_pool()
 
     def json_object(value):
@@ -369,7 +371,7 @@ async def get_strategies(request: Request, strategy_id: str | None = None, page:
                 str(selected_row["social_account_id"] or ""),
             )
 
-        page = max(1, int(page or 1))
+        page = 1 if use_grid else max(1, int(page or 1))
         status = status if status in {"all", "active", "draft"} else "all"
         q = (q or "").strip()[:120]
         status_counts = await conn.fetchrow(
@@ -404,12 +406,13 @@ async def get_strategies(request: Request, strategy_id: str | None = None, page:
             LEFT JOIN public.app_social_accounts a ON a.id = s.social_account_id
             WHERE """ + list_where + """
             ORDER BY COALESCE(s.updated_at, s.created_at) DESC
-            LIMIT 10 OFFSET $4
+            LIMIT $5 OFFSET $4
             """,
             user.active_workspace_id,
             status,
             q,
             (page - 1) * 10,
+            None if use_grid else 10,
         )
         # La page de liste doit rester compatible avec une base mise à jour
         # progressivement. `revoked_at` est une colonne additive récente ; un

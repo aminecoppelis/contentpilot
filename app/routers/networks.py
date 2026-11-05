@@ -133,12 +133,13 @@ async def get_networks(request: Request, user=Depends(require_auth),
     cibles de partage, notice OAuth)."""
     from datetime import datetime, timezone
 
-    page = max(1, int(page or 1))
+    use_grid = bool(get_settings().syncfusion_license_key.strip())
+    page = 1 if use_grid else max(1, int(page or 1))
     pool = get_pool()
     async with pool.acquire() as conn:
         rows = await conn.fetch(
             _network_access_list_sql() + " ORDER BY a.updated_at DESC NULLS LAST, a.id DESC LIMIT $2 OFFSET $3",
-            user.active_workspace_id, 10, (page - 1) * 10,
+            user.active_workspace_id, None if use_grid else 10, (page - 1) * 10,
         )
         total = await conn.fetchval(
             "SELECT count(*)::int FROM (" + _network_access_list_sql() + ") network_access",

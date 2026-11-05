@@ -31,7 +31,7 @@ from app.dependencies.auth import AuthRequiredHTML
 from app.worker.scheduler import start_scheduler, shutdown_scheduler
 
 from app.routers import (auth, posts, media, publish, networks, strategies, workspace,
-                          admin, listing, media_proxy)
+                          admin, listing, media_proxy, table_preferences, publication_calendar)
 
 logger = logging.getLogger("app")
 
@@ -86,7 +86,7 @@ from app.templating import templates
 # Tous les routeurs métier sous /app (équivalent du /webhook/V0 original)
 for router in (auth.router, posts.router, media.router, publish.router,
                networks.router, strategies.router, workspace.router, admin.router,
-               listing.router, media_proxy.router):
+               listing.router, media_proxy.router, table_preferences.router, publication_calendar.router):
     app.include_router(router, prefix="/app")
 
 

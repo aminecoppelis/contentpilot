@@ -1,0 +1,9 @@
+<section class="postFlowNavigation" aria-label="{{ t('js.post_flow.review') }}">
+  <div id="post-stepper-{{ i }}" class="postFlowStepper" data-flow-stepper hidden></div>
+  <nav class="postFlowFallback" data-flow-fallback>
+    <button type="button" data-flow-go="0">1 · {{ t('js.post_flow.write') }}</button>
+    <button type="button" data-flow-go="1">2 · {{ t('js.post_flow.media') }}</button>
+    <button type="button" data-flow-go="2">3 · {{ t('js.post_flow.review') }}</button>
+  </nav>
+  <p class="postFlowHint" data-flow-hint role="status">{{ t('js.post_flow.review_hint') if idea.is_published or idea.is_scheduled else t('js.post_flow.write_hint') }}</p>
+</section>

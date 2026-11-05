@@ -1,0 +1,6 @@
+{% if syncfusion_tables %}
+<div class="pgGridLoading" role="status" aria-label="{{ t('js.loading') }}" aria-live="polite">
+  <div class="pgSkeletonToolbar" aria-hidden="true"><span class="pgSkeletonBlock"></span><span class="pgSkeletonBlock"></span></div>
+  <div aria-hidden="true">{% for row in range(6) %}<div class="pgSkeletonRow">{% for column in range(4) %}<span class="pgSkeletonBlock"></span>{% endfor %}</div>{% endfor %}</div>
+</div>
+{% endif %}

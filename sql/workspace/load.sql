@@ -1,5 +1,6 @@
 -- Port verbatim de "BDD - Charger Workspace"
--- Params: $1 user_id, $2 workspace_id
+-- Params: $1 user_id, $2 workspace_id, $3 member_offset, $4 invitation_offset,
+--         $5 page_size (NULL loads the complete permitted dataset for the grid)
 WITH p AS (
   SELECT NULLIF($1::text,'')::uuid AS user_id,NULLIF($2::text,'')::uuid AS workspace_id,
          GREATEST(0,COALESCE($3::int,0)) AS member_offset,
@@ -36,10 +37,10 @@ WITH p AS (
 SELECT
   COALESCE((SELECT row_to_json(a) FROM allowed a),'{}'::json) AS workspace,
   COALESCE((SELECT jsonb_agg(to_jsonb(m)) FROM (
-    SELECT * FROM members ORDER BY is_owner DESC,lower(name) LIMIT 10 OFFSET (SELECT member_offset FROM p)
+    SELECT * FROM members ORDER BY is_owner DESC,lower(name) LIMIT $5::int OFFSET (SELECT member_offset FROM p)
   ) m),'[]'::jsonb) AS members,
   COALESCE((SELECT jsonb_agg(to_jsonb(i)) FROM (
-    SELECT * FROM invitations ORDER BY created_at DESC LIMIT 10 OFFSET (SELECT invitation_offset FROM p)
+    SELECT * FROM invitations ORDER BY created_at DESC LIMIT $5::int OFFSET (SELECT invitation_offset FROM p)
   ) i),'[]'::jsonb) AS invitations,
   (SELECT count(*)::int FROM members) AS members_total,
   (SELECT count(*)::int FROM invitations) AS invitations_total;

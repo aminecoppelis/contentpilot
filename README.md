@@ -659,3 +659,88 @@ serveur. Les réponses sont mises en cache pendant 24 heures dans `.cache/pixaba
 (hors des fichiers publics). La recherche affiche la source et les photographes.
 Pixabay est un service externe gratuit sous sa licence de contenus, pas un
 service open source. Cette intégration n’ajoute aucune dépendance payante.
+
+## Tableaux Syncfusion
+
+Les vues Posts, Publications, Stratégies, Réseaux, Utilisateurs et Workspace
+utilisent les grilles Syncfusion Essential JS 2 **35.1.37** lorsqu’une clé
+compatible est définie dans `SYNCFUSION_LICENSE_KEY` dans `.env`.
+Redémarrer le serveur après avoir modifié cette variable.
+
+Les grilles proposent le tri, les filtres de type Excel, la recherche, la
+pagination, le redimensionnement, le déplacement et le choix des colonnes.
+Les badges, formulaires et boutons d’action existants sont conservés.
+Les filtres portent sur toutes les lignes accessibles de la vue courante,
+dans le workspace actif, en respectant les filtres de page déjà appliqués.
+Ces données sont chargées en mémoire côté navigateur ; de très grands volumes
+nécessiteraient un adaptateur de données côté serveur.
+
+Le moteur et le thème Bootstrap 5.3 proviennent du CDN officiel Syncfusion.
+Les traductions des sept langues sont servies localement. Une exception CSS
+préserve la police `e-icons` malgré la police Inter globale du site.
+Sans clé ou si le moteur ne se charge pas, les tableaux classiques restent
+accessibles. La clé Syncfusion est enregistrée dans le navigateur, conformément
+au fonctionnement du SDK JavaScript ; utiliser une clé de licence 35.x valide.
+
+Vérification Python :
+`venv\Scripts\python.exe -m unittest discover -s tests -p test_syncfusion_tables.py`.
+
+Le test DOM `tests/syncfusion_grid_dom.cjs` utilise le véritable moteur Syncfusion
+et jsdom sans navigateur. Installer jsdom avec
+`npm install --prefix .cache/grid-tests --no-save --ignore-scripts jsdom@26.1.0`,
+placer le bundle officiel 35.1.37 dans `.cache/grid-tests/ej2.min.js`, puis lancer
+`node tests/syncfusion_grid_dom.cjs`. La variable optionnelle `TEST_LICENSE`
+permet d’enregistrer une clé pour ce test local.
+
+Les préférences de chaque grille sont enregistrées automatiquement dans
+`user_table_preferences`, séparément par utilisateur, workspace et vue.
+Les migrations 012 et 013 créent cette table et protègent les sauvegardes
+contre les requêtes arrivées en retard. Filtres, recherche, tri, taille de
+page, ordre, visibilité et largeur des colonnes sont restaurés avant
+l’affichage. Les filtres de page (origine, statut, recherche) sont également
+conservés ; une URL contenant des filtres explicites garde la priorité.
+« Réinitialiser la vue » restaure les valeurs par défaut et les enregistre.
+La langue de l’interface ne change pas l’identité d’une préférence.
+
+Test API : `venv\Scripts\python.exe -m unittest discover -s tests -p test_table_preferences.py`.
+Test de restauration avec le moteur réel : `node tests/table_preferences_dom.cjs`
+(mêmes prérequis jsdom et bundle local que le test de grille ci-dessus).
+
+## Parcours de préparation d’un post
+
+L’éditeur propose trois étapes : écrire, ajouter un visuel, puis vérifier et
+publier. Le Stepper Syncfusion 35.1.37 est utilisé avec la clé existante ; les
+boutons de navigation restent disponibles si le composant ne se charge pas.
+Les modifications sont sauvegardées avant de quitter l’étape d’écriture.
+Un visuel est facultatif dans le parcours ; les contraintes de chaque réseau
+restent vérifiées lors de la publication. Aucune étape ne publie automatiquement.
+Les posts publiés ou programmés s’ouvrent sur leur aperçu. Les vues en lecture
+seule conservent leur affichage complet. Les textes sont traduits dans les sept
+langues. Test DOM : `node tests/post_flow_dom.cjs` (mêmes prérequis que les grilles).
+
+## Calendrier des publications
+
+Dans la fiche stratégie, l’onglet « Calendrier » contient deux sous-vues :
+« Actions » pour les dates d’exécution et « Publications » pour les envois
+sur les réseaux. Cette seconde sous-vue utilise le Scheduler Syncfusion
+35.1.37 : jour, semaine, mois et agenda. Seules les publications de la
+stratégie ouverte sont chargées et modifiables. Il n’y a pas d’entrée
+supplémentaire dans le menu principal. Statut, réseau et vue sont enregistrés dans les préférences
+de l’utilisateur et du workspace (migration 014).
+
+Cliquer sur une carte ouvre ses détails et le lien vers le post. Seules les
+publications encore programmées et liées à un post actif peuvent être déplacées,
+par glisser-déposer ou par saisie d’une date. Chaque modification demande une
+confirmation. Le serveur vérifie le workspace, le statut et la date de dernière
+modification et le rattachement à la stratégie pour éviter une course avec le worker d’envoi. Le contenu et le
+média enregistrés lors de la programmation restent inchangés.
+
+Les cartes représentent des instants d’envoi, visualisés sur 30 minutes ; elles
+ne sont pas redimensionnables. Le fuseau du compte est utilisé, les dates étant
+conservées en UTC. Les publications déjà envoyées sont en lecture seule.
+La liste classique des publications reste accessible. Traductions et formats
+de dates sont disponibles dans les sept langues.
+
+Tests : `venv\Scripts\python.exe -m unittest discover -s tests -p test_publication_calendar.py`
+et `node tests/publication_calendar_dom.cjs` (prérequis jsdom et moteur local
+identiques aux tests des grilles).

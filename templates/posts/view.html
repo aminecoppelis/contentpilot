@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ page_heading }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/consultation.css?v=20261103-pixabay-multi-keywords">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/consultation.css?v=20261103-pixabay-multi-keywords"><link rel="stylesheet" href="/static/css/post-flow.css?v=1">{% endblock %}
 {% block content %}
 <header class="header" id="posts-view-header">
   <div>
@@ -50,13 +50,14 @@
 {% endif %}
 {% for idea in ideas %}
   {% set i = loop.index0 %}
-  <article class="card" id="card-{{ i }}" data-idea-id="{{ idea.idea_id }}" data-idea-index="{{ i }}">
+  <article class="card" id="card-{{ i }}" data-idea-id="{{ idea.idea_id }}" data-idea-index="{{ i }}" {% if not read_only %}data-post-flow data-flow-step="{{ 2 if idea.is_published or idea.is_scheduled else 0 }}"{% endif %}>
     <div class="top">
       <div><span class="num">#{{ loop.index }}</span>
         <span class="format" id="format-{{ i }}">{{ idea.recommended_format }}</span></div>
       <span class="status {{ idea.status_cls }}" id="status-{{ i }}">{{ t('post.status.scheduled') if idea.is_scheduled else idea.status_label }}</span>
     </div>
 
+    {% if not read_only %}{% include "posts/_flow_navigation.html" %}{% endif %}
     <section class="postReady">
       {% set preview_platform = (origin_context.platform if origin_context and origin_context.platform else 'linkedin')|lower %}
       {% set preview_account = origin_context.account_name if origin_context and origin_context.account_name else 'ContentPilot' %}
@@ -212,7 +213,7 @@
         {% for kw in idea.seo_keywords %}<span class="tag kw">{{ kw }}</span>{% endfor %}</div>
     </details>
 
-    <div class="actions">
+    <div class="actions postFlowPublication">
       <div class="reviewNote" id="review-note-{{ i }}" {% if not idea.review_note %}style="display:none"{% endif %}>
         {% if idea.review_note %}<b>{{ t('pv.note.reject') if idea.review_action == 'Refuser' else t('pv.note.approve') }}</b>
         <span>{{ idea.review_note }}</span>{% endif %}
@@ -239,6 +240,10 @@
                 title="{{ t('pv.act.publish.title') }}">{{ t('pv.act.publish') }}</button>{% endif %}
       </div>
     </div>
+    {% if not read_only %}<nav class="postFlowFooter" aria-label="{{ t('common.actions') }}">
+      <button type="button" class="btn secondary" data-flow-previous {% if not idea.is_published and not idea.is_scheduled %}hidden{% endif %}>{{ t('common.previous') }}</button>
+      <button type="button" class="btn primary" data-flow-next {% if idea.is_published or idea.is_scheduled %}hidden{% endif %}>{{ t('common.next') }}</button>
+    </nav>{% endif %}
   </article>
 {% endfor %}
 </section>
@@ -280,4 +285,5 @@ window.__PG_VIEW = {
 };
 </script>
 <script src="/static/js/consultation.js?v=31-publication-copy"></script>
+<script src="/static/js/post-flow.js?v=1"></script>
 {% endblock %}

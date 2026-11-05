@@ -40,14 +40,14 @@
 </div>
 
 <div class="tableWrap strategiesTableWrap">
-  <table>
+  {% include "partials/grid_loading.html" %}<table data-syncfusion="true" data-grid-view="strategies">
     <thead><tr>
       <th>{{ t('strat.table.strategy') }}</th><th>{{ t('common.status') }}</th><th>{{ t('strat.table.network') }}</th><th>{{ t('strat.table.account') }}</th>
       <th>{{ t('strat.table.progress') }}</th><th>{{ t('strat.table.version') }}</th><th>{{ t('strat.table.last_modified') }}</th><th><span class="srOnly">{{ t('common.actions') }}</span></th>
     </tr></thead>
     <tbody id="strategiesTableBody">
     {% for s in strategies %}
-      <tr>
+      <tr {% if s.status != 'generating' %}data-row-url="/app/strategies?strategy_id={{ s.id }}" tabindex="0" aria-label="{{ t('strat.open') }}"{% endif %}>
         <td class="strategyTitleCell"><b>{{ s.title or t('strat.default_title') }}</b>
           {% if s.objective_label %}<small>{{ s.objective_label }}</small>{% endif %}</td>
         <td><span class="statusPill {{ s.status }}">{{ t('strat.status.' ~ s.status) }}</span></td>
@@ -99,5 +99,5 @@
 {% endblock %}
 {% block scripts %}
 {% if strategies|selectattr('status', 'equalto', 'generating')|list %}<script>setTimeout(function(){window.location.reload();},4000);</script>{% endif %}
-<script src="/static/js/strategies.js?v=24-background-create"></script>
+<script src="/static/js/strategies.js?v=36-syncfusion"></script>
 {% endblock %}

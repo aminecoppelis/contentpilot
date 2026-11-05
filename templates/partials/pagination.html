@@ -1,5 +1,5 @@
 {% if pagination and pagination.total_pages > 1 %}
-<nav class="pgPagination" aria-label="{{ t('js.pagination.label') }}">
+<nav class="pgPagination" data-server-pagination="true" aria-label="{{ t('js.pagination.label') }}">
   <span class="pgPaginationInfo">{{ t('js.pagination.range', first=pagination.first, last=pagination.last, total=pagination.total) }}</span>
   <div class="pgPaginationButtons">
     <a class="pgPaginationButton{{ ' isDisabled' if pagination.page <= 1 }}" {% if pagination.page > 1 %}href="{{ pagination.path }}?{{ pagination.query_prefix }}{{ pagination.page_param or 'page' }}={{ pagination.page - 1 }}{{ pagination.fragment or '' }}"{% endif %} aria-label="{{ t('common.previous') }}">‹</a>

@@ -11,6 +11,7 @@ from fastapi import APIRouter, Request, Depends, Body
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from app.config import get_settings
 from app.database import get_pool
 from app.dependencies.auth import require_auth
 from app.user_timezone import format_user_datetime
@@ -223,7 +224,7 @@ WHERE pp.workspace_id = $1::uuid AND ($2::text[] IS NULL OR pp.status = ANY($2::
 
 
 async def _load_published(workspace_id: str, statuses: list[str], offset: int, timezone_name: str,
-                          limit: int = PUBLISHED_PAGE_SIZE):
+                          limit: int | None = PUBLISHED_PAGE_SIZE):
     status_array = None if "all" in statuses else statuses
     pool = get_pool()
     async with pool.acquire() as conn:
@@ -248,8 +249,9 @@ async def _load_published(workspace_id: str, statuses: list[str], offset: int, t
 async def get_published(request: Request, filter: str | None = None, page: int = 1,
                         user=Depends(require_auth)):
     statuses = _parse_filter(filter)
-    page = max(1, int(page or 1))
-    rows, total = await _load_published(user.active_workspace_id, statuses, (page - 1) * PUBLISHED_PAGE_SIZE, user.timezone)
+    use_grid = bool(get_settings().syncfusion_license_key.strip())
+    page = 1 if use_grid else max(1, int(page or 1))
+    rows, total = await _load_published(user.active_workspace_id, statuses, (page - 1) * PUBLISHED_PAGE_SIZE, user.timezone, limit=None if use_grid else PUBLISHED_PAGE_SIZE)
     return templates.TemplateResponse(request, "posts/published.html", {
         "auth_user": user, "active_nav": "published",
         "rows": rows, "total": total,

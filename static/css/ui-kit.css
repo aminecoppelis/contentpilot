@@ -697,9 +697,17 @@ summary:focus-visible,
    ===================================================================== */
 .has-sidebar .app-content-wrapper,
 .has-sidebar main.wrap {
-  max-width: 1360px;
+  width: 100% !important;
+  max-width: none !important;
   margin: 0 auto;
-  padding: 32px 32px 72px !important;
+  padding: 32px 24px 72px !important;
+}
+.has-sidebar .strategyWorkspace,
+.has-sidebar .strategyListPage,
+.has-sidebar .postListPage {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
 }
 @media (max-width: 720px) {
   .has-sidebar .app-content-wrapper,
@@ -1771,16 +1779,36 @@ summary:focus-visible,
    et on ramène TOUS les boutons de la vue à l'échelle standard.
    ===================================================================== */
 
-/* --- Grille : 1 colonne large par défaut, 2 seulement s'il y a la place --- */
+/* Two posts per row on desktop; one on smaller screens. */
 .has-sidebar #posts-view-grid {
   display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr)) !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: var(--space-5) !important;
   align-items: start;
 }
 .has-sidebar #posts-view-grid.one {
   grid-template-columns: 1fr !important;
-  max-width: 780px;
+  max-width: none;
+}
+@media (max-width: 1199px) {
+  .has-sidebar #posts-view-grid { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+/* Adapt the editor to the card width, including multi-card desktop grids. */
+.has-sidebar .postReady { container: post-ready / inline-size; }
+.has-sidebar .postReadyHeader { flex-wrap: wrap; }
+.has-sidebar .postViewSwitch { flex-shrink: 0; }
+.has-sidebar .postLiveWorkspace { grid-template-columns: minmax(0, 1fr); }
+.has-sidebar .postLivePreview { position: static; min-width: 0; }
+.has-sidebar .postLiveEditor .copyBox { width: 100%; min-width: 0; }
+.has-sidebar .postLivePreview .lpPhone { max-width: 100%; }
+@container post-ready (min-width: 760px) {
+  .has-sidebar .postLiveWorkspace:not(.mode-editor):not(.mode-preview) {
+    grid-template-columns: minmax(320px, 1fr) 350px;
+  }
+  .has-sidebar .postLiveWorkspace:not(.mode-editor):not(.mode-preview) .postLivePreview {
+    position: sticky;
+  }
 }
 
 /* --- Carte idée : rayon & rembourrage plus sobres --- */
@@ -2337,3 +2365,6 @@ summary:focus-visible,
 }
 
 .has-sidebar .openPostButton:disabled { opacity:.45;cursor:not-allowed; }
+.has-sidebar tr[data-row-url]{cursor:pointer}
+.has-sidebar tr[data-row-url]:focus-visible{outline:2px solid #2563eb;outline-offset:-2px}
+.has-sidebar tr[data-row-url]:hover>td{background:#eff6ff!important}

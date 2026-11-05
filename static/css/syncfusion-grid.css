@@ -1,0 +1,31 @@
+.pgSyncfusionGrid{width:100%;min-width:0;border:1px solid #e2e8f0!important;border-radius:14px!important;overflow:hidden;font-family:Inter,Arial,sans-serif!important;background:#fff}
+html.pg-grid-loading table[data-syncfusion="true"],html.pg-grid-loading [data-server-pagination]{display:none!important}
+.pgGridLoading{display:none}
+html.pg-grid-loading .pgGridLoading{display:block;min-height:360px;border:1px solid #e2e8f0;border-radius:14px;background:#fff;overflow:hidden}
+.pgSkeletonBlock{display:block;height:12px;border-radius:6px;background:linear-gradient(100deg,#edf1f6 20%,#f8fafc 45%,#edf1f6 70%);background-size:240% 100%;animation:pgSkeletonShimmer 1.6s ease-in-out infinite}
+.pgSkeletonToolbar{display:flex;justify-content:space-between;gap:24px;padding:20px;border-bottom:1px solid #edf2f7}.pgSkeletonToolbar .pgSkeletonBlock{width:140px;height:28px}.pgSkeletonToolbar .pgSkeletonBlock:last-child{width:200px}
+.pgSkeletonRow{display:grid;grid-template-columns:2fr 1.3fr 1fr .7fr;gap:28px;align-items:center;padding:20px;border-bottom:1px solid #edf2f7}.pgSkeletonRow .pgSkeletonBlock:nth-child(2){width:80%}.pgSkeletonRow:nth-child(even) .pgSkeletonBlock:first-child{width:75%}
+@keyframes pgSkeletonShimmer{from{background-position:100% 0}to{background-position:-100% 0}}
+@media(prefers-reduced-motion:reduce){.pgSkeletonBlock{animation:none}}
+/* ui-kit enforces Inter on spans/divs; Syncfusion glyphs need their own font,
+   including filter menus rendered outside the grid container. */
+body.has-sidebar .e-icons,
+body.has-sidebar .e-icons::before,
+body.has-sidebar .e-icons::after{font-family:"e-icons"!important;font-style:normal!important;font-weight:normal!important;text-transform:none!important}
+.has-sidebar .pgSyncfusionGrid .e-table{min-width:0!important;table-layout:fixed}
+.has-sidebar .pgSyncfusionGrid .e-headercell{background:#f8fafc!important;color:#475569!important;font-size:11px!important;font-weight:700!important;border-color:#e2e8f0!important;height:44px;padding:10px 14px!important}
+.has-sidebar .pgSyncfusionGrid .e-rowcell{padding:12px 14px!important;border-color:#edf2f7!important;font-size:12px!important;color:#334155!important;vertical-align:middle!important;white-space:normal!important;height:auto!important}
+.has-sidebar .pgSyncfusionGrid .e-row:hover .e-rowcell{background:#f8fbff!important}
+.has-sidebar .pgSyncfusionGrid .e-toolbar{background:#fff!important;border-bottom:1px solid #e2e8f0!important;padding:8px 12px!important}
+.has-sidebar .pgSyncfusionGrid .e-gridpager{border-top:1px solid #e2e8f0!important;background:#fff!important;padding:12px!important}
+.has-sidebar .pgSyncfusionGrid .e-currentitem{background:#2563eb!important;border-color:#2563eb!important;color:#fff!important}
+.pgSyncfusionGrid .pgGridCell{display:block;min-width:0;overflow-wrap:anywhere}
+.pgSyncfusionGrid .pgGridCell .actions,.pgSyncfusionGrid .pgGridCell .rowActions{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.pgSyncfusionGrid .pgGridCell .inlineForm{margin:0;display:inline-flex}
+.pgSyncfusionGrid .e-checkbox-wrapper{vertical-align:middle}
+.pgGridStatus{padding:10px 14px;color:#64748b;font-size:12px}
+.tableWrap:has(>.pgSyncfusionGrid){overflow:visible!important;border:0!important;border-radius:14px}
+.pgSyncfusionGrid .e-gridheader,.pgSyncfusionGrid .e-headercontent{border-color:#e2e8f0!important}
+.pgSyncfusionGrid .e-rowcell .mini,.pgSyncfusionGrid .e-rowcell small{display:block;font-size:10px;color:#64748b;margin-top:3px}
+.pgSyncfusionGrid .e-headercell .e-sortfilterdiv,.pgSyncfusionGrid .e-headercell .e-filtermenudiv{color:#64748b}
+@media(max-width:700px){.has-sidebar .pgSyncfusionGrid .e-toolbar-items{flex-wrap:wrap}.pgSyncfusionGrid{border-radius:10px!important}}

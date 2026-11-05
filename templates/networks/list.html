@@ -44,7 +44,7 @@
 {% if notice %}<div class="notice {{ notice_type }}">{{ notice }}</div>{% endif %}
 
 <div class="tableWrap">
-  <table>
+  {% include "partials/grid_loading.html" %}<table data-syncfusion="true" data-grid-view="networks">
     <thead><tr>
       <th>{{ t('net.table.name') }}</th><th>{{ t('strat.table.network') }}</th><th>{{ t('strat.table.account') }}</th><th>{{ t('net.table.linked_page') }}</th>
       <th>{{ t('common.status') }}</th><th>{{ t('net.table.remaining_posts') }}</th><th>{{ t('net.table.modified') }}</th><th>{{ t('common.actions') }}</th>

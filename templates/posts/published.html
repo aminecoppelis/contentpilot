@@ -25,7 +25,7 @@
 </div>
 
 <section class="tableWrap">
-  <table>
+  {% include "partials/grid_loading.html" %}<table data-syncfusion="true" data-grid-view="publications">
     <thead><tr>
       <th class="publishedBulkCell">
         <input id="publishedSelectAll" type="checkbox" aria-label="{{ t('published.select_all') }}"
@@ -90,5 +90,5 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="/static/js/published.js?v=22"></script>
+<script src="/static/js/published.js?v=23-syncfusion"></script>
 {% endblock %}

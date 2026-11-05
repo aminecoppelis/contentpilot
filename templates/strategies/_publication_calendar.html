@@ -1,0 +1,35 @@
+<div class="strategyPanelHeading"><div><h2>{{ t('js.strategy_calendar.title') }}</h2><p>{{ t('js.strategy_calendar.subtitle') }}</p></div></div>
+<section class="publicationCalendarFilters">
+  <label>{{ t('common.status') }}<select id="publicationCalendarStatus">
+    <option value="all">{{ t('common.all') }}</option>
+    {% for status in ['scheduled','published','failed','pending','processing','cancelled'] %}<option value="{{ status }}">{{ t('posts.publication.' ~ status) }}</option>{% endfor %}
+  </select></label>
+  <label>{{ t('strat.table.network') }}<select id="publicationCalendarPlatform"><option value="all">{{ t('common.all') }}</option>
+    {% for platform, label in [('linkedin','LinkedIn'),('instagram','Instagram'),('facebook','Facebook'),('x','X'),('tiktok','TikTok'),('youtube','YouTube'),('pinterest','Pinterest'),('threads','Threads'),('bluesky','Bluesky'),('mastodon','Mastodon')] %}<option value="{{ platform }}">{{ label }}</option>{% endfor %}
+  </select></label>
+  <button type="button" class="btn secondary" id="publicationCalendarRefresh">{{ t('js.pub_calendar.refresh') }}</button>
+  <p>{{ t('pm.pub.datetime.tz') }} <b>{{ auth_user.timezone }}</b></p>
+</section>
+<p class="publicationCalendarHint">{{ t('js.strategy_calendar.hint') }}</p>
+<p id="publicationCalendarStatusText" role="status" aria-live="polite">{{ t('js.loading') }}</p>
+<div class="publicationCalendarLayout">
+  <div id="publicationCalendarShell" class="publicationCalendarShell is-loading" aria-busy="true">
+    <div id="publicationCalendarSkeleton" class="publicationCalendarSkeleton" role="status" aria-label="{{ t('js.loading') }}">
+      <div class="pgSkeletonToolbar" aria-hidden="true"><span class="pgSkeletonBlock"></span><span class="pgSkeletonBlock"></span></div>
+      <div class="publicationSkeletonDays" aria-hidden="true">{% for day in range(7) %}<span class="pgSkeletonBlock"></span>{% endfor %}</div>
+      <div class="publicationSkeletonCells" aria-hidden="true">{% for cell in range(35) %}<div>{% if cell % 3 != 0 %}<span class="pgSkeletonBlock"></span>{% endif %}</div>{% endfor %}</div>
+    </div>
+    <div id="publicationScheduler" class="publicationScheduler"></div>
+  </div>
+  <aside id="publicationCalendarDetails" class="publicationCalendarDetails" hidden aria-labelledby="publicationCalendarDetailTitle">
+    <button type="button" class="btn secondary" id="publicationCalendarClose">{{ t('common.close') }}</button>
+    <h2 id="publicationCalendarDetailTitle"></h2><p id="publicationCalendarDetailStatus"></p><p id="publicationCalendarDetailTime"></p>
+    <a id="publicationCalendarPostLink" class="btn primary">{{ t('js.pub_calendar.open') }}</a>
+    <form id="publicationCalendarForm" hidden>
+      <label for="publicationCalendarDate">{{ t('pm.pub.datetime') }}</label>
+      <input type="datetime-local" id="publicationCalendarDate" required step="60">
+      <button type="submit" class="btn primary">{{ t('js.pub_calendar.change') }}</button>
+    </form>
+    <p id="publicationCalendarReadonly">{{ t('js.pub_calendar.readonly') }}</p>
+  </aside>
+</div>

@@ -136,7 +136,7 @@
         body:JSON.stringify({strategy_id:id,action:'delete'})});
       var d=await r.json().catch(function(){return {};});
       if(!r.ok||d.success===false)throw new Error(d.message||('HTTP '+r.status));
-      var row=btn.closest('tr'); if(row)row.remove();
+      var row=btn.closest('tr'); if(row&&!(window.pgRemoveGridRow&&window.pgRemoveGridRow(row)))row.remove();
       toast(window.t('js.strat.deleted'));
     }catch(e){ toast(e.message||window.t('js.delete_failed'),'error'); btn.disabled=false; }
   });

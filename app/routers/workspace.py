@@ -51,12 +51,13 @@ async def get_workspace(request: Request, member_page: int = 1, invitation_page:
                         user=Depends(require_auth)):
     import json as _json
 
-    member_page = max(1, int(member_page or 1))
-    invitation_page = max(1, int(invitation_page or 1))
+    use_grid = bool(get_settings().syncfusion_license_key.strip())
+    member_page = 1 if use_grid else max(1, int(member_page or 1))
+    invitation_page = 1 if use_grid else max(1, int(invitation_page or 1))
     pool = get_pool()
     async with pool.acquire() as conn:
         row = await conn.fetchrow(sql("workspace/load.sql"), user.id, user.active_workspace_id,
-                                  (member_page - 1) * 10, (invitation_page - 1) * 10)
+                                  (member_page - 1) * 10, (invitation_page - 1) * 10, None if use_grid else 10)
 
     def _parse(value, default):
         if value is None:
