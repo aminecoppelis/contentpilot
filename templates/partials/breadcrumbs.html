@@ -1,0 +1,9 @@
+{% if breadcrumbs %}
+<div class="pgBreadcrumbWrap">
+  <nav id="pgBreadcrumbFallback" class="pgBreadcrumbFallback" aria-label="{{ t('js.shell.breadcrumb') }}">
+    <ol>{% for item in breadcrumbs %}<li>{% if item.url %}<a href="{{ item.url }}">{{ item.text }}</a>{% else %}<span aria-current="page">{{ item.text }}</span>{% endif %}</li>{% endfor %}</ol>
+  </nav>
+  <nav id="pgBreadcrumb" aria-label="{{ t('js.shell.breadcrumb') }}" hidden></nav>
+  <script id="pgBreadcrumbItems" type="application/json">{{ breadcrumbs|tojson }}</script>
+</div>
+{% endif %}

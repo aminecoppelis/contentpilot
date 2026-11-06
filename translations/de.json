@@ -1255,5 +1255,16 @@
   "js.pub_calendar.unavailable": "Der Kalender ist nicht verfügbar. Nutze die Veröffentlichungsliste für deine Beiträge.",
   "js.strategy_calendar.title": "Kalender für Aktionen und Veröffentlichungen",
   "js.strategy_calendar.subtitle": "Sehen Sie Ausführungstermine von Aktionen sowie geplante und veröffentlichte Beiträge im selben Kalender.",
-  "js.strategy_calendar.hint": "Eine Aktion erstellt Inhalte am Ausführungstermin. Eine Veröffentlichung sendet den Beitrag an das Netzwerk. Wählen Sie einen Termin für Details; nur bearbeitbare Termine können verschoben werden."
+  "js.strategy_calendar.hint": "Eine Aktion erstellt Inhalte am Ausführungstermin. Eine Veröffentlichung sendet den Beitrag an das Netzwerk. Wählen Sie einen Termin für Details; nur bearbeitbare Termine können verschoben werden.",
+  "js.shell.create": "Beitrag erstellen",
+  "js.shell.post": "Beitrag vorbereiten",
+  "js.shell.edit": "Beitrag bearbeiten",
+  "js.shell.variants": "Varianten",
+  "js.shell.settings": "Einstellungen",
+  "js.shell.users": "Benutzer",
+  "js.shell.strategy": "Strategiedetails",
+  "js.shell.history": "Verlauf",
+  "js.shell.breadcrumb": "Brotkrümelnavigation",
+  "js.shell.skip": "Zum Inhalt springen",
+  "js.shell.navigation": "Hauptnavigation"
 }

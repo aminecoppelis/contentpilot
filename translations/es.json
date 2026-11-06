@@ -1255,5 +1255,16 @@
   "js.pub_calendar.unavailable": "El calendario no está disponible. Usa la lista de publicaciones para consultar tus posts.",
   "js.strategy_calendar.title": "Calendario de acciones y publicaciones",
   "js.strategy_calendar.subtitle": "Consulta las fechas de ejecución de acciones y los posts programados o publicados en el mismo calendario.",
-  "js.strategy_calendar.hint": "Una acción crea contenido en su fecha de ejecución. Una publicación envía el post a la red. Selecciona un evento para ver sus detalles; solo se pueden mover las fechas editables."
+  "js.strategy_calendar.hint": "Una acción crea contenido en su fecha de ejecución. Una publicación envía el post a la red. Selecciona un evento para ver sus detalles; solo se pueden mover las fechas editables.",
+  "js.shell.create": "Crear un post",
+  "js.shell.post": "Preparar el post",
+  "js.shell.edit": "Editar el post",
+  "js.shell.variants": "Variantes",
+  "js.shell.settings": "Configuración",
+  "js.shell.users": "Usuarios",
+  "js.shell.strategy": "Detalle de la estrategia",
+  "js.shell.history": "Historial",
+  "js.shell.breadcrumb": "Ruta de navegación",
+  "js.shell.skip": "Ir al contenido",
+  "js.shell.navigation": "Navegación principal"
 }

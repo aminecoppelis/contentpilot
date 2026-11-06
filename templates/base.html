@@ -46,18 +46,20 @@
     },12000);
   </script>
   {% endif %}
-  {% if auth_user and (syncfusion_tables or syncfusion_post_flow or syncfusion_calendar) %}<link rel="stylesheet" href="https://cdn.syncfusion.com/ej2/35.1.37/bootstrap5.3.css">{% endif %}
-  <link rel="stylesheet" href="/static/css/ui-kit.css?v=33-two-posts-per-row">
-  {% if auth_user and (syncfusion_tables or syncfusion_post_flow or syncfusion_calendar) %}<link rel="stylesheet" href="/static/css/syncfusion-grid.css?v=4-skeleton">{% endif %}
+  {% if auth_user and (syncfusion_tables or syncfusion_post_flow or syncfusion_calendar or syncfusion_shell) %}<link rel="stylesheet" href="https://cdn.syncfusion.com/ej2/35.1.37/bootstrap5.3.css">{% endif %}
+  <link rel="stylesheet" href="/static/css/ui-kit.css?v=34-ux-navigation">
+  {% if auth_user %}<link rel="stylesheet" href="/static/css/app-shell.css?v=1">{% endif %}
+  {% if auth_user and (syncfusion_tables or syncfusion_post_flow or syncfusion_calendar or syncfusion_shell) %}<link rel="stylesheet" href="/static/css/syncfusion-grid.css?v=4-skeleton">{% endif %}
 </head>
 <body class="{% if auth_user %}has-sidebar{% endif %}">
+{% if auth_user %}<a class="pgSkipLink" href="#pgMainContent">{{ t('js.shell.skip') }}</a>{% endif %}
 <div class="app-layout">
   
   {% if auth_user %}
   <!-- Overlay tiroir sidebar (mobile) -->
   <div class="pgSidebarOverlay" id="pgSidebarOverlay" aria-hidden="true"></div>
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="pgSidebar" aria-label="{{ t('js.shell.navigation') }}">
     <div class="sidebar-logo">
       <div class="brand">
         <span class="brand-mark" aria-hidden="true">
@@ -65,7 +67,7 @@
         </span>
         <span class="brand-text">{{ t('app.name') }}</span>
       </div>
-      <button type="button" class="sidebar-collapse-btn" id="pgSidebarToggle" aria-label="{{ t('topbar.collapse_sidebar') }}" aria-expanded="true">
+      <button type="button" class="sidebar-collapse-btn" id="pgSidebarToggle" aria-controls="pgSidebar" aria-label="{{ t('topbar.collapse_sidebar') }}" aria-expanded="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/><path d="m14 9-2 3 2 3"/></svg>
       </button>
     </div>
@@ -128,14 +130,15 @@
   <!-- Main Content Area -->
   <div class="main-content">
     {% if auth_user %}
-    <header class="nav">
+    <header class="nav pgAppBar">
       <div class="nav-links">
-        <button type="button" class="btn-icon pgMobileNavToggle" aria-expanded="false" aria-label="{{ t('topbar.toggle_menu') }}">
+        <button type="button" class="btn-icon pgMobileNavToggle" aria-controls="pgSidebar" aria-expanded="false" aria-label="{{ t('topbar.toggle_menu') }}">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
       </div>
       <div class="spacer"></div>
 
+      <a class="btn primary pgCreatePost" href="/app/posts/new"><span aria-hidden="true">+</span><span>{{ t('js.shell.create') }}</span></a>
       <div class="nav-user-actions">
 
         <!-- Sélecteur de workspace -->
@@ -242,60 +245,14 @@
     {% endif %}
 
     <!-- Contenu de la Page -->
-    <main class="app-content-wrapper wrap" style="padding-top:20px;">
+    <main id="pgMainContent" class="app-content-wrapper wrap" tabindex="-1">
+      {% if auth_user %}{% include "partials/breadcrumbs.html" %}{% endif %}
       {% block content %}{% endblock %}
     </main>
   </div>
 </div>
 
 <script>
-  /* Sidebar : repli/déploiement (desktop) + tiroir (mobile) */
-  (function() {
-    var body = document.body;
-    var root = document.documentElement;
-    var deskBtn = document.getElementById('pgSidebarToggle');
-    var overlay = document.getElementById('pgSidebarOverlay');
-
-    function isMobile() {
-      return window.matchMedia('(max-width: 1024px)').matches;
-    }
-    function setCollapsed(collapsed) {
-      root.classList.toggle('pg-nav-collapsed', collapsed);
-      try { localStorage.setItem('pg_nav_collapsed', collapsed ? '1' : '0'); } catch (e) {}
-      if (deskBtn) deskBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    }
-    function setDrawer(open) {
-      body.classList.toggle('pg-sidebar-open', open);
-    }
-
-    if (deskBtn) {
-      deskBtn.addEventListener('click', function() {
-        if (isMobile()) { setDrawer(!body.classList.contains('pg-sidebar-open')); }
-        else { setCollapsed(!root.classList.contains('pg-nav-collapsed')); }
-      });
-    }
-    document.addEventListener('click', function(event) {
-      var mobileBtn = event.target.closest && event.target.closest('.pgMobileNavToggle');
-      if (mobileBtn) {
-        event.preventDefault();
-        setDrawer(!body.classList.contains('pg-sidebar-open'));
-        return;
-      }
-      if (isMobile() && body.classList.contains('pg-sidebar-open')) {
-        if (!event.target.closest('.sidebar') && !event.target.closest('.pgMobileNavToggle')) {
-          setDrawer(false);
-        }
-      }
-    });
-    if (overlay) overlay.addEventListener('click', function() { setDrawer(false); });
-    document.addEventListener('keydown', function(event) {
-      if (event.key === 'Escape') setDrawer(false);
-    });
-    window.addEventListener('resize', function() {
-      if (!isMobile()) setDrawer(false);
-    });
-  })();
-
   /* Init Global Theme Toggle (for pages with auth_user) */
   (function() {
     var toggleBtn = document.getElementById('themeToggle');
@@ -413,7 +370,7 @@
 <script src="/static/js/toast.js?v={{ request.query_params.get('v', '23') }}"></script>
 <script src="/static/js/pg-ui.js?v={{ request.query_params.get('v', '23') }}"></script>
 <script src="/static/js/row-navigation.js?v=1"></script>
-{% if auth_user and (syncfusion_tables or syncfusion_post_flow or syncfusion_calendar) %}
+{% if auth_user and (syncfusion_tables or syncfusion_post_flow or syncfusion_calendar or syncfusion_shell) %}
 <script src="https://cdn.syncfusion.com/ej2/35.1.37/dist/ej2.min.js"></script>
 <script>
   {% if syncfusion_tables %}window.__PG_SYNCFUSION = {version:'35.1.37'};{% endif %}
@@ -429,6 +386,7 @@
 <script src="/static/js/tables.js"></script>
 <script src="/static/js/pagination.js?v=4-grid-fallback"></script>
 <script src="/static/js/textarea_limits.js?v=2-no-clipboard-counter"></script>
+{% if auth_user %}<script src="/static/js/app-shell.js?v=1"></script>{% endif %}
 {% block scripts %}{% endblock %}
 </body>
 </html>

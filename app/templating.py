@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from fastapi.templating import Jinja2Templates
 from app.config import get_settings
+from app.ui_navigation import breadcrumb_items
 
 from app.i18n import (
     DEFAULT_LOCALE,
@@ -48,6 +49,8 @@ def _i18n_context(request) -> dict:
         "post_flow": post_flow,
         "syncfusion_post_flow": bool(license_key and post_flow),
         "syncfusion_calendar": bool(license_key and publication_calendar),
+        "syncfusion_shell": bool(license_key and request.url.path.startswith("/app/")),
+        "breadcrumbs": breadcrumb_items(request, _t),
     }
 
 
