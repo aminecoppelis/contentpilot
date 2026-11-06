@@ -1,0 +1,13 @@
+<article class="panel" id="dashboardAttention">
+  <div class="dashChartHeading"><div><h2>{{ t('js.dash.attention') }}</h2><p>{{ t('js.dash.attention_hint') }}</p></div><span class="panelCount">{{ attention_total }}</span></div>
+  {% if attention_total %}
+  <ul class="dashAttentionList">
+    {% if dashboard_metrics.operations.overdue %}<li><a href="/app/published?filter=scheduled"><b>{{ t('js.dash.overdue_sends') }}</b><span>{{ dashboard_metrics.operations.overdue }}</span><small>{{ t('js.dash.check_send') }}</small></a></li>{% endif %}
+    {% if dashboard_metrics.operations.failed %}<li><a href="/app/published?filter=failed"><b>{{ t('js.dash.failed_sends') }}</b><span>{{ dashboard_metrics.operations.failed }}</span><small>{{ t('js.dash.check_send') }}</small></a></li>{% endif %}
+    {% for group in dashboard_metrics.action_groups %}
+      {% if group.overdue %}<li><a href="/app/strategies?strategy_id={{ group.strategy_id }}#actions"><b>{{ t('js.dash.overdue_actions') }}</b><span>{{ group.overdue }}</span><small>{{ group.title }} · {{ t('js.dash.check_action') }}</small></a></li>{% endif %}
+      {% if group.failed %}<li><a href="/app/strategies?strategy_id={{ group.strategy_id }}#actions"><b>{{ t('js.dash.failed_actions') }}</b><span>{{ group.failed }}</span><small>{{ group.title }} · {{ t('js.dash.check_action') }}</small></a></li>{% endif %}
+    {% endfor %}
+  </ul>
+  {% else %}<div class="emptyState"><span class="emptyTitle">{{ t('js.dash.all_clear') }}</span></div>{% endif %}
+</article>

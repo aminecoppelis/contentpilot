@@ -1,14 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Accueil · Post Generator{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/dashboard.css?v=3-collapsible-guide">{% endblock %}
-{# Aucune CSS de page : dashboard est entièrement piloté par ui-kit.css
-   (.kpiCard, .panel, .nextCard, .emptyState, .pgToast…). #}
+{% block title %}{{ t('dash.title') }} · {{ t('app.name') }}{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/dashboard.css?v=8-dashboard-layout">{% endblock %}
+{# Shared UI components with dashboard-specific responsive charts. #}
 {% block content %}
 <div class="dashWrap">
 <section class="hero dashboardHero">
   <div class="eyebrow">{{ t('dash.eyebrow') }}</div>
   <h1>{{ t('dash.title') }}</h1>
   <p class="muted">{{ t('dash.subtitle') }}</p>
+  <div class="dashQuickActions"><a class="btn secondary" href="/app/strategies">{{ t('nav.strategies') }}</a></div>
 </section>
 
 <section class="quickStart {{ 'isCollapsed' if quick_start_completed >= 4 }}" id="quickStart"
@@ -36,54 +36,96 @@
       <span class="quickStepNumber">{{ '✓' if generated_posts else '3' }}</span><div><b>{{ t('dash.quick.post.title') }}</b>{% if strategies_total and not generated_posts %}<em>{{ t('dash.quick.now') }}</em>{% endif %}<small>{{ t('dash.quick.post.text') }}</small></div>
       <a href="/app/posts">{{ t('dash.quick.post.cta') }}</a>
     </li>
-    <li class="{{ 'done' if planned_actions or published_posts else ('current' if generated_posts else '') }}">
-      <span class="quickStepNumber">{{ '✓' if planned_actions or published_posts else '4' }}</span><div><b>{{ t('dash.quick.plan.title') }}</b>{% if generated_posts and not (planned_actions or published_posts) %}<em>{{ t('dash.quick.now') }}</em>{% endif %}<small>{{ t('dash.quick.plan.text') }}</small></div>
-      <a class="openPostButton btn" href="/app/strategies">{{ t('dash.quick.plan.cta') }}</a>
+    <li class="{{ 'done' if scheduled_publications or published_posts else ('current' if generated_posts else '') }}">
+      <span class="quickStepNumber">{{ '✓' if scheduled_publications or published_posts else '4' }}</span><div><b>{{ t('dash.quick.plan.title') }}</b>{% if generated_posts and not (scheduled_publications or published_posts) %}<em>{{ t('dash.quick.now') }}</em>{% endif %}<small>{{ t('dash.quick.plan.text') }}</small></div>
+      <a class="openPostButton btn" href="/app/posts">{{ t('dash.quick.post.cta') }}</a>
     </li>
   </ol>
   </div>
 </section>
 
 <section class="kpiGrid" aria-label="{{ t('dash.kpi.aria') }}">
-  <article class="kpiCard">
+  <a class="kpiCard dashScheduledKpi" href="/app/published?filter=scheduled">
+    <div class="kpiTop">
+      <span class="kpiLabel">{{ t('js.dash.scheduled') }}</span>
+      <span class="kpiIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4"/></svg></span>
+    </div>
+    <b class="kpiValue">{{ scheduled_publications }}</b>
+    <span class="kpiHint">{{ t('js.dash.scheduled_hint') }}</span>
+  </a>
+  <a class="kpiCard" href="/app/networks">
     <div class="kpiTop">
       <span class="kpiLabel">{{ t('dash.kpi.accounts') }}</span>
       <span class="kpiIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></span>
     </div>
     <b class="kpiValue">{{ connected_accounts }}</b>
     <span class="kpiHint">{{ t('dash.kpi.accounts.some') if connected_accounts else t('dash.kpi.accounts.none') }}</span>
-  </article>
-  <article class="kpiCard">
+  </a>
+  <a class="kpiCard" href="/app/strategies?status=active">
     <div class="kpiTop">
       <span class="kpiLabel">{{ t('dash.kpi.strategies') }}</span>
       <span class="kpiIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>
     </div>
     <b class="kpiValue">{{ active_strategies }}</b>
     <span class="kpiHint">{{ t('dash.kpi.strategies.some') if active_strategies else t('dash.kpi.strategies.none') }}</span>
-  </article>
-  <article class="kpiCard">
-    <div class="kpiTop">
-      <span class="kpiLabel">{{ t('dash.kpi.actions') }}</span>
-      <span class="kpiIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M12 14v3l2 1"/></svg></span>
-    </div>
-    <b class="kpiValue">{{ planned_actions }}</b>
-    <span class="kpiHint">{{ t('dash.kpi.actions.some') if planned_actions else t('dash.kpi.actions.none') }}</span>
-  </article>
-  <article class="kpiCard">
+  </a>
+
+  <a class="kpiCard" href="/app/published?filter=published">
     <div class="kpiTop">
       <span class="kpiLabel">{{ t('dash.kpi.posts') }}</span>
       <span class="kpiIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg></span>
     </div>
     <b class="kpiValue">{{ published_posts }}</b>
-    <span class="kpiHint {{ 'is-alert' if failed_items }}">{{ t('dash.kpi.posts.alerts', count=failed_items) if failed_items else t('dash.kpi.posts.none') }}</span>
-  </article>
+    <span class="kpiHint">{{ t('js.dash.published_hint') }}</span>
+  </a>
 </section>
 
-<section class="dashMain">
+<section class="dashWorkspace" aria-label="{{ t('js.dash.overview') }}">
+  <div class="dashWorkspaceToolbar"><p id="dashboardLayoutHint">{{ t('js.dash.layout_hint') }}</p><div><button type="button" class="btn secondary" id="dashboardCustomize" aria-pressed="false" aria-controls="dashboardLayout" hidden>{{ t('js.dash.customize') }}</button><button type="button" class="btn secondary" id="dashboardLayoutReset" hidden>{{ t('js.dash.reset_layout') }}</button></div></div>
+  <div id="dashboardLayout" class="dashLayoutFallback" data-user="{{ auth_user.id }}" data-workspace="{{ auth_user.active_workspace_id }}">
+    <div id="dashPanel-upcoming" class="e-panel" data-row="0" data-col="0" data-sizex="1" data-sizey="1"><div class="e-panel-container">
+      <div class="dashPanelHandle"><span aria-hidden="true">?</span><span>{{ t('js.dash.upcoming') }}</span><div class="dashPanelMove"><button type="button" data-panel-move="-1" aria-label="{{ t('js.dash.move_previous') }}">?</button><button type="button" data-panel-move="1" aria-label="{{ t('js.dash.move_next') }}">?</button></div></div>
+  <article class="panel">
+    <div class="dashChartHeading"><div><h2>{{ t('js.dash.upcoming') }}</h2><p>{{ t('js.dash.upcoming_hint') }} · {{ auth_user.timezone }}</p></div><a class="dashPanelLink" href="/app/published?filter=scheduled">{{ t('js.dash.view_all') }}</a></div>
+    {% if upcoming_publications %}<ol class="nextList">{% for publication in upcoming_publications %}<li><a class="nextCard" href="/app/posts/view?request_id={{ publication.request_id }}&amp;idea_id={{ publication.idea_id }}"><span class="nextRank">{{ loop.index }}</span><span class="nextBody"><b class="nextWhen">{{ publication.when }} · {{ publication.platform }}</b><small class="nextWhat">{{ publication.title or t('js.pub_calendar.untitled') }}</small></span></a></li>{% endfor %}</ol>
+    {% else %}<div class="emptyState"><span class="emptyTitle">{{ t('js.dash.no_upcoming') }}</span><a class="btn secondary" href="/app/posts">{{ t('nav.subjects') }}</a></div>{% endif %}
+  </article>
+
+    </div></div>
+    <div id="dashPanel-attention" class="e-panel" data-row="0" data-col="1" data-sizex="1" data-sizey="1"><div class="e-panel-container">
+      <div class="dashPanelHandle"><span aria-hidden="true">?</span><span>{{ t('js.dash.attention') }}</span><div class="dashPanelMove"><button type="button" data-panel-move="-1" aria-label="{{ t('js.dash.move_previous') }}">?</button><button type="button" data-panel-move="1" aria-label="{{ t('js.dash.move_next') }}">?</button></div></div>
+{% include "posts/_dashboard_attention.html" %}
+    </div></div>
+    <div id="dashPanel-activity" class="e-panel" data-row="1" data-col="0" data-sizex="1" data-sizey="1"><div class="e-panel-container">
+      <div class="dashPanelHandle"><span aria-hidden="true">?</span><span>{{ t('js.dash.activity') }}</span><div class="dashPanelMove"><button type="button" data-panel-move="-1" aria-label="{{ t('js.dash.move_previous') }}">?</button><button type="button" data-panel-move="1" aria-label="{{ t('js.dash.move_next') }}">?</button></div></div>
+  <article class="panel dashChartPanel">
+    <div class="dashChartHeading"><div><h2>{{ t('js.dash.activity') }}</h2><p>{{ t('js.dash.activity_hint') }}</p></div>
+      <label><span class="dashSrOnly">{{ t('js.dash.period') }}</span><select id="dashboardPeriod"><option value="14">{{ t('js.dash.days', count=14) }}</option><option value="7">{{ t('js.dash.days', count=7) }}</option></select></label>
+    </div>
+    <div class="dashChartShell" data-dashboard-chart-shell>
+      {% if syncfusion_dashboard %}<div class="dashChartSkeleton" aria-hidden="true">{% for height in [25,45,30,65,40,80,55,35,70,45,90,60,75,50] %}<span class="pgSkeletonBlock" style="height:{{ height }}%"></span>{% endfor %}</div>{% endif %}
+      <div id="dashboardActivityChart" class="dashChart" role="img" aria-label="{{ t('js.dash.activity') }}"></div>
+    </div>
+    <details class="dashChartData" id="dashboardHistoryData" {% if not syncfusion_dashboard %}open{% endif %}><summary>{{ t('js.dash.view_data') }}</summary><table><thead><tr><th>{{ t('js.dash.date') }}</th><th>{{ t('posts.publication.published') }}</th></tr></thead><tbody>{% for item in dashboard_metrics.history %}<tr data-dashboard-day="{{ item.day }}"><td>{{ item.day }}</td><td>{{ item.total }}</td></tr>{% endfor %}</tbody></table></details>
+  </article>
+    </div></div>
+    <div id="dashPanel-distribution" class="e-panel" data-row="1" data-col="1" data-sizex="1" data-sizey="1"><div class="e-panel-container">
+      <div class="dashPanelHandle"><span aria-hidden="true">?</span><span>{{ t('js.dash.distribution') }}</span><div class="dashPanelMove"><button type="button" data-panel-move="-1" aria-label="{{ t('js.dash.move_previous') }}">?</button><button type="button" data-panel-move="1" aria-label="{{ t('js.dash.move_next') }}">?</button></div></div>
+  <article class="panel dashChartPanel">
+    <div class="dashChartHeading"><div><h2>{{ t('js.dash.distribution') }}</h2><p>{{ t('js.dash.distribution_hint') }}</p></div></div>
+    <div class="dashChartShell" data-dashboard-chart-shell><div id="dashboardStatusChart" class="dashChart" role="img" aria-label="{{ t('js.dash.distribution') }}"></div><p id="dashboardNoPublications" class="dashNoData" hidden>{{ t('js.dash.no_publications') }}</p></div>
+    <ul class="dashStatusLegend">{% for status,total in dashboard_metrics.statuses.items() %}<li><span class="dashStatusDot" data-status="{{ status }}" aria-hidden="true"></span><span>{{ t('posts.publication.' ~ status) if status in ['published','scheduled','failed','pending','processing','cancelled'] else t('posts.publication.other') }}</span><b>{{ total }}</b></li>{% endfor %}</ul>
+  </article>
+    </div></div>
+  </div>
+</section>
+<details class="dashAutomation panel">
+  <summary>{{ t('js.dash.automation') }} <span>{{ planned_actions }}</span></summary>
+  <p class="dashAutomationHint">{{ t('js.dash.automation_hint') }}</p>
   <article class="panel">
     <div class="panelHead">
       <span class="panelIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></svg></span>
-      <h2>{{ t('dash.next.title') }}</h2>
+      <h2>{{ t('js.dash.future_actions') }}</h2>
       {% if next_actions %}<span class="panelCount">{{ next_actions | length }}</span>{% endif %}
     </div>
     {% if next_actions %}
@@ -107,49 +149,14 @@
     {% else %}
     <div class="emptyState">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      <span class="emptyTitle">{{ t('dash.next.empty') }}</span>
+      <span class="emptyTitle">{{ t('js.dash.no_future_actions') }}</span>
     </div>
     {% endif %}
   </article>
 
-  <article class="panel">
-    <div class="panelHead">
-      <span class="panelIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
-      <h2>{{ t('dash.activity.title') }}</h2>
-    </div>
-    {% if recent_activity %}
-    <ul class="activityList">
-      {% for item in recent_activity %}
-      <li class="activityRow">
-        <span class="activityDot is-{{ item.action | lower }}" aria-hidden="true"></span>
-        <span class="activityMain">
-          <b>{{ item.entity or '—' }}</b>
-          {% if item.action %}<span class="activityAction">{{ item.action }}</span>{% endif %}
-        </span>
-        <time class="activityAt">{{ item.at }}</time>
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-    <div class="emptyState">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      <span class="emptyTitle">{{ t('dash.activity.empty') }}</span>
-    </div>
-    {% endif %}
-  </article>
+</details>
 
-  {% if todos %}
-  <article class="panel">
-    <div class="panelHead">
-      <span class="panelIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
-      <h2>{{ t('dash.todo.title') }}</h2>
-    </div>
-    <ul class="todoList">
-      {% for t in todos %}<li>{{ t }}</li>{% endfor %}
-    </ul>
-  </article>
-  {% endif %}
-</section>
+
 </div>
 {% endblock %}
-{% block scripts %}{{ super() }}<script src="/static/js/dashboard.js?v=1-quick-start-toggle"></script>{% endblock %}
+{% block scripts %}{{ super() }}<script id="dashboardMetrics" type="application/json">{{ {'history': dashboard_metrics.history, 'statuses': dashboard_metrics.statuses}|tojson }}</script><script src="/static/js/dashboard-layout.js?v=1"></script><script src="/static/js/dashboard.js?v=3-layout-charts"></script>{% endblock %}

@@ -27,3 +27,24 @@ Fichiers principaux : `app/ui_navigation.py`, `app/templating.py`, `templates/ba
 Vérifications : 26 tests Python ciblés réussis ; rendu du shell dans les sept langues ; test DOM avec le vrai Breadcrumb Syncfusion, repli sans SDK, clavier, focus et transitions desktop/mobile. Ces tests ne remplacent pas une recette visuelle dans un navigateur réel ; cette vérification reste à effectuer avant publication.
 
 Suite du plan : Dashboard Layout, puis formulaire de création simplifié. Aucun écran Analyses ou Médias vide n’a été ajouté au menu.
+
+### Correction du lot 1 — action principale unique
+
+- Retrait du bouton « Nouveau post » dans l’en-tête du Dashboard : il doublonnait l’action permanente « Créer un post » de la topbar. Le raccourci secondaire vers les stratégies est conservé.
+
+## 6 novembre 2026 — Lot 2 : Dashboard orienté publication
+
+- Mise en page des quatre panneaux avec **Syncfusion Dashboard Layout EJ2 35.1.37**, tout en conservant les Charts et AccumulationChart existants.
+- Ordre initial : publications à venir et éléments à vérifier, puis graphiques. Les exécutions automatiques restent dans une section distincte et repliable.
+- Mode « Personnaliser » explicite : déplacement limité aux poignées, alternatives par boutons fléchés et réinitialisation. Le tableau de bord reste verrouillé hors de ce mode ; les données ne sont jamais modifiées par ces actions.
+- Ordre mémorisé localement dans le navigateur, avec une clé distincte par utilisateur et workspace ; ce réglage de présentation ne prétend pas être synchronisé entre appareils.
+- Conservation des nœuds DOM et de leurs écouteurs : liens de publication, sélecteur de période et panneaux détaillés restent actifs après déplacement.
+- Réadaptation des graphiques lors du déplacement, du changement de largeur et du repli de la sidebar. Présentation empilée sur mobile ; grille HTML utilisable sans SDK.
+- Ce lot intègre les corrections du Dashboard préparées auparavant : exclusion des dates passées des événements à venir, séparation des retards/échecs et retrait des alertes de stratégie de la carte des publications réussies.
+- Aucun KPI de portée, engagement ou abonnés inventé ; les statistiques reposent sur les envois stockés dans le workspace.
+
+Fichiers principaux : `templates/posts/dashboard.html`, `templates/posts/_dashboard_attention.html`, `static/js/dashboard-layout.js`, `static/js/dashboard.js`, `static/css/dashboard.css`, `app/services/dashboard_metrics.py`, route Dashboard, contexte de templates, traductions et tests dédiés.
+
+Vérifications : 26 tests Python ciblés réussis ; rendu des quatre panneaux dans les sept langues, sans doublon de création ; tests DOM avec les vrais composants Syncfusion pour les graphiques et Dashboard Layout, déplacement clavier, réinitialisation, états vides et conservation des événements. Les scénarios SQL passé/futur ont été validés sur des fixtures PostgreSQL sans modifier les données stockées. Recette visuelle en navigateur réel toujours à effectuer avant publication.
+
+Suite : simplification du formulaire de création et regroupement des réglages avancés, sans changer les paramètres envoyés à la génération.

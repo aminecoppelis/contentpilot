@@ -49,6 +49,7 @@ def _i18n_context(request) -> dict:
         "post_flow": post_flow,
         "syncfusion_post_flow": bool(license_key and post_flow),
         "syncfusion_calendar": bool(license_key and publication_calendar),
+        "syncfusion_dashboard": bool(license_key and request.url.path == "/app/dashboard"),
         "syncfusion_shell": bool(license_key and request.url.path.startswith("/app/")),
         "breadcrumbs": breadcrumb_items(request, _t),
     }

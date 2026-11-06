@@ -16,6 +16,7 @@ from app.dependencies.auth import require_auth
 from app.services import ai
 from app.services.ai import AIGenerationError
 from app.services import post_generation
+from app.services.dashboard_metrics import load_dashboard_metrics
 from app.services.copy_ready import build_copy_ready_text
 from app.user_timezone import format_user_datetime
 from app.pagination import page_meta
@@ -787,6 +788,7 @@ async def post_delete(request: Request, user=Depends(require_auth)):
 async def get_dashboard(request: Request, user=Depends(require_auth)):
     pool = get_pool()
     async with pool.acquire() as conn:
+        dashboard_metrics = await load_dashboard_metrics(conn, user.active_workspace_id, user.timezone)
         connected_accounts = await conn.fetchval(
             """
             SELECT count(DISTINCT a.id)::int
@@ -814,59 +816,33 @@ async def get_dashboard(request: Request, user=Depends(require_auth)):
             "SELECT count(*) FROM public.post_requests WHERE workspace_id=$1::uuid AND deleted_at IS NULL",
             user.active_workspace_id,
         )
-        planned_actions = await conn.fetchval(
-            "SELECT count(*) FROM public.app_growth_strategy_action_calendar WHERE workspace_id=$1::uuid AND status IN ('scheduled','retry')",
-            user.active_workspace_id,
-        )
-        published_posts = await conn.fetchval(
-            "SELECT count(*) FROM public.post_publications WHERE workspace_id=$1::uuid AND status='published'",
-            user.active_workspace_id,
-        )
-        failed_items = await conn.fetchval(
-            "SELECT count(*) FROM public.app_growth_strategy_action_calendar WHERE workspace_id=$1::uuid AND status='failed'",
-            user.active_workspace_id,
-        )
-        next_actions_rows = await conn.fetch(
-            """
-            SELECT c.id::text, c.strategy_id::text, c.planned_for, s.title AS strategy_title
-            FROM public.app_growth_strategy_action_calendar c
-            LEFT JOIN public.app_growth_strategies s ON s.id = c.strategy_id
-            WHERE c.workspace_id=$1::uuid AND c.status IN ('scheduled','retry')
-            ORDER BY c.planned_for ASC LIMIT 5
-            """,
-            user.active_workspace_id,
-        )
-        recent_rows = await conn.fetch(
-            "SELECT entity_type, action, created_at FROM public.post_activity_logs WHERE workspace_id=$1::uuid ORDER BY created_at DESC LIMIT 8",
-            user.active_workspace_id,
-        )
+        planned_actions = sum(row['upcoming'] for row in dashboard_metrics['action_groups'])
+        published_posts = dashboard_metrics['statuses'].get('published', 0)
+        failed_items = sum(row['failed'] for row in dashboard_metrics['action_groups'])
+        next_actions_rows = dashboard_metrics['next_actions']
 
     next_actions = [
         {"url": f"/app/strategies?strategy_id={r['strategy_id']}#calendar",
-         "title": r["strategy_title"] or translate("js.cal.planned_task", resolve_locale(request)),
+         "title": r["title"] or translate("js.cal.planned_task", resolve_locale(request)),
          "meta": format_user_datetime(r["planned_for"], user.timezone)}
         for r in next_actions_rows if r["strategy_id"]
     ]
-    recent_activity = [
-        {
-            "entity": (r["entity_type"] or "").replace("_", " ").strip(),
-            "action": r["action"] or "",
-            "at": format_user_datetime(r["created_at"], user.timezone, "%d/%m %H:%M"),
-        }
-        for r in recent_rows
-    ]
-
     quick_start_completed = sum((
         bool(connected_accounts), bool(strategies_total), bool(generated_posts),
-        bool(planned_actions or published_posts),
+        bool(dashboard_metrics["operations"]["scheduled"] or published_posts),
     ))
     return templates.TemplateResponse(request, "posts/dashboard.html", {
+        "dashboard_metrics": dashboard_metrics,
+        "scheduled_publications": dashboard_metrics["operations"]["scheduled"],
+        "attention_total": sum(row['overdue'] + row['failed'] for row in dashboard_metrics['action_groups']) + dashboard_metrics['operations']['overdue'] + dashboard_metrics['operations']['failed'],
+        "upcoming_publications": [{**row, "when": format_user_datetime(row["scheduled_at"], user.timezone)}
+                                  for row in dashboard_metrics["upcoming"]],
         "auth_user": user, "active_nav": "dashboard",
         "connected_accounts": connected_accounts, "active_strategies": active_strategies,
         "planned_actions": planned_actions, "published_posts": published_posts, "failed_items": failed_items,
         "strategies_total": strategies_total, "generated_posts": generated_posts,
         "quick_start_completed": quick_start_completed,
-        "next_actions": next_actions, "recent_activity": recent_activity, "todos": [],
+        "next_actions": next_actions,
     })
 
 
