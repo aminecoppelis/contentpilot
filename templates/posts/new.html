@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ t('pn.title') }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/form.css?v=20260902-v90-new-subject-overflow-2">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/form.css?v=20260902-v90-new-subject-overflow-2"><link rel="stylesheet" href="/static/css/creation-form.css?v=1">{% endblock %}
 {% block content %}
 <a class="pageBack" href="/app/posts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>{{ t('nav.subjects') }}</a>
 <section class="card newSubjectCard">
@@ -9,7 +9,9 @@
     <p class="subtitle">{{ t('pn.card.subtitle') }}</p>
   </div>
   <form id="ideasForm" method="post" action="/app/post-ideas-generate">
-    <div class="field" data-field="subject">
+    <p class="creationIntro">{{ t('js.creation.intro') }}</p>
+    <section class="creationBrief" aria-labelledby="creationBriefTitle"><h3 id="creationBriefTitle">{{ t('js.creation.brief') }}</h3>
+<div class="field" data-field="subject">
       <label>{{ t('pn.f.subject') }}<span class="req">*</span></label>
       <div class="subjectSuggestWrap">
         <input id="subjectInput" name="subject" required autocomplete="off" aria-autocomplete="list"
@@ -20,87 +22,7 @@
       <div class="hint">{{ t('pn.f.subject.hint') }}</div>
       <div class="error">{{ t('pn.f.subject.err') }}</div>
     </div>
-
-    <div class="field" data-field="content_domains">
-      <label>{{ t('pn.f.domains') }}<span class="req">*</span></label>
-      <div id="contentDomainsSelect" class="multiSelect"></div>
-      <div class="hint">{{ t('pn.f.domains.hint') }}</div>
-      <div class="error">{{ t('pn.f.domains.err') }}</div>
-    </div>
-
-    <div class="grid">
-      <div class="field" data-field="commercial_objective">
-        <label>{{ t('pn.f.objective') }}<span class="req">*</span></label>
-        <select name="commercial_objective" required>
-          <option value="génération de leads">{{ t('pn.obj.leads') }}</option>
-          <option value="visibilité">{{ t('pn.obj.visibility') }}</option>
-          <option value="éducation marché">{{ t('pn.obj.education') }}</option>
-          <option value="démonstration produit">{{ t('pn.obj.demo') }}</option>
-          <option value="autorité/expertise">{{ t('pn.obj.authority') }}</option>
-        </select>
-      </div>
-      <div class="field" data-field="language">
-        <label>{{ t('pn.f.language') }}<span class="req">*</span></label>
-        <select name="language" required>
-          <option value="français">{{ t('pn.lang.fr') }}</option>
-          <option value="anglais">{{ t('pn.lang.en') }}</option>
-          <option value="espagnol">{{ t('pn.lang.es') }}</option>
-          <option value="italien">{{ t('pn.lang.it') }}</option>
-          <option value="allemand">{{ t('pn.lang.de') }}</option>
-          <option value="russe">{{ t('pn.lang.ru') }}</option>
-          <option value="arabe">{{ t('pn.lang.ar') }}</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="field" data-field="post_count">
-        <label>{{ t('pn.f.count') }}<span class="req">*</span></label>
-        <input name="post_count" type="number" min="1" max="8" value="5" required>
-        <div class="hint">{{ t('pn.f.count.hint') }}</div>
-      </div>
-      <div class="field" data-field="target_sector">
-        <label>{{ t('pn.f.sector') }}</label>
-        <input name="target_sector" placeholder="{{ t('pn.f.sector.ph') }}">
-        <div class="hint">{{ t('pn.f.sector.hint') }}</div>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="field"><label>{{ t('pn.f.company') }}</label>
-        <input name="company" placeholder="{{ t('pn.f.company.ph') }}"></div>
-      <div class="field"><label>{{ t('pn.f.website') }}</label>
-        <input name="website" placeholder="{{ t('pn.f.website.ph') }}"></div>
-    </div>
-
-    <div class="grid">
-      <div class="field"><label>{{ t('pn.f.solution') }}</label>
-        <input name="solution" placeholder="{{ t('pn.f.solution.ph') }}"></div>
-      <div class="field"><label>{{ t('pn.f.tags') }}</label>
-        <input name="default_tags" placeholder="{{ t('pn.f.tags.ph') }}">
-        <div class="hint">{{ t('pn.f.tags.hint') }}</div>
-      </div>
-    </div>
-
-    <div class="field" data-field="target_audience">
-      <label>{{ t('pn.f.audience') }}</label>
-      <div id="targetAudienceSelect" class="multiSelect"></div>
-      <div class="hint">{{ t('pn.f.audience.hint') }}</div>
-    </div>
-
-    <div class="field" data-field="preferred_formats">
-      <label>{{ t('pn.f.formats') }}<span class="req">*</span></label>
-      <div id="preferredFormatsSelect" class="multiSelect"></div>
-      <div class="hint">{{ t('pn.f.formats.hint') }}</div>
-      <div class="error">{{ t('pn.f.formats.err') }}</div>
-    </div>
-
-    <div class="field"><label>{{ t('pn.f.constraints') }}</label>
-      <textarea name="constraints" maxlength="900" data-char-limit="900"
-        placeholder="{{ t('pn.f.constraints.ph') }}">{{ t('pn.f.constraints.default') }}</textarea>
-    </div>
-
-    <div class="field promptField" data-field="theme">
+<div class="field promptField" data-field="theme">
       <div class="labelRow">
         <label for="themeInput">{{ t('pn.f.prompt') }}</label>
         <button type="button" id="reformulateBtn" class="promptBtn">{{ t('pn.f.prompt.generate') }}</button>
@@ -111,8 +33,65 @@
       <div id="promptAssistStatus" class="assistStatus"></div>
       <div class="error">{{ t('pn.f.prompt.err') }}</div>
     </div>
-
-    <div class="field" style="margin-top:20px;padding:16px 18px;background:rgba(248,250,252,0.92);border:1px solid #e2e8f0;border-radius:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+<div class="creationSettings"><div class="field" data-field="commercial_objective">
+        <label>{{ t('pn.f.objective') }}<span class="req">*</span></label>
+        <select name="commercial_objective" required>
+          <option value="génération de leads">{{ t('pn.obj.leads') }}</option>
+          <option value="visibilité">{{ t('pn.obj.visibility') }}</option>
+          <option value="éducation marché">{{ t('pn.obj.education') }}</option>
+          <option value="démonstration produit">{{ t('pn.obj.demo') }}</option>
+          <option value="autorité/expertise">{{ t('pn.obj.authority') }}</option>
+        </select>
+      </div><div class="field" data-field="language">
+        <label>{{ t('pn.f.language') }}<span class="req">*</span></label>
+        <select name="language" required>
+          <option value="français">{{ t('pn.lang.fr') }}</option>
+          <option value="anglais">{{ t('pn.lang.en') }}</option>
+          <option value="espagnol">{{ t('pn.lang.es') }}</option>
+          <option value="italien">{{ t('pn.lang.it') }}</option>
+          <option value="allemand">{{ t('pn.lang.de') }}</option>
+          <option value="russe">{{ t('pn.lang.ru') }}</option>
+          <option value="arabe">{{ t('pn.lang.ar') }}</option>
+        </select>
+      </div><div class="field" data-field="post_count">
+        <label>{{ t('pn.f.count') }}<span class="req">*</span></label>
+        <input name="post_count" type="number" min="1" max="8" value="5" required>
+        <div class="hint">{{ t('pn.f.count.hint') }}</div>
+      </div></div>
+<div class="field" data-field="preferred_formats">
+      <label>{{ t('pn.f.formats') }}<span class="req">*</span></label>
+      <div id="preferredFormatsSelect" class="multiSelect"></div>
+      <div class="hint">{{ t('pn.f.formats.hint') }}</div>
+      <div class="error">{{ t('pn.f.formats.err') }}</div>
+    </div></section>
+    <section class="creationAdvanced" aria-labelledby="creationAdvancedTitle"><h3 id="creationAdvancedTitle">{{ t('js.creation.advanced') }}</h3><p class="hint">{{ t('js.creation.advanced_hint') }}</p>
+    <div id="creationOptions">
+      <div><div><h4>{{ t('js.creation.targeting') }}</h4></div><div><div class="creationOptionsContent">
+<div class="field" data-field="content_domains">
+      <label>{{ t('pn.f.domains') }}<span class="req">*</span></label>
+      <div id="contentDomainsSelect" class="multiSelect"></div>
+      <div class="hint">{{ t('pn.f.domains.hint') }}</div>
+      <div class="error">{{ t('pn.f.domains.err') }}</div>
+    </div><div class="field" data-field="target_sector">
+        <label>{{ t('pn.f.sector') }}</label>
+        <input name="target_sector" placeholder="{{ t('pn.f.sector.ph') }}">
+        <div class="hint">{{ t('pn.f.sector.hint') }}</div>
+      </div><div class="field" data-field="target_audience">
+      <label>{{ t('pn.f.audience') }}</label>
+      <div id="targetAudienceSelect" class="multiSelect"></div>
+      <div class="hint">{{ t('pn.f.audience.hint') }}</div>
+    </div></div></div></div>
+      <div><div><h4>{{ t('js.creation.brand') }}</h4></div><div><div class="creationOptionsContent">
+<div class="grid"><div class="field"><label>{{ t('pn.f.company') }}</label>
+        <input name="company" placeholder="{{ t('pn.f.company.ph') }}"></div><div class="field"><label>{{ t('pn.f.website') }}</label>
+        <input name="website" placeholder="{{ t('pn.f.website.ph') }}"></div></div><div class="grid"><div class="field"><label>{{ t('pn.f.solution') }}</label>
+        <input name="solution" placeholder="{{ t('pn.f.solution.ph') }}"></div><div class="field"><label>{{ t('pn.f.tags') }}</label>
+        <input name="default_tags" placeholder="{{ t('pn.f.tags.ph') }}">
+        <div class="hint">{{ t('pn.f.tags.hint') }}</div>
+      </div></div><div class="field"><label>{{ t('pn.f.constraints') }}</label>
+      <textarea name="constraints" maxlength="900" data-char-limit="900"
+        placeholder="{{ t('pn.f.constraints.ph') }}">{{ t('pn.f.constraints.default') }}</textarea>
+    </div><div class="field" style="margin-top:20px;padding:16px 18px;background:rgba(248,250,252,0.92);border:1px solid #e2e8f0;border-radius:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:14px">
         <label style="display:inline-flex;align-items:center;cursor:pointer">
           <input type="checkbox" name="use_macaron" id="useMacaronCheckbox" onchange="document.getElementById('newMacaronPreview').style.display=this.checked?'flex':'none'" value="true" {% if auth_user.macaron_enabled %}checked{% endif %} style="width:20px;height:20px;accent-color:var(--brand);cursor:pointer">
@@ -131,15 +110,17 @@
           <a href="/app/account#macaronCard" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:none;font-weight:700;font-size:11px">{{ t('pn.f.macaron.customize') }} ↗</a>
         </div>
       </div>
-    </div>
-
+    </div></div></div></div>
+    </div></section>
+    <div class="creationSubmit"><p>{{ t('js.creation.no_publish') }}</p>
     <button id="submitBtn" class="btn-primary newSubjectSubmit" type="submit">{{ t('pn.submit') }}</button>
+    </div>
   </form>
 </section>
 
 <div id="loaderOverlay" class="loaderOverlay" aria-live="polite" aria-busy="true">
   <div class="loaderBox">
-    <div class="spinner"></div>
+    <div class="creationGeneratingSkeleton" aria-hidden="true"><span class="pgSkeletonBlock"></span><span class="pgSkeletonBlock"></span><span class="pgSkeletonBlock"></span></div>
     <p class="loaderTitle">{{ t('pn.loader.title') }}</p>
     <p class="loaderText">{{ t('pn.loader.text') }}</p>
     <div class="loaderSteps">
@@ -151,4 +132,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/form.js?v=22"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/creation-form.js?v=1"></script><script src="/static/js/form.js?v=23-clear-validation"></script>{% endblock %}

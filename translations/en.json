@@ -1303,5 +1303,12 @@
   "js.dash.finish_layout": "Done",
   "js.dash.edit_layout_hint": "Move panels using their handle or arrow buttons. Order saved in this browser for this workspace.",
   "js.dash.move_previous": "Move earlier",
-  "js.dash.move_next": "Move later"
+  "js.dash.move_next": "Move later",
+  "js.creation.intro": "Describe your idea, then choose the content to generate. You can edit and preview it before publishing.",
+  "js.creation.brief": "Your brief",
+  "js.creation.advanced": "Adjust settings",
+  "js.creation.advanced_hint": "Prefilled values remain in use when these sections are closed. Open them to adjust targeting or branding.",
+  "js.creation.targeting": "Topics and audience",
+  "js.creation.brand": "Company, instructions and badge",
+  "js.creation.no_publish": "This step generates content. No post will be published or scheduled automatically."
 }

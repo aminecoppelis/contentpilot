@@ -1303,5 +1303,12 @@
   "js.dash.finish_layout": "Listo",
   "js.dash.edit_layout_hint": "Mueve los paneles con el asa o las flechas. El orden se guarda en este navegador para este workspace.",
   "js.dash.move_previous": "Mover antes",
-  "js.dash.move_next": "Mover después"
+  "js.dash.move_next": "Mover después",
+  "js.creation.intro": "Describe tu idea y elige el contenido que quieres generar. Podrás editarlo y previsualizarlo antes de publicarlo.",
+  "js.creation.brief": "Tu brief",
+  "js.creation.advanced": "Ajustar configuración",
+  "js.creation.advanced_hint": "Los valores predefinidos siguen activos aunque estas secciones estén cerradas. Ábrelas para ajustar el público o la marca.",
+  "js.creation.targeting": "Temas y público",
+  "js.creation.brand": "Empresa, instrucciones y distintivo",
+  "js.creation.no_publish": "Este paso genera contenido. No se publicará ni programará ningún post automáticamente."
 }

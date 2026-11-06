@@ -1303,5 +1303,12 @@
   "js.dash.finish_layout": "Fine",
   "js.dash.edit_layout_hint": "Sposta i pannelli con la maniglia o le frecce. L’ordine viene salvato in questo browser per questo workspace.",
   "js.dash.move_previous": "Sposta prima",
-  "js.dash.move_next": "Sposta dopo"
+  "js.dash.move_next": "Sposta dopo",
+  "js.creation.intro": "Descrivi la tua idea e scegli i contenuti da generare. Potrai modificarli e visualizzarli prima di pubblicarli.",
+  "js.creation.brief": "Il tuo brief",
+  "js.creation.advanced": "Modifica impostazioni",
+  "js.creation.advanced_hint": "I valori precompilati restano attivi anche quando le sezioni sono chiuse. Aprile per modificare il pubblico o il marchio.",
+  "js.creation.targeting": "Argomenti e pubblico",
+  "js.creation.brand": "Azienda, istruzioni e badge",
+  "js.creation.no_publish": "Questo passaggio genera contenuti. Nessun post verrà pubblicato o programmato automaticamente."
 }

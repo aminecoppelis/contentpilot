@@ -1303,5 +1303,12 @@
   "js.dash.finish_layout": "Terminer",
   "js.dash.edit_layout_hint": "Déplacez les panneaux avec leur poignée ou les flèches. Ordre enregistré dans ce navigateur, pour ce workspace.",
   "js.dash.move_previous": "Déplacer avant",
-  "js.dash.move_next": "Déplacer après"
+  "js.dash.move_next": "Déplacer après",
+  "js.creation.intro": "Décrivez votre idée, puis choisissez les contenus à générer. Vous pourrez les modifier et les prévisualiser avant de publier.",
+  "js.creation.brief": "Votre brief",
+  "js.creation.advanced": "Ajuster les réglages",
+  "js.creation.advanced_hint": "Les valeurs préremplies restent utilisées lorsque ces sections sont fermées. Ouvrez-les pour adapter le ciblage ou la marque.",
+  "js.creation.targeting": "Domaines et audience",
+  "js.creation.brand": "Entreprise, consignes et macaron",
+  "js.creation.no_publish": "Cette étape génère des contenus. Aucun post ne sera publié ni programmé automatiquement."
 }

@@ -48,3 +48,18 @@ Fichiers principaux : `templates/posts/dashboard.html`, `templates/posts/_dashbo
 Vérifications : 26 tests Python ciblés réussis ; rendu des quatre panneaux dans les sept langues, sans doublon de création ; tests DOM avec les vrais composants Syncfusion pour les graphiques et Dashboard Layout, déplacement clavier, réinitialisation, états vides et conservation des événements. Les scénarios SQL passé/futur ont été validés sur des fixtures PostgreSQL sans modifier les données stockées. Recette visuelle en navigateur réel toujours à effectuer avant publication.
 
 Suite : simplification du formulaire de création et regroupement des réglages avancés, sans changer les paramètres envoyés à la génération.
+
+## 6 novembre 2026 — Lot 3a : formulaire de création guidé
+
+- Brief essentiel en premier : sujet, instructions, objectif, langue, nombre de contenus et formats. Les champs sont réorganisés sans modifier leurs noms, valeurs par défaut ou contraintes.
+- Réglages de ciblage et de marque regroupés dans deux panneaux **Syncfusion Accordion EJ2 35.1.37**, initialement fermés. Sans SDK, les réglages restent visibles et utilisables.
+- Matérialisation de tous les champs avant initialisation des contrôleurs existants : les dix domaines et les trois formats préremplis, ainsi que les paramètres facultatifs, restent transmis même lorsque les panneaux sont fermés.
+- Ouverture automatique du panneau en erreur et focus sur le premier champ invalide ; associations labels/champs et descriptions d’erreur améliorées.
+- Génération annoncée comme une préparation de contenus, sans publication ni programmation automatique. Skeleton de chargement sans pourcentage fictif ; saisies conservées en cas d’échec pour permettre un nouvel essai.
+- Aucun changement aux routes, à la structure du payload de génération, aux options envoyées à l’IA ou au comportement du macaron.
+
+Fichiers principaux : `templates/posts/new.html`, `static/js/creation-form.js`, `static/css/creation-form.css`, ajustements de validation dans `static/js/form.js`, traductions et tests du formulaire.
+
+Vérifications : 27 tests Python ciblés réussis ; contrats de champs vérifiés dans les sept langues ; test DOM avec le vrai Accordion, champs fermés, valeurs par défaut, erreurs, focus, payload exact, échec de génération et repli sans SDK. Aucune requête réelle vers l’IA ou Buffer n’a été envoyée. La recette visuelle en navigateur réel reste à effectuer avant publication.
+
+Suite du lot 3 : consultation des variantes, édition et aperçu, notamment la distinction entre les compteurs simulés de l’aperçu et les données réelles.

@@ -1303,5 +1303,12 @@
   "js.dash.finish_layout": "Fertig",
   "js.dash.edit_layout_hint": "Verschieben Sie Bereiche mit dem Griff oder den Pfeiltasten. Die Reihenfolge wird in diesem Browser für diesen Workspace gespeichert.",
   "js.dash.move_previous": "Nach vorne verschieben",
-  "js.dash.move_next": "Nach hinten verschieben"
+  "js.dash.move_next": "Nach hinten verschieben",
+  "js.creation.intro": "Beschreiben Sie Ihre Idee und wählen Sie die zu erstellenden Inhalte. Vor der Veröffentlichung können Sie diese bearbeiten und ansehen.",
+  "js.creation.brief": "Ihr Briefing",
+  "js.creation.advanced": "Einstellungen anpassen",
+  "js.creation.advanced_hint": "Vorausgefüllte Werte gelten auch bei geschlossenen Abschnitten. Öffnen Sie diese, um Zielgruppe oder Marke anzupassen.",
+  "js.creation.targeting": "Themen und Zielgruppe",
+  "js.creation.brand": "Unternehmen, Vorgaben und Badge",
+  "js.creation.no_publish": "Dieser Schritt erstellt Inhalte. Es wird kein Beitrag automatisch veröffentlicht oder geplant."
 }

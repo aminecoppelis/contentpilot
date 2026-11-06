@@ -27,6 +27,9 @@
     mount.innerHTML='<div class="msBox"><div class="msTags"></div><input class="msSearch" type="text" autocomplete="off"></div><div class="msOptions"></div><div class="msHidden"></div>';
     var tagsEl=mount.querySelector('.msTags');
     var input=mount.querySelector('.msSearch');
+    input.id=config.mountId+'-search';
+    var inputField=mount.closest('.field'),fieldLabel=inputField&&inputField.querySelector('label');if(fieldLabel)fieldLabel.htmlFor=input.id;
+    if(inputField){var descriptions=[];inputField.querySelectorAll('.hint,.error').forEach(function(node,index){node.id=input.id+'-description-'+index;descriptions.push(node.id);if(node.classList.contains('error'))node.setAttribute('aria-live','polite');});if(descriptions.length)input.setAttribute('aria-describedby',descriptions.join(' '));}
     var optionsEl=mount.querySelector('.msOptions');
     var hiddenEl=mount.querySelector('.msHidden');
     input.placeholder=config.placeholder||window.t('pe.ms.search');
@@ -36,6 +39,7 @@
       if(state.options.indexOf(clean)<0)state.options.push(clean);
       if(state.selected.indexOf(clean)<0)state.selected.push(clean);
       input.value='';render();
+      input.setAttribute('aria-invalid','false');
       var field=mount.closest('.field');if(field){field.classList.remove('isInvalid','hasError');var err=field.querySelector('.error');if(err)err.classList.remove('isVisible');}
     }
     function removeValue(value){state.selected=state.selected.filter(function(v){return v!==value;});render();}
@@ -186,7 +190,7 @@
   /* --- Validation + soumission --- */
   function markInvalid(fieldName,invalid){
     var f=form.querySelector('[data-field="'+fieldName+'"]');
-    if(f){f.classList.toggle('isInvalid',Boolean(invalid));f.classList.toggle('hasError',Boolean(invalid));var err=f.querySelector('.error');if(err)err.classList.toggle('isVisible',Boolean(invalid));}
+    if(f){f.classList.toggle('isInvalid',Boolean(invalid));f.classList.toggle('hasError',Boolean(invalid));var err=f.querySelector('.error');if(err)err.classList.toggle('isVisible',Boolean(invalid));var control=f.querySelector('input:not([type=hidden]),select,textarea');if(control)control.setAttribute('aria-invalid',String(!!invalid));}
   }
   form.addEventListener('submit',async function(event){
     event.preventDefault();
@@ -197,7 +201,7 @@
     markInvalid('subject',!subject); if(!subject)ok=false;
     markInvalid('content_domains',!domains.length); if(!domains.length)ok=false;
     markInvalid('preferred_formats',!formats.length); if(!formats.length)ok=false;
-    if(!ok)return;
+    if(!ok){form.dispatchEvent(new CustomEvent('pg:creation-errors'));return;}
 
     if(submitBtn)submitBtn.disabled=true;
     if(overlay)overlay.classList.add('isOpen','isVisible');
