@@ -63,3 +63,19 @@ Fichiers principaux : `templates/posts/new.html`, `static/js/creation-form.js`, 
 Vérifications : 27 tests Python ciblés réussis ; contrats de champs vérifiés dans les sept langues ; test DOM avec le vrai Accordion, champs fermés, valeurs par défaut, erreurs, focus, payload exact, échec de génération et repli sans SDK. Aucune requête réelle vers l’IA ou Buffer n’a été envoyée. La recette visuelle en navigateur réel reste à effectuer avant publication.
 
 Suite du lot 3 : consultation des variantes, édition et aperçu, notamment la distinction entre les compteurs simulés de l’aperçu et les données réelles.
+
+## 6 novembre 2026 — Lot 3b : éditeur et aperçu des contenus
+
+- Navigation entre contenus par **Syncfusion Toolbar EJ2 35.1.37**, avec liens HTML en repli, focus clavier et prise en compte des cartes ajoutées pendant la génération.
+- Les deux contenus par ligne sont conservés sur grand écran ; la navigation permet d’atteindre une carte sans changer son texte ni son étape.
+- Modes Texte / Les deux / Aperçu indépendants par carte. Le choix est mémorisé par identifiant de contenu dans ce navigateur, en conservant l’ancienne préférence globale comme valeur initiale.
+- Suppression des likes et commentaires fictifs dans les aperçus de l’éditeur (LinkedIn, Facebook, Instagram), remplacés par une mention explicite d’aperçu indicatif sans statistiques réelles.
+- Champ de texte identifié par un label ; état de sauvegarde annoncé ; focus visible et tailles de contrôles améliorés.
+- Intégration des améliorations de parcours préparées auparavant : boutons annonçant l’étape suivante, action « Publier ou programmer » hiérarchisée, sauvegarde et blocage sur texte vide ou échec conservés.
+- Pas de migration vers un éditeur HTML : le texte Unicode et le contrat de publication restent inchangés. Aucun endpoint métier modifié.
+
+Fichiers principaux : `templates/posts/view.html`, `static/js/post-editor.js`, `static/css/post-editor.css`, adaptations de présentation dans `static/js/consultation.js` et `static/js/post-flow.js`, styles du parcours, traductions et tests.
+
+Vérifications : 29 tests Python ciblés réussis ; tests DOM du contrôleur complet et des vrais Toolbar et Stepper Syncfusion ; sept langues, navigation, apparition de nouveaux contenus, indépendance des aperçus, repli sans SDK et garde-fous de sauvegarde. Les tests de navigation n’effectuent aucun appel API et les simulations de parcours ne publient aucun post. La recette visuelle dans un navigateur réel reste à effectuer avant publication.
+
+Suite du plan : calendrier et comptes connectés, en conservant le Scheduler dans la stratégie.

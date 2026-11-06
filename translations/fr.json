@@ -1310,5 +1310,11 @@
   "js.creation.advanced_hint": "Les valeurs préremplies restent utilisées lorsque ces sections sont fermées. Ouvrez-les pour adapter le ciblage ou la marque.",
   "js.creation.targeting": "Domaines et audience",
   "js.creation.brand": "Entreprise, consignes et macaron",
-  "js.creation.no_publish": "Cette étape génère des contenus. Aucun post ne sera publié ni programmé automatiquement."
+  "js.creation.no_publish": "Cette étape génère des contenus. Aucun post ne sera publié ni programmé automatiquement.",
+  "js.post_flow.publish_options": "Publier ou programmer",
+  "js.editor.variants": "Vos contenus",
+  "js.editor.variants_hint": "Chaque carte peut être modifiée et préparée séparément. Choisissez celle sur laquelle travailler.",
+  "js.editor.variant": "Contenu {n}",
+  "js.editor.text": "Texte du post",
+  "js.editor.preview_note": "Aperçu indicatif du contenu. Les statistiques réelles de likes et de commentaires ne sont pas affichées ici."
 }

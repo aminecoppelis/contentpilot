@@ -1310,5 +1310,11 @@
   "js.creation.advanced_hint": "Vorausgefüllte Werte gelten auch bei geschlossenen Abschnitten. Öffnen Sie diese, um Zielgruppe oder Marke anzupassen.",
   "js.creation.targeting": "Themen und Zielgruppe",
   "js.creation.brand": "Unternehmen, Vorgaben und Badge",
-  "js.creation.no_publish": "Dieser Schritt erstellt Inhalte. Es wird kein Beitrag automatisch veröffentlicht oder geplant."
+  "js.creation.no_publish": "Dieser Schritt erstellt Inhalte. Es wird kein Beitrag automatisch veröffentlicht oder geplant.",
+  "js.post_flow.publish_options": "Veröffentlichen oder planen",
+  "js.editor.variants": "Ihre Inhalte",
+  "js.editor.variants_hint": "Jede Karte lässt sich separat bearbeiten und vorbereiten. Wählen Sie den gewünschten Inhalt aus.",
+  "js.editor.variant": "Inhalt {n}",
+  "js.editor.text": "Beitragstext",
+  "js.editor.preview_note": "Unverbindliche Inhaltsvorschau. Tatsächliche Like- und Kommentarstatistiken werden hier nicht angezeigt."
 }

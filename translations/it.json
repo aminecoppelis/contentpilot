@@ -1310,5 +1310,11 @@
   "js.creation.advanced_hint": "I valori precompilati restano attivi anche quando le sezioni sono chiuse. Aprile per modificare il pubblico o il marchio.",
   "js.creation.targeting": "Argomenti e pubblico",
   "js.creation.brand": "Azienda, istruzioni e badge",
-  "js.creation.no_publish": "Questo passaggio genera contenuti. Nessun post verrà pubblicato o programmato automaticamente."
+  "js.creation.no_publish": "Questo passaggio genera contenuti. Nessun post verrà pubblicato o programmato automaticamente.",
+  "js.post_flow.publish_options": "Pubblica o programma",
+  "js.editor.variants": "I tuoi contenuti",
+  "js.editor.variants_hint": "Ogni scheda può essere modificata e preparata separatamente. Scegli quella su cui lavorare.",
+  "js.editor.variant": "Contenuto {n}",
+  "js.editor.text": "Testo del post",
+  "js.editor.preview_note": "Anteprima indicativa del contenuto. Le statistiche reali di like e commenti non sono mostrate qui."
 }

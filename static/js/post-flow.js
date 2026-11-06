@@ -9,6 +9,8 @@
     function render(){
       card.dataset.flowStep=String(current);
       previous.hidden=current===0;next.hidden=current===2;
+      previous.textContent=current>0?t(labels[current-1]):window.t('common.previous');
+      next.textContent=current<2?t(labels[current+1]):window.t('common.next');
       card.querySelector('[data-flow-hint]').textContent=t(labels[current]+'_hint');
       card.querySelectorAll('[data-flow-go]').forEach(function(button){if(Number(button.dataset.flowGo)===current)button.setAttribute('aria-current','step');else button.removeAttribute('aria-current');});
       if(stepper&&stepper.activeStep!==current){syncing=true;try{stepper.activeStep=current;stepper.dataBind();}finally{syncing=false;}}

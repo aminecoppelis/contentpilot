@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ page_heading }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/consultation.css?v=20261103-pixabay-multi-keywords"><link rel="stylesheet" href="/static/css/post-flow.css?v=1">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/consultation.css?v=20261103-pixabay-multi-keywords"><link rel="stylesheet" href="/static/css/post-flow.css?v=3-editor-journey"><link rel="stylesheet" href="/static/css/post-editor.css?v=1">{% endblock %}
 {% block content %}
 <header class="header" id="posts-view-header">
   <div>
@@ -9,6 +9,12 @@
     <h1 class="h1" id="posts-view-heading">{{ page_heading }}</h1>
   </div>
 </header>
+
+<section class="postVariantNavigator" id="postVariantNavigator" aria-label="{{ t('js.editor.variants') }}" {% if ideas|length < 2 %}hidden{% endif %}>
+  <div><h2>{{ t('js.editor.variants') }}</h2><p>{{ t('js.editor.variants_hint') }}</p></div>
+  <div id="postVariantToolbar" hidden></div>
+  <nav id="postVariantFallback" aria-label="{{ t('js.editor.variants') }}">{% for idea in ideas %}<a href="#card-{{ loop.index0 }}">{{ t('js.editor.variant', n=loop.index) }}</a>{% endfor %}</nav>
+</section>
 
 {% if origin_context %}
 <section class="postStrategyOrigin" role="status">
@@ -52,7 +58,7 @@
   {% set i = loop.index0 %}
   <article class="card" id="card-{{ i }}" data-idea-id="{{ idea.idea_id }}" data-idea-index="{{ i }}" {% if not read_only %}data-post-flow data-flow-step="{{ 2 if idea.is_published or idea.is_scheduled else 0 }}"{% endif %}>
     <div class="top">
-      <div><span class="num">#{{ loop.index }}</span>
+      <div><span class="num">{{ t('js.editor.variant', n=loop.index) }}</span>
         <span class="format" id="format-{{ i }}">{{ idea.recommended_format }}</span></div>
       <span class="status {{ idea.status_cls }}" id="status-{{ i }}">{{ t('post.status.scheduled') if idea.is_scheduled else idea.status_label }}</span>
     </div>
@@ -67,9 +73,9 @@
         <div><span class="label">{{ t('pv.ready_label') }}</span>
           <h2 id="post-title-{{ i }}">{{ idea.post_title }}</h2></div>
         <div class="postViewSwitch" role="group" aria-label="{{ t('pv.display.aria') }}">
-          <button type="button" data-post-view-mode="editor" onclick="setPostDisplayMode('editor')">{{ t('pv.display.editor') }}</button>
-          <button type="button" data-post-view-mode="split" onclick="setPostDisplayMode('split')">{{ t('pv.display.split') }}</button>
-          <button type="button" data-post-view-mode="preview" onclick="setPostDisplayMode('preview')">{{ t('pv.display.preview') }}</button>
+          <button type="button" data-post-view-mode="editor" onclick="setPostDisplayMode('editor', {{ i }})">{{ t('pv.display.editor') }}</button>
+          <button type="button" data-post-view-mode="split" onclick="setPostDisplayMode('split', {{ i }})">{{ t('pv.display.split') }}</button>
+          <button type="button" data-post-view-mode="preview" onclick="setPostDisplayMode('preview', {{ i }})">{{ t('pv.display.preview') }}</button>
         </div>
       </div>
       <div class="postLiveWorkspace" data-post-workspace="{{ i }}"><div class="postLiveEditor">
@@ -83,17 +89,19 @@
         <button type="button" class="copyBtn copyIconBtn" title="{{ t('pv.copy') }}" aria-label="{{ t('pv.copy') }}"
                 onmousedown="event.preventDefault()" onclick="copyPost('copy-{{ i }}', this)">⧉</button>
       </div>{% endif %}
-      <textarea id="copy-{{ i }}" class="copyBox" {% if read_only %}readonly aria-readonly="true"{% else %}oninput="markPostEdited({{ i }});updateFormatToolbar({{ i }})"{% endif %}
+      <label class="postEditorLabel" for="copy-{{ i }}">{{ t('js.editor.text') }}</label>
+      <textarea id="copy-{{ i }}" class="copyBox" {% if not read_only %}aria-describedby="post-edit-status-{{ i }}"{% endif %} {% if read_only %}readonly aria-readonly="true"{% else %}oninput="markPostEdited({{ i }});updateFormatToolbar({{ i }})"{% endif %}
                 {% if not read_only %}onpaste="handlePostPaste(event, {{ i }})" onkeyup="updateFormatToolbar({{ i }})"
                 onmouseup="updateFormatToolbar({{ i }})" onselect="updateFormatToolbar({{ i }})"{% endif %}>{{ idea.full_text }}</textarea>
       {% if not read_only %}<div class="buttons" style="margin-top:10px">
         <button type="button" onclick="openActionModal({{ i }}, 'Régénérer')" class="regen"
                 title="{{ t('pv.regen.title') }}">{{ t('pv.regen') }}</button>
-        <span id="post-edit-status-{{ i }}" class="hint" style="margin:0;align-self:center"></span>
+        <span id="post-edit-status-{{ i }}" class="hint" role="status" aria-live="polite" style="margin:0;align-self:center"></span>
       </div>{% endif %}
       </div>
       <aside class="postLivePreview" aria-label="{{ t('pv.preview.phone_aria') }}">
         <div class="lpCaption"><span></span>{{ t('pv.preview.live') }}</div>
+        <p class="postPreviewNotice">{{ t('js.editor.preview_note') }}</p>
         <div class="lpPhone lp-{{ preview_platform }}"><div class="lpScreen">
           <div class="lpStatus"><b>9:41</b><i></i><span>● ◔ ▰</span></div>
           <div class="lpAppbar">{% if preview_platform == 'instagram' %}<b>Instagram</b><span>♡　✉</span>{% elif preview_platform == 'facebook' %}<b class="lpFacebook">facebook</b><span>⌕　☰</span>{% else %}<b class="lpLinkedin">in</b><span>⌕　✉</span>{% endif %}</div>
@@ -101,7 +109,7 @@
             <div class="lpAuthor"><span class="lpAvatar">{{ preview_account[:1]|upper }}</span><div><b>{{ preview_account }}</b><small>{{ t('pv.preview.now') }}</small></div><i>•••</i></div>
             {% if preview_platform != 'instagram' %}<div class="lpText" data-live-post-text="{{ i }}">{{ idea.full_text }}</div>{% endif %}
             <div class="lpMedia {{ 'empty' if not preview_media }}" data-live-post-media="{{ i }}">{% if preview_media %}{% if preview_media.media_type == 'video' %}<video muted playsinline preload="metadata" src="/app/posts/media-video.mp4?media_id={{ preview_media.id }}"></video>{% else %}<img src="/app/posts/media-image.jpg?media_id={{ preview_media.id }}" alt="{{ t('pv.preview.media_alt') }}">{% endif %}{% else %}<span>{{ t('pv.preview.media_empty') }}</span>{% endif %}</div>
-            {% if preview_platform == 'instagram' %}<div class="lpIgActions"><span>♡　◯　⌁</span><span>▢</span></div><b class="lpLikes">{{ t('pv.preview.likes') }}</b><div class="lpText lpIgText"><b>{{ preview_account }}</b> <span data-live-post-text="{{ i }}">{{ idea.full_text }}</span></div>{% else %}<div class="lpStats"><span>👍 ❤️ 48</span><span>{{ t('pv.preview.comments') }}</span></div><div class="lpActions"><span>👍<small>{{ t('pv.preview.like') }}</small></span><span>◯<small>{{ t('pv.preview.comment') }}</small></span><span>↗<small>{{ t('pv.preview.share') }}</small></span></div>{% endif %}
+            {% if preview_platform == 'instagram' %}<div class="lpIgActions"><span>♡　◯　⌁</span><span>▢</span></div><div class="lpText lpIgText"><b>{{ preview_account }}</b> <span data-live-post-text="{{ i }}">{{ idea.full_text }}</span></div>{% else %}<div class="lpActions"><span>👍<small>{{ t('pv.preview.like') }}</small></span><span>◯<small>{{ t('pv.preview.comment') }}</small></span><span>↗<small>{{ t('pv.preview.share') }}</small></span></div>{% endif %}
           </div><div class="lpHome"></div>
         </div></div>
       </aside></div>
@@ -237,7 +245,7 @@
         <button type="button" id="share-btn-{{ i }}" onclick="shareIdea({{ i }}, this)" class="edit"
                 title="{{ t('pv.act.share.title') }}">{{ t('pv.act.share') }}</button>
         {% if not read_only %}<button type="button" id="publish-btn-{{ i }}" onclick="openPublishModal({{ i }})" class="ok"
-                title="{{ t('pv.act.publish.title') }}">{{ t('pv.act.publish') }}</button>{% endif %}
+                title="{{ t('js.post_flow.publish_options') }}">{{ t('js.post_flow.publish_options') }}</button>{% endif %}
       </div>
     </div>
     {% if not read_only %}<nav class="postFlowFooter" aria-label="{{ t('common.actions') }}">
@@ -284,6 +292,7 @@ window.__PG_VIEW = {
   backgroundJobs: {{ background_jobs | tojson }}
 };
 </script>
-<script src="/static/js/consultation.js?v=31-publication-copy"></script>
-<script src="/static/js/post-flow.js?v=1"></script>
+<script src="/static/js/consultation.js?v=32-independent-preview"></script>
+<script src="/static/js/post-flow.js?v=3-editor-journey"></script>
+<script src="/static/js/post-editor.js?v=1"></script>
 {% endblock %}

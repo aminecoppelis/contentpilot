@@ -1310,5 +1310,11 @@
   "js.creation.advanced_hint": "Prefilled values remain in use when these sections are closed. Open them to adjust targeting or branding.",
   "js.creation.targeting": "Topics and audience",
   "js.creation.brand": "Company, instructions and badge",
-  "js.creation.no_publish": "This step generates content. No post will be published or scheduled automatically."
+  "js.creation.no_publish": "This step generates content. No post will be published or scheduled automatically.",
+  "js.post_flow.publish_options": "Publish or schedule",
+  "js.editor.variants": "Your content",
+  "js.editor.variants_hint": "Each card can be edited and prepared separately. Choose the one you want to work on.",
+  "js.editor.variant": "Content {n}",
+  "js.editor.text": "Post text",
+  "js.editor.preview_note": "Illustrative content preview. Actual like and comment statistics are not shown here."
 }

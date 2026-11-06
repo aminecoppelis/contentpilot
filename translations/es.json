@@ -1310,5 +1310,11 @@
   "js.creation.advanced_hint": "Los valores predefinidos siguen activos aunque estas secciones estén cerradas. Ábrelas para ajustar el público o la marca.",
   "js.creation.targeting": "Temas y público",
   "js.creation.brand": "Empresa, instrucciones y distintivo",
-  "js.creation.no_publish": "Este paso genera contenido. No se publicará ni programará ningún post automáticamente."
+  "js.creation.no_publish": "Este paso genera contenido. No se publicará ni programará ningún post automáticamente.",
+  "js.post_flow.publish_options": "Publicar o programar",
+  "js.editor.variants": "Tus contenidos",
+  "js.editor.variants_hint": "Cada tarjeta se puede editar y preparar por separado. Elige con cuál trabajar.",
+  "js.editor.variant": "Contenido {n}",
+  "js.editor.text": "Texto del post",
+  "js.editor.preview_note": "Vista previa orientativa del contenido. Aquí no se muestran estadísticas reales de me gusta ni comentarios."
 }

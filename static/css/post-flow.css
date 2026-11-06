@@ -16,4 +16,8 @@
 .pg-post-flow [data-post-flow][data-flow-step="2"] .postLiveWorkspace{display:block!important}
 .pg-post-flow [data-post-flow][data-flow-step="2"] .postLivePreview{display:block!important;max-width:440px;margin:auto}
 .postFlowStepper .e-step-label{font-size:12px!important}.postFlowStepper .e-step-container{cursor:pointer}
+.postFlowPublication [id^="publish-btn-"]{background:#2563eb!important;color:#fff!important;border-color:#2563eb!important;font-weight:700}
+.postFlowPublication [id^="publish-btn-"]:hover{background:#1d4ed8!important}
+.postFlowFooter .btn{min-height:40px;white-space:normal;text-align:center}
+.postFlowNavigation button:focus-visible,.postFlowFooter button:focus-visible,.postFlowPublication button:focus-visible{outline:2px solid #2563eb;outline-offset:3px}
 @media(max-width:640px){.postFlowNavigation{padding:14px 10px}.postFlowFallback{flex-direction:column}.postFlowStepper .e-step-label{font-size:10px!important}.postFlowFooter{justify-content:space-between}}
