@@ -1316,5 +1316,20 @@
   "js.editor.variants_hint": "Jede Karte lässt sich separat bearbeiten und vorbereiten. Wählen Sie den gewünschten Inhalt aus.",
   "js.editor.variant": "Inhalt {n}",
   "js.editor.text": "Beitragstext",
-  "js.editor.preview_note": "Unverbindliche Inhaltsvorschau. Tatsächliche Like- und Kommentarstatistiken werden hier nicht angezeigt."
+  "js.editor.preview_note": "Unverbindliche Inhaltsvorschau. Tatsächliche Like- und Kommentarstatistiken werden hier nicht angezeigt.",
+  "js.calendar.reset": "Filter zurücksetzen",
+  "js.calendar.filter_hint": "Status- und Netzwerkfilter gelten für Beitragsversand.",
+  "js.calendar.legend": "Ereignistypen",
+  "js.calendar.action": "Strategieaktion",
+  "js.calendar.publication": "Beitragsversand",
+  "js.calendar.action_readonly": "Diese Aktion kann im Kalender nicht verschoben werden: Sie ist abgeschlossen, läuft oder ist bereits mit Inhalten verknüpft.",
+  "js.calendar.actions_hint": "Diese Termine führen Strategieaktionen aus. Netzwerk- und Veröffentlichungsfilter gelten hier nicht.",
+  "js.calendar.filtered_hint": "Veröffentlichungsfilter aktiv: Strategieaktionen sind ausgeblendet. Setzen Sie die Filter zurück oder wählen Sie Aktionen.",
+  "js.connections.owned": "Von diesem Workspace verwaltet",
+  "js.connections.shared": "Mit diesem Workspace geteilt",
+  "js.connections.configure": "Buffer konfigurieren",
+  "js.connections.other": "Weitere Verbindungen",
+  "js.connections.title": "Ihre Verbindungen verstehen",
+  "js.connections.hint": "Ändern Sie Buffer-Schlüssel oder Kanal über Buffer konfigurieren beim Konto. Geteilte Konten verwaltet der Eigentümer-Workspace.",
+  "js.connections.access_hint": "Aktiv bedeutet, dass das Konto in diesem Workspace freigegeben ist. Die externe Verbindung kann trotzdem ungültig sein. Prüfen Sie Token- und Kontingentwarnungen."
 }

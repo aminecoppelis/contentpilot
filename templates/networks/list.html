@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Mes réseaux · Post Generator{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/networks.css?v=25-buffer-only">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/networks.css?v=26-connection-ux">{% endblock %}
 {% block content %}
 <section class="hero">
   <div>
@@ -12,6 +12,7 @@
     </div>
   </div>
   <div class="channelConnectors">
+    <details class="networkComingSoon"><summary>{{ t('js.connections.other') }}</summary><div class="networkComingSoonCards">
     {% if auth_user.is_super_admin %}
     <button type="button" class="channelCard channelCardDisabled" disabled aria-disabled="true">
       <span class="channelIcon metaChannelIcon" aria-label="Meta">
@@ -32,6 +33,7 @@
       </span>
       <span><b>{{ t('net.connect_instagram') }}</b><small>{{ t('net.connect_instagram_sub') }}</small><em>{{ t('net.coming_soon') }}</em></span>
     </button>
+    </div></details>
     <button type="button" class="channelCard bufferCard" onclick="window.openBufferModal();return false">
       <span class="channelIcon bufferChannelIcon" aria-label="Buffer">
         <img src="/static/img/buffer.svg" alt="" width="30" height="30" aria-hidden="true">
@@ -42,6 +44,7 @@
 </section>
 
 {% if notice %}<div class="notice {{ notice_type }}">{{ notice }}</div>{% endif %}
+<section class="networkConnectionGuide" aria-label="{{ t('js.connections.title') }}"><h2>{{ t('js.connections.title') }}</h2><p>{{ t('js.connections.hint') }}</p><p>{{ t('js.connections.access_hint') }}</p></section>
 
 <div class="tableWrap">
   {% include "partials/grid_loading.html" %}<table data-syncfusion="true" data-grid-view="networks">

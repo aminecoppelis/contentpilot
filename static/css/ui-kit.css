@@ -709,6 +709,7 @@ summary:focus-visible,
   max-width: none;
   min-width: 0;
 }
+.has-sidebar .strategyViewBtn:focus-visible{outline:2px solid var(--brand);outline-offset:3px}
 @media (max-width: 720px) {
   .has-sidebar .app-content-wrapper,
   .has-sidebar main.wrap { padding: 20px 16px 60px !important; }

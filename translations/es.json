@@ -1316,5 +1316,20 @@
   "js.editor.variants_hint": "Cada tarjeta se puede editar y preparar por separado. Elige con cuál trabajar.",
   "js.editor.variant": "Contenido {n}",
   "js.editor.text": "Texto del post",
-  "js.editor.preview_note": "Vista previa orientativa del contenido. Aquí no se muestran estadísticas reales de me gusta ni comentarios."
+  "js.editor.preview_note": "Vista previa orientativa del contenido. Aquí no se muestran estadísticas reales de me gusta ni comentarios.",
+  "js.calendar.reset": "Restablecer filtros",
+  "js.calendar.filter_hint": "Los filtros de estado y red se aplican a los envíos de posts.",
+  "js.calendar.legend": "Tipos de eventos",
+  "js.calendar.action": "Acción de estrategia",
+  "js.calendar.publication": "Envío del post",
+  "js.calendar.action_readonly": "Esta acción no se puede mover desde el calendario: está terminada, en ejecución o vinculada a contenido.",
+  "js.calendar.actions_hint": "Estos eventos ejecutan acciones de las estrategias. Los filtros de red y publicación no se aplican aquí.",
+  "js.calendar.filtered_hint": "Filtro de publicación activo: las acciones de estrategia están ocultas. Restablece los filtros o elige Acciones.",
+  "js.connections.owned": "Gestionada por este workspace",
+  "js.connections.shared": "Compartida con este workspace",
+  "js.connections.configure": "Configurar Buffer",
+  "js.connections.other": "Otros conectores",
+  "js.connections.title": "Entender tus conexiones",
+  "js.connections.hint": "Para cambiar una clave o canal de Buffer, usa Configurar Buffer junto a la cuenta. Las cuentas compartidas las gestiona su workspace propietario.",
+  "js.connections.access_hint": "Activa indica que la cuenta está habilitada en este workspace; no garantiza que su conexión externa siga siendo válida. Revisa los avisos de token y cuota."
 }

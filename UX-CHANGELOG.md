@@ -79,3 +79,20 @@ Fichiers principaux : `templates/posts/view.html`, `static/js/post-editor.js`, `
 Vérifications : 29 tests Python ciblés réussis ; tests DOM du contrôleur complet et des vrais Toolbar et Stepper Syncfusion ; sept langues, navigation, apparition de nouveaux contenus, indépendance des aperçus, repli sans SDK et garde-fous de sauvegarde. Les tests de navigation n’effectuent aucun appel API et les simulations de parcours ne publient aucun post. La recette visuelle dans un navigateur réel reste à effectuer avant publication.
 
 Suite du plan : calendrier et comptes connectés, en conservant le Scheduler dans la stratégie.
+
+## 6 novembre 2026 — Lot 4 : calendrier et comptes connectés
+
+- Scheduler conservé dans la stratégie. Libellés explicites « Action de stratégie » et « Envoi du post », légende et explication des événements non déplaçables.
+- Portée des filtres rendue visible : ils concernent les publications ; lorsqu’ils masquent les actions, un message l’indique et une réinitialisation est disponible.
+- Ajout de **Syncfusion DateTimePicker EJ2 35.1.37** dans les détails. La date reste transmise comme heure locale du compte pour la conversion serveur existante ; l’input natif reste disponible en repli.
+- Focus sur le détail au clic et retour au calendrier à la fermeture. Les actualisations ne déplacent pas le focus.
+- Intégration des corrections de navigation de stratégie préparées auparavant : onglets clavier/RTL, relations ARIA et restauration de l’onglet Posts par lien direct.
+- Configuration Buffer visible près du nom du compte pour son workspace propriétaire, sans doublon dans le menu. Les comptes partagés ne reçoivent pas cette action ; activation, partage et suppression conservent leurs règles.
+- Identifiant technique remplacé par une indication de propriété/partage ; connecteurs indisponibles regroupés dans une section secondaire. Le statut d’accès « Actif » n’est plus présenté comme la preuve d’une connexion externe valide.
+- Aucun endpoint métier, flux OAuth, token, règle de publication ou autorisation modifié. Aucune nouvelle route de calendrier global.
+
+Fichiers principaux : calendrier partiel/JS/CSS, templates et styles des comptes, navigation JS des stratégies et tests dédiés. Composants Syncfusion : Schedule existant et DateTimePicker ajouté, version inchangée.
+
+Vérifications : 31 tests Python ciblés réussis ; vrais Scheduler et DateTimePicker dans les sept langues, navigateur UTC et compte America/New_York, conservation des révisions précises, filtres, confirmations et verrouillage des publications déjà envoyées. Tests DOM des onglets et de l’ouverture Buffer : bon compte/canal, clé non exposée, conservation d’une clé vide en édition, aucun appel API. La recette visuelle dans un navigateur réel reste à effectuer avant publication.
+
+Suite du plan : listes et recherche cohérentes, puis périmètre de bibliothèque médias et analyses réelles selon les données disponibles.

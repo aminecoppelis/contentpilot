@@ -99,5 +99,5 @@
 {% endblock %}
 {% block scripts %}
 {% if strategies|selectattr('status', 'equalto', 'generating')|list %}<script>setTimeout(function(){window.location.reload();},4000);</script>{% endif %}
-<script src="/static/js/strategies.js?v=36-syncfusion"></script>
+<script src="/static/js/strategies.js?v=37-accessible-tabs"></script>
 {% endblock %}

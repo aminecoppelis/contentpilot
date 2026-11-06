@@ -92,3 +92,5 @@
 .quotaCell.isWarning .quotaValue{color:#b45309}
 .quotaCell.isDanger .quotaValue{color:#b91c1c}
 .quotaCell.isUnavailable .quotaValue,.quotaCell.isDisabled .quotaValue{color:#64748b}
+
+.networkConnectionGuide{padding:16px 20px;margin:16px 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md)}.has-sidebar .networkConnectionGuide h2{margin:0;font-size:15px;color:var(--ink)}.networkConnectionGuide p{margin:8px 0 0;font-size:12px;line-height:1.6;color:var(--ink-2)}.has-sidebar .networkConnectionAction{display:inline-flex;align-items:center;min-height:36px;margin-top:8px;padding:6px 10px;border:1px solid var(--line-2);border-radius:var(--radius-sm);background:var(--brand-tint);color:var(--brand);font:inherit;font-size:12px;cursor:pointer}.networkConnectionAction:focus-visible,.networkComingSoon summary:focus-visible{outline:2px solid var(--brand);outline-offset:3px}.networkComingSoon{align-self:center}.networkComingSoon summary{padding:10px;font-size:12px;color:var(--ink-2);cursor:pointer}.networkComingSoonCards{display:grid;gap:10px;padding:12px}.networkComingSoonCards .channelCard{width:100%}

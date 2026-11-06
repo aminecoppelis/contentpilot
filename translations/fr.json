@@ -1316,5 +1316,20 @@
   "js.editor.variants_hint": "Chaque carte peut être modifiée et préparée séparément. Choisissez celle sur laquelle travailler.",
   "js.editor.variant": "Contenu {n}",
   "js.editor.text": "Texte du post",
-  "js.editor.preview_note": "Aperçu indicatif du contenu. Les statistiques réelles de likes et de commentaires ne sont pas affichées ici."
+  "js.editor.preview_note": "Aperçu indicatif du contenu. Les statistiques réelles de likes et de commentaires ne sont pas affichées ici.",
+  "js.calendar.reset": "Réinitialiser les filtres",
+  "js.calendar.filter_hint": "Les filtres de statut et de réseau concernent les envois de posts.",
+  "js.calendar.legend": "Types d’événements",
+  "js.calendar.action": "Action de stratégie",
+  "js.calendar.publication": "Envoi du post",
+  "js.calendar.action_readonly": "Cette action n’est pas déplaçable depuis le calendrier : elle est terminée, en cours ou déjà liée à un contenu.",
+  "js.calendar.actions_hint": "Ces événements exécutent les actions des stratégies. Les filtres de réseau et de publication ne s’appliquent pas ici.",
+  "js.calendar.filtered_hint": "Filtre de publication actif : les actions de stratégie sont masquées. Réinitialisez les filtres ou choisissez Actions pour les retrouver.",
+  "js.connections.owned": "Géré par ce workspace",
+  "js.connections.shared": "Partagé avec ce workspace",
+  "js.connections.configure": "Configurer Buffer",
+  "js.connections.other": "Autres connecteurs",
+  "js.connections.title": "Comprendre vos connexions",
+  "js.connections.hint": "Pour modifier une clé ou un canal Buffer, utilisez Configurer Buffer à côté du compte. Les comptes partagés sont gérés par leur workspace propriétaire.",
+  "js.connections.access_hint": "Actif indique que le compte est utilisable dans ce workspace ; cela ne garantit pas que sa connexion externe est encore valide. Les avertissements de jeton et de quota restent à vérifier."
 }

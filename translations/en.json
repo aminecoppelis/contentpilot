@@ -1316,5 +1316,20 @@
   "js.editor.variants_hint": "Each card can be edited and prepared separately. Choose the one you want to work on.",
   "js.editor.variant": "Content {n}",
   "js.editor.text": "Post text",
-  "js.editor.preview_note": "Illustrative content preview. Actual like and comment statistics are not shown here."
+  "js.editor.preview_note": "Illustrative content preview. Actual like and comment statistics are not shown here.",
+  "js.calendar.reset": "Reset filters",
+  "js.calendar.filter_hint": "Status and network filters apply to post sends.",
+  "js.calendar.legend": "Event types",
+  "js.calendar.action": "Strategy action",
+  "js.calendar.publication": "Post send",
+  "js.calendar.action_readonly": "This action cannot be moved from the calendar: it is completed, running, or already linked to content.",
+  "js.calendar.actions_hint": "These events execute strategy actions. Network and publication filters do not apply here.",
+  "js.calendar.filtered_hint": "Publication filter active: strategy actions are hidden. Reset filters or choose Actions to find them.",
+  "js.connections.owned": "Managed by this workspace",
+  "js.connections.shared": "Shared with this workspace",
+  "js.connections.configure": "Configure Buffer",
+  "js.connections.other": "Other connectors",
+  "js.connections.title": "Understand your connections",
+  "js.connections.hint": "To change a Buffer key or channel, use Configure Buffer next to the account. Shared accounts are managed by their owning workspace.",
+  "js.connections.access_hint": "Active means the account is enabled in this workspace; it does not guarantee its external connection is still valid. Review token and quota warnings."
 }

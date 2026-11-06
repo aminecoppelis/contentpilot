@@ -1,7 +1,8 @@
 {% for a in accounts %}
 <tr id="network-{{ a.id }}">
   <td><b data-name>{{ a.display_name or a.platform_account_name or a.provider_label }}</b>
-    <div class="mini">{{ a.id }}</div>
+    <div class="mini">{{ t('js.connections.owned') if a.is_owner_workspace else t('js.connections.shared') }}</div>
+    {% if a.provider == 'buffer' and a.is_owner_workspace %}<button type="button" class="networkConnectionAction" data-buffer-edit="1" data-id="{{ a.id }}" data-name="{{ a.display_name or '' }}" data-channel="{{ a.external_account_id or '' }}" onclick="window.openBufferModalFromButton(this);return false">{{ t('js.connections.configure') }}</button>{% endif %}
     {% if a.token_expired %}<div class="mini tokenWarn" title="{{ t('net.token_expired_title') }}">{{ t('net.token_expired') }}</div>
     {% elif a.token_temporary %}<div class="mini tokenWarn" title="{{ t('net.token_temp_title') }}">{{ t('net.token_temp', date=a.token_expires_label) }}</div>{% endif %}
     {% if a.is_legacy_instagram %}<div class="mini capabilityBad">{{ t('net.legacy_instagram') }}</div>{% endif %}
@@ -39,9 +40,7 @@
             onclick='toggleNetworkKebab({{ a.id|tojson }},this,event)'>⋮</button>
     <div class="networkKebabMenu" id="network-menu-{{ a.id }}" role="menu">
       {% if a.provider == 'buffer' and a.is_owner_workspace %}
-        <button type="button" role="menuitem" data-buffer-edit="1" data-id="{{ a.id }}"
-                data-name="{{ a.display_name or '' }}" data-channel="{{ a.external_account_id or '' }}"
-                onclick="window.openBufferModalFromButton(this);return false">{{ t('common.edit') }}</button>
+        {# Buffer configuration is exposed next to the account name. #}
       {% elif a.reconnect_url %}
         <a role="menuitem" href="{{ a.reconnect_url }}">{{ t('net.reconnect') }}</a>
       {% elif a.is_owner_workspace %}

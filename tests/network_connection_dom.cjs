@@ -1,0 +1,16 @@
+const fs=require('fs'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
+const {JSDOM}=require('../.cache/grid-tests/node_modules/jsdom');
+execFileSync('venv/Scripts/python.exe',['-m','tests.render_network_fixture']);
+const dom=new JSDOM(fs.readFileSync('.cache/networks-fixture.html','utf8'),{url:'http://localhost/app/networks',runScripts:'outside-only'}),w=dom.window;
+w.t=k=>k;w.__networkPaging={has_more:false};w.__shareTargets=[];let calls=0;w.fetch=async()=>{calls++;throw new Error('No API calls expected');};
+w.eval(fs.readFileSync('static/js/networks.js','utf8'));
+const button=w.document.querySelector('.networkConnectionAction');assert(button);
+w.openBufferModalFromButton(button);
+assert(w.document.getElementById('bufferModal').classList.contains('isOpen'));
+assert.equal(w.document.getElementById('bufferAccountId').value,'account-id');
+assert.equal(w.document.getElementById('bufferChannelId').value,'channel-id');
+assert.equal(w.document.getElementById('bufferDisplayName').value,'Example account');
+assert.equal(w.document.getElementById('bufferApiKey').value,'','Existing API key never exposed');
+assert.equal(w.document.getElementById('bufferApiKey').required,false,'Blank key preserves the current key when editing');
+w.closeBufferModal();assert(!w.document.getElementById('bufferModal').classList.contains('isOpen'));assert.equal(calls,0);
+w.close();console.log('PASS: visible Buffer configuration opens original modal with account/channel, preserves key semantics and makes no API calls');

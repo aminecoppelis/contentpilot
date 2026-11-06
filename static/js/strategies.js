@@ -239,25 +239,44 @@
   var tabButtons=Array.prototype.slice.call(document.querySelectorAll('[data-strategy-tab]'));
   var panels=Array.prototype.slice.call(document.querySelectorAll('[data-strategy-panel]'));
   function showTab(name){
+    if(!tabButtons.some(function(btn){return btn.getAttribute('data-strategy-tab')===name;}))return;
     tabButtons.forEach(function(btn){
       var active=btn.getAttribute('data-strategy-tab')===name;
       btn.classList.toggle('active',active);
       btn.setAttribute('aria-selected',active?'true':'false');
+      btn.tabIndex=active?0:-1;
+      btn.setAttribute('role','tab');
+      btn.id='strategy-tab-'+btn.getAttribute('data-strategy-tab');
+      btn.setAttribute('aria-controls','strategy-panel-'+btn.getAttribute('data-strategy-tab'));
     });
     panels.forEach(function(panel){
       var active=panel.getAttribute('data-strategy-panel')===name;
       panel.classList.toggle('active',active);
       panel.hidden=!active;
+      panel.id='strategy-panel-'+panel.getAttribute('data-strategy-panel');
+      panel.setAttribute('role','tabpanel');
+      panel.setAttribute('aria-labelledby','strategy-tab-'+panel.getAttribute('data-strategy-panel'));
+      panel.tabIndex=0;
     });
     try{history.replaceState(null,'',window.location.pathname+window.location.search+'#'+name);}catch(e){}
   }
   tabButtons.forEach(function(btn){btn.addEventListener('click',function(){showTab(btn.getAttribute('data-strategy-tab'));});});
+  tabButtons.forEach(function(btn,index){btn.addEventListener('keydown',function(event){
+    var target=index,rtl=document.documentElement.dir==='rtl';
+    if(event.key==='ArrowRight')target=(index+(rtl?-1:1)+tabButtons.length)%tabButtons.length;
+    else if(event.key==='ArrowLeft')target=(index+(rtl?1:-1)+tabButtons.length)%tabButtons.length;
+    else if(event.key==='Home')target=0;
+    else if(event.key==='End')target=tabButtons.length-1;
+    else return;
+    event.preventDefault();showTab(tabButtons[target].getAttribute('data-strategy-tab'));tabButtons[target].focus();
+  });});
   document.querySelectorAll('[data-strategy-jump]').forEach(function(btn){btn.addEventListener('click',function(){showTab(btn.getAttribute('data-strategy-jump'));var tabs=document.querySelector('.strategyDetailTabs');if(tabs)tabs.scrollIntoView({behavior:'smooth',block:'nearest'});});});
   var initialHash=String(window.location.hash||'').replace(/^#/,'');
   var hasCalendarQuery=false;
   try{hasCalendarQuery=new URL(window.location.href).searchParams.has('cal_view');}catch(e){}
   if(hasCalendarQuery)showTab('calendar');
-  else if(['summary','actions','calendar'].indexOf(initialHash)!==-1)showTab(initialHash);
+  else if(['summary','actions','posts','calendar'].indexOf(initialHash)!==-1)showTab(initialHash);
+  else showTab('summary');
 
   document.querySelectorAll('.strategyStatusBtn[data-strategy-action],.strategyScheduleBtn[data-strategy-action]').forEach(function(btn){
     btn.addEventListener('click',async function(){

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ selected.title or t('sd.default_title') }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css?v=41-published-media-preview"><link rel="stylesheet" href="/static/css/strategy-calendar-clean.css?v=1"><link rel="stylesheet" href="/static/css/publication-calendar.css?v=5-soft-colors">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/strategies.css?v=41-published-media-preview"><link rel="stylesheet" href="/static/css/strategy-calendar-clean.css?v=1"><link rel="stylesheet" href="/static/css/publication-calendar.css?v=6-explicit-events">{% endblock %}
 {% block content %}
 <section class="strategyWorkspace" data-strategy-id="{{ selected.id }}">
   <div class="strategyWorkspaceHeader">
@@ -309,7 +309,7 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="/static/js/strategies.js?v=35-action-execution-copy"></script>
+<script src="/static/js/strategies.js?v=37-accessible-tabs"></script>
 <script>window.__PG_PUBLICATION_CALENDAR={timezone:{{ auth_user.timezone|tojson }},strategyId:{{ selected.id|tojson }}};</script>
-<script src="/static/js/publication-calendar.js?v=5-skeleton"></script>
+<script src="/static/js/publication-calendar.js?v=6-datetime-picker"></script>
 {% endblock %}
