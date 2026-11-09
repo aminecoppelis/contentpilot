@@ -60,7 +60,7 @@
     <div class="top">
       <div><span class="num">{{ t('js.editor.variant', n=loop.index) }}</span>
         <span class="format" id="format-{{ i }}">{{ idea.recommended_format }}</span></div>
-      <span class="status {{ idea.status_cls }}" id="status-{{ i }}">{{ t('post.status.scheduled') if idea.is_scheduled else idea.status_label }}</span>
+      <span class="status {{ 'ok' if idea.is_published else idea.status_cls }}" id="status-{{ i }}">{{ t('posts.publication.published') if idea.is_published else (t('post.status.scheduled') if idea.is_scheduled else idea.status_label) }}</span>
     </div>
 
     {% if not read_only %}{% include "posts/_flow_navigation.html" %}{% endif %}
@@ -244,7 +244,7 @@
         </span>{% endif %}
         <button type="button" id="share-btn-{{ i }}" onclick="shareIdea({{ i }}, this)" class="edit"
                 title="{{ t('pv.act.share.title') }}">{{ t('pv.act.share') }}</button>
-        {% if not read_only %}<button type="button" id="publish-btn-{{ i }}" onclick="openPublishModal({{ i }})" class="ok"
+        {% if not read_only and not idea.is_published %}<button type="button" id="publish-btn-{{ i }}" onclick="openPublishModal({{ i }})" class="ok"
                 title="{{ t('js.post_flow.publish_options') }}">{{ t('js.post_flow.publish_options') }}</button>{% endif %}
       </div>
     </div>
@@ -292,7 +292,7 @@ window.__PG_VIEW = {
   backgroundJobs: {{ background_jobs | tojson }}
 };
 </script>
-<script src="/static/js/consultation.js?v=32-independent-preview"></script>
+<script src="/static/js/consultation.js?v=33-published-guard"></script>
 <script src="/static/js/post-flow.js?v=3-editor-journey"></script>
 <script src="/static/js/post-editor.js?v=1"></script>
 {% endblock %}

@@ -22,7 +22,9 @@ async function run(locale,sdk=true){
  assert.equal(scrolled,'card-1');assert.equal(w.document.activeElement.id,'card-1');
  const card=w.document.createElement('article');card.id='card-2';card.dataset.ideaIndex='2';card.dataset.ideaId='idea-2';card.innerHTML='<h2 id="post-title-2">New content</h2>';w.document.getElementById('posts-view-grid').appendChild(card);await wait(50);
  if(sdk)assert.equal(host.ej2_instances[0].items.length,3);else assert.equal(w.document.querySelectorAll('#postVariantFallback a').length,3);
- assert.equal(calls.length,0,'Navigation and preview mode changes never call generation or publication APIs');
+ w.__PG_VIEW.ideas[0].is_published=true;await w.openPublishModal(0);
+ assert(!w.document.getElementById('publishModal').classList.contains('isOpen'),'Published post cannot reopen the publish modal');
+ assert.equal(calls.length,0,'Navigation, preview changes and a published post never call generation or publication APIs');
  w.dispatchEvent(new w.Event('pagehide'));w.close();
 }
 (async()=>{for(const locale of ['fr','en','de','es','it','ru','ar'])await run(locale);await run('fr',false);console.log('PASS: full editor controller, real Toolbar, seven locales, per-card preview modes, scoped persistence, variant navigation, dynamically added cards and native fallback; no API calls');})().catch(e=>{console.error(e.stack?.slice(0,1800));process.exit(1);});

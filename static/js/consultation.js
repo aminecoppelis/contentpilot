@@ -996,6 +996,7 @@
     if(wrap)wrap.style.display=mode==='scheduled'?'block':'none';if(dt)dt.required=mode==='scheduled';if(mode)clearPublishFieldError('publishModeWrap','publishModeError');if(mode!=='scheduled')clearPublishFieldError('publishDateWrap','publishDateError');updatePublishTypeVisibility();if(confirm){confirm.disabled=false;confirm.textContent=mode==='scheduled'?window.t('pm.pub.when.schedule'):window.t('pv.act.publish');}
   }
   window.openPublishModal=async function(i){
+    if(ideaAt(i).is_published)return;
     currentPublishIndex=i;var idea=ideaAt(i),modal=document.getElementById('publishModal');
     document.getElementById('publishModalIdea').innerHTML='<b>#'+(Number(i)+1)+' · '+esc(idea.ready_post&&idea.ready_post.title||idea.title||window.t('js.post'))+'</b><br><span>'+esc(idea.recommended_format||window.t('js.pub.format_undefined'))+'</span>';
     document.getElementById('publishPostPreview').value=(postBox(i)||{}).value||'';var preview=document.getElementById('publishMediaPreview');if(preview)preview.innerHTML=publishMediaPreviewHtml(idea,i);

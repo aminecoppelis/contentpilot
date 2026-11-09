@@ -4,13 +4,13 @@ from jinja2 import ChoiceLoader, DictLoader, Environment, FileSystemLoader
 from app.i18n import SUPPORTED_LOCALES, translate
 
 
-def render(locale, platform='linkedin', read_only=False):
+def render(locale, platform='linkedin', read_only=False, published=False):
     env = Environment(loader=ChoiceLoader([
         DictLoader({'base.html': '{% block content %}{% endblock %}'}), FileSystemLoader('templates')]))
     ideas = [dict(idea_id=f'idea-{i}', full_text=f'Example text {i}', post_title=f'Example {i}',
                   title=f'Example {i}', recommended_format='Post', status_cls='generated',
                   status_label='Draft', media=[], scores_list=[], seo_keywords=[],
-                  is_published=False, is_scheduled=False) for i in range(2)]
+                  is_published=published, is_scheduled=False) for i in range(2)]
     return env.get_template('posts/view.html').render(
         t=lambda key, **kwargs: translate(key, locale, **kwargs),
         ideas=ideas, ideas_json=ideas, request_id='request', page_heading='Example subject',

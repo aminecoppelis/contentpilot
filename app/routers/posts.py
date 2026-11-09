@@ -502,6 +502,9 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
         rows = await conn.fetch(
             """
             SELECT pi.id::text AS idea_id, pi.title, pi.hook, pi.summary, pi.status,
+                   EXISTS(SELECT 1 FROM public.post_publications pp
+                          WHERE pp.idea_id=pi.id AND pp.workspace_id=pi.workspace_id
+                            AND pp.status='published') AS has_published_publication,
                    pi.recommended_format, pi.scores, pi.seo_keywords, pi.raw_idea,
                    pi.use_macaron,
                    pi.request_id::text, pr.subject AS request_subject,
@@ -574,7 +577,7 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
             ),
             "recommended_format": d["recommended_format"] or "",
             "status_cls": cls, "status_label": label,
-            "is_published": status == "published", "is_scheduled": status == "scheduled",
+            "is_published": status == "published" or bool(d.get("has_published_publication")), "is_scheduled": status == "scheduled",
             "is_approved": status in {"approved", "validated"},
             "awaiting_validation": status == "ready_for_review",
             "business_problem_solved": raw_idea.get("business_problem_solved", ""),
@@ -657,6 +660,7 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
                 "selected_media_id": i["selected_media_id"], "media": i["media"],
                 "media_count": i["media_count"],
                 "use_macaron": i.get("use_macaron", True),
+                "is_published": i["is_published"],
             }
             for i in ideas
         ],

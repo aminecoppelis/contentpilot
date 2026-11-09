@@ -9,6 +9,26 @@ from app.routers.posts import _add_publication_statuses, _publication_badges
 
 
 class PublicationStatusTests(unittest.IsolatedAsyncioTestCase):
+    async def test_editor_uses_successful_send_even_if_idea_still_approved(self):
+        from types import SimpleNamespace
+        from starlette.requests import Request
+        from app.routers.posts import get_post_view
+        row = dict(idea_id='idea', version_id='version', title='Post', hook='', summary='',
+                   raw_idea={}, scores={}, media=[], status='approved', has_published_publication=True,
+                   post_text='Example text', hashtags=[], cta='', recommended_format='Post',
+                   seo_keywords=[], media_count=0, request_subject='Subject')
+        conn = AsyncMock()
+        conn.fetch.side_effect = [[row], []]
+        pool = MagicMock()
+        pool.acquire.return_value.__aenter__ = AsyncMock(return_value=conn)
+        request = Request({'type': 'http', 'path': '/app/posts/view', 'query_string': b'', 'headers': []})
+        with patch('app.routers.posts.get_pool', return_value=pool), patch(
+                'app.routers.posts.templates.TemplateResponse', side_effect=lambda request, name, context: context):
+            context = await get_post_view(request, user=SimpleNamespace(active_workspace_id='workspace', timezone='Europe/Paris'))
+        self.assertTrue(context['ideas'][0]['is_published'])
+        self.assertTrue(context['ideas_json'][0]['is_published'])
+        self.assertIn('pp.workspace_id=pi.workspace_id', conn.fetch.call_args_list[0].args[0])
+
     async def test_visible_requests_share_one_workspace_scoped_query(self):
         conn = AsyncMock()
         conn.fetch.return_value = [

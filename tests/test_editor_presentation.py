@@ -4,6 +4,13 @@ from app.i18n import SUPPORTED_LOCALES
 
 
 class EditorPresentationTests(unittest.TestCase):
+    def test_published_content_does_not_offer_publication_in_any_language(self):
+        for locale in SUPPORTED_LOCALES:
+            html = render(locale, published=True)
+            self.assertNotIn('id="publish-btn-', html)
+            self.assertNotIn('id="validation-actions-', html)
+            self.assertIn('data-flow-step="2"', html)
+
     def test_preview_contains_no_simulated_engagement(self):
         for locale in SUPPORTED_LOCALES:
             for platform in ['linkedin', 'facebook', 'instagram']:

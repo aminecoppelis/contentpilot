@@ -96,3 +96,10 @@ Fichiers principaux : calendrier partiel/JS/CSS, templates et styles des comptes
 Vérifications : 31 tests Python ciblés réussis ; vrais Scheduler et DateTimePicker dans les sept langues, navigateur UTC et compte America/New_York, conservation des révisions précises, filtres, confirmations et verrouillage des publications déjà envoyées. Tests DOM des onglets et de l’ouverture Buffer : bon compte/canal, clé non exposée, conservation d’une clé vide en édition, aucun appel API. La recette visuelle dans un navigateur réel reste à effectuer avant publication.
 
 Suite du plan : listes et recherche cohérentes, puis périmètre de bibliothèque médias et analyses réelles selon les données disponibles.
+
+## 9 novembre 2026 — Correction : action de publication sur un contenu déjà publié
+
+- Bouton « Publier ou programmer » masqué pour un contenu déjà publié, sans retirer cette action aux autres contenus du même sujet.
+- La fiche consulte les publications réussies du contenu dans le workspace, même si son statut de validation est encore « approved ». Badge, étape initiale et actions affichées restent ainsi cohérents avec l’envoi réel.
+- Garde côté interface empêchant l’ouverture de la modale pour ce contenu ; aucune modification de l’API de publication.
+- Vérifications : huit tests Python ciblés réussis, dont le décalage entre statut de validation et publication ; test DOM de l’éditeur dans les sept langues avec ouverture de modale bloquée et aucun appel API.
