@@ -103,3 +103,9 @@ Suite du plan : listes et recherche cohérentes, puis périmètre de bibliothèq
 - La fiche consulte les publications réussies du contenu dans le workspace, même si son statut de validation est encore « approved ». Badge, étape initiale et actions affichées restent ainsi cohérents avec l’envoi réel.
 - Garde côté interface empêchant l’ouverture de la modale pour ce contenu ; aucune modification de l’API de publication.
 - Vérifications : huit tests Python ciblés réussis, dont le décalage entre statut de validation et publication ; test DOM de l’éditeur dans les sept langues avec ouverture de modale bloquée et aucun appel API.
+
+## 10 novembre 2026 — Connexion Instagram réactivée
+
+- Carte « Connecter Instagram » visible directement dans Mes réseaux, retirée des connecteurs indisponibles et reliée à la route OAuth Instagram existante.
+- Retrait de l’état désactivé et du libellé « bientôt disponible » pour Instagram. Les traductions existantes sont conservées.
+- Aucun changement aux identifiants, autorisations, paramètres Meta ou callbacks OAuth ; aucune connexion externe n’a été déclenchée pendant la vérification.
