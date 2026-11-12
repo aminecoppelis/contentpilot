@@ -1,5 +1,11 @@
 # UX changelog
 
+## 12 novembre 2026 — Double génération du même média
+
+- Cause identifiée dans le code : la route synchrone créait une image `pending/running` sans verrou de worker. Le worker pouvait la réclamer pendant l'appel au fournisseur et produire une deuxième image sous le même identifiant, avec écrasement du fichier et des URL.
+- La génération depuis l'éditeur réserve désormais le média en `processing/running`, hors de la file du worker. Le worker ne reprend une ligne `running` que si son verrou explicite a expiré ; un verrou absent ne vaut plus expiration.
+- Vérifications : 13 tests Python réussis, dont la réservation pendant l'appel fournisseur, la persistance du premier résultat et les conditions de reprise du worker. Aucun appel réel de génération ou de publication. Les tests ne prouvent pas quel résultat a été écrasé en production et ne restaurent pas un fichier déjà remplacé.
+
 ## 6 novembre 2026 — Étape 1 : audit, en attente de validation
 
 - Ajout de `UX-AUDIT.md` : inventaire des écrans, stack Syncfusion, constats ergonomiques, priorités et plan par lots.

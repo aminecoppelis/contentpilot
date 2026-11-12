@@ -279,11 +279,13 @@ async def post_ideas_image(payload: dict = Body(...), user=Depends(require_auth)
     if macaron_position not in VALID_POSITIONS:
         macaron_position = user.macaron_position or "bottom-right"
 
+    # This request owns generation until completion. 'pending' would let the
+    # background image worker generate again and overwrite this media's file.
     async with pool.acquire() as conn:
         media_row = await conn.fetchrow(
             """
             INSERT INTO public.post_media (idea_id, workspace_id, media_type, source, status, generation_status, prompt)
-            VALUES ($1::uuid,$2::uuid,'image','ai_generated','pending','running',$3)
+            VALUES ($1::uuid,$2::uuid,'image','ai_generated','processing','running',$3)
             RETURNING id::text AS media_id
             """,
             idea_id, user.active_workspace_id, prompt,

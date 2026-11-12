@@ -15,6 +15,8 @@ MAX_ATTEMPTS = 3
 
 
 async def _claim(media_id: str | None = None):
+    # A running row without a worker lease belongs to a foreground request.
+    # Only queued/retry jobs or an explicitly expired worker lease are ours.
     pool = get_pool()
     async with pool.acquire() as conn:
         async with conn.transaction():
@@ -27,7 +29,8 @@ async def _claim(media_id: str | None = None):
                     AND ($1::uuid IS NULL OR id=$1::uuid)
                     AND (
                       generation_status IN ('queued','retry')
-                      OR (generation_status='running' AND COALESCE(NULLIF(metadata->>'image_lock_until','')::timestamptz,now()-interval '1 second') < now())
+                      OR (generation_status='running'
+                          AND NULLIF(metadata->>'image_lock_until','')::timestamptz < now())
                     )
                     AND COALESCE(NULLIF(metadata->>'image_attempt_count','')::int,0) < $2
                   ORDER BY created_at ASC
