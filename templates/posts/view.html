@@ -68,7 +68,7 @@
       {% set preview_platform = (origin_context.platform if origin_context and origin_context.platform else 'linkedin')|lower %}
       {% set preview_account = origin_context.account_name if origin_context and origin_context.account_name else 'ContentPilot' %}
       {% set selected_preview_media = idea.media | selectattr('id', 'equalto', idea.selected_media_id) | list %}
-      {% set preview_media = selected_preview_media[0] if selected_preview_media else (idea.media[0] if idea.media else none) %}
+      {% set preview_media = selected_preview_media[0] if selected_preview_media else none %}
       <div class="postReadyHeader">
         <div><span class="label">{{ t('pv.ready_label') }}</span>
           <h2 id="post-title-{{ i }}">{{ idea.post_title }}</h2></div>
@@ -108,7 +108,7 @@
           <div class="lpPost">
             <div class="lpAuthor"><span class="lpAvatar">{{ preview_account[:1]|upper }}</span><div><b>{{ preview_account }}</b><small>{{ t('pv.preview.now') }}</small></div><i>•••</i></div>
             {% if preview_platform != 'instagram' %}<div class="lpText" data-live-post-text="{{ i }}">{{ idea.full_text }}</div>{% endif %}
-            <div class="lpMedia {{ 'empty' if not preview_media }}" data-live-post-media="{{ i }}">{% if preview_media %}{% if preview_media.media_type == 'video' %}<video muted playsinline preload="metadata" src="/app/posts/media-video.mp4?media_id={{ preview_media.id }}"></video>{% else %}<img src="/app/posts/media-image.jpg?media_id={{ preview_media.id }}" alt="{{ t('pv.preview.media_alt') }}">{% endif %}{% else %}<span>{{ t('pv.preview.media_empty') }}</span>{% endif %}</div>
+            <div class="lpMedia {{ 'empty' if not preview_media }}" data-live-post-media="{{ i }}">{% if preview_media %}{% if preview_media.media_type == 'video' %}<video muted playsinline preload="metadata" src="/app/posts/media-video.mp4?media_id={{ preview_media.id }}"></video>{% else %}<img src="{{ preview_media.url or preview_media.public_url or preview_media.external_url or ('/app/posts/media-image.jpg?media_id=' ~ preview_media.id) }}" alt="{{ t('pv.preview.media_alt') }}">{% endif %}{% else %}<span>{{ t('pv.preview.media_empty') }}</span>{% endif %}</div>
             {% if preview_platform == 'instagram' %}<div class="lpIgActions"><span>♡　◯　⌁</span><span>▢</span></div><div class="lpText lpIgText"><b>{{ preview_account }}</b> <span data-live-post-text="{{ i }}">{{ idea.full_text }}</span></div>{% else %}<div class="lpActions"><span>👍<small>{{ t('pv.preview.like') }}</small></span><span>◯<small>{{ t('pv.preview.comment') }}</small></span><span>↗<small>{{ t('pv.preview.share') }}</small></span></div>{% endif %}
           </div><div class="lpHome"></div>
         </div></div>
@@ -292,7 +292,7 @@ window.__PG_VIEW = {
   backgroundJobs: {{ background_jobs | tojson }}
 };
 </script>
-<script src="/static/js/consultation.js?v=34-visible-instagram"></script>
+<script src="/static/js/consultation.js?v=35-selected-media-preview"></script>
 <script src="/static/js/post-flow.js?v=3-editor-journey"></script>
 <script src="/static/js/post-editor.js?v=1"></script>
 {% endblock %}

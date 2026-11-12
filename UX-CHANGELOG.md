@@ -116,3 +116,10 @@ Suite du plan : listes et recherche cohérentes, puis périmètre de bibliothèq
 - Le compte reste désormais visible, avec une option désactivée et la raison « Aucun média n’est sélectionné ». Les types compatibles deviennent sélectionnables avec l’image ou la vidéo choisie.
 - La sélection d’un média reste obligatoire pour Instagram. Les filtres d’accès au workspace, les comptes inactifs et les anciens connecteurs non pris en charge ne sont pas modifiés.
 - Test DOM des six cas Instagram direct/Buffer × sans média/image/vidéo, avec lecture de comptes simulée et aucune publication.
+
+
+## 12 novembre 2026 - Aperçu du média choisi
+
+- L'aperçu utilise uniquement le média choisi et la même source que la galerie.
+- Les anciennes réponses de galerie ne remplacent plus une nouvelle sélection. Les choix successifs sont enregistrés dans leur ordre.
+- Tests : scénarios DOM de chargement retardé, clics successifs et erreur ; régression Instagram ; huit tests Python réussis. Aucun appel réel de publication.
