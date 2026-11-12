@@ -865,6 +865,7 @@
     var provider=String(account&&account.provider||'').toLowerCase(),connection=publishAccountConnectionProvider(account),isBuffer=provider==='buffer'||connection==='buffer';
     var directInstagram=platform==='instagram'&&provider==='instagram'&&(connection==='meta_direct'||!connection),targets=[];
     function add(type){targets.push({platform:platform,account:account,contentType:type,disabled:false,disabledReason:''});}
+    function missingMedia(){targets.push({platform:platform,account:account,contentType:'standard',disabled:true,disabledReason:window.t('js.pub.media_none_selected')});}
     if(platform==='linkedin'){
       if(isBuffer)add('standard');
       return targets;
@@ -875,6 +876,7 @@
       if(directInstagram){
         if(hasImage){add('standard');add('story');}
         else if(hasVideo){add('reel');add('story');}
+        else missingMedia();
         return targets;
       }
       // Buffer : image = Post/Story ; vidéo = Post/Reel/Story.
@@ -884,7 +886,7 @@
           var base=inferPublishContentTypeFromAccount(platform,account);
           var order=base==='reel'?['reel','standard','story']:(base==='story'?['story','standard','reel']:['standard','reel','story']);
           order.forEach(add);
-        }
+        }else missingMedia();
         return targets;
       }
       return targets;
@@ -930,7 +932,7 @@
     prunePublishSelections();
     var platforms=['linkedin','facebook','instagram'];
     var availablePlatforms=platforms.filter(function(p){return activePublishAccounts(p).length>0;});
-    var allTargets=[];availablePlatforms.forEach(function(p){activePublishAccounts(p).forEach(function(a){publishTargetsForAccount(p,a).filter(function(t){return !t.disabled;}).forEach(function(t){allTargets.push(t);});});});
+    var allTargets=[];availablePlatforms.forEach(function(p){activePublishAccounts(p).forEach(function(a){publishTargetsForAccount(p,a).forEach(function(t){allTargets.push(t);});});});
     if(!allTargets.length){var selected=selectedPublishMedia(ideaAt(currentPublishIndex));var msg=selected?window.t('js.pub.no_match_media'):window.t('js.pub.no_match_instagram');mount.innerHTML='<div class="publishAccountError">'+esc(msg)+' <a href="'+WEBHOOK_BASE+'/networks" target="_blank" rel="noopener">'+window.t('js.pub.manage_networks')+'</a></div>';updatePublishTypeVisibility();return;}
     mount.innerHTML='<div class="publishAccountMultiBox"><div class="publishAccountTags"></div><input class="publishAccountSearch" type="text" autocomplete="off" placeholder="'+window.t('js.pub.search_placeholder')+'"></div><div class="publishAccountDropdown"></div><div class="publishAccountHidden"></div><div class="publishAccountSummary"></div>';
     var box=mount.querySelector('.publishAccountMultiBox'),tags=mount.querySelector('.publishAccountTags'),search=mount.querySelector('.publishAccountSearch'),dropdown=mount.querySelector('.publishAccountDropdown'),hidden=mount.querySelector('.publishAccountHidden'),summary=mount.querySelector('.publishAccountSummary');
@@ -944,7 +946,7 @@
         var remove=document.createElement('button');remove.type='button';remove.setAttribute('aria-label',window.t('js.remove')+' '+target.accountName);remove.textContent='×';remove.addEventListener('click',function(e){e.stopPropagation();publishTargetSelectionState.delete(publishTargetKey(target.platform,target.contentType,target.socialAccountId));selectionChanged();});tag.appendChild(text);tag.appendChild(remove);tags.appendChild(tag);
         var input=document.createElement('input');input.type='checkbox';input.hidden=true;input.checked=true;input.name='publishTarget';input.value=JSON.stringify({platform:target.platform,contentType:target.contentType,socialAccountId:target.socialAccountId});hidden.appendChild(input);
       });
-      summary.textContent=targets.length?window.t('js.pub.n_selected',{count:targets.length})+' · '+targets.map(function(t){return publishPlatformLabel(t.platform)+' '+publishContentTypeLabel(t.contentType);}).join(', '):window.t('js.pub.none_selected_summary');
+      summary.textContent=targets.length?window.t('js.pub.n_selected',{count:targets.length})+' · '+targets.map(function(t){return publishPlatformLabel(t.platform)+' '+publishContentTypeLabel(t.contentType);}).join(', '):window.t(allTargets.every(function(target){return target.disabled;})?'js.pub.media_none_selected':'js.pub.none_selected_summary');
       drawOptions();
     }
     function drawOptions(){

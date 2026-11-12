@@ -109,3 +109,10 @@ Suite du plan : listes et recherche cohérentes, puis périmètre de bibliothèq
 - Carte « Connecter Instagram » visible directement dans Mes réseaux, retirée des connecteurs indisponibles et reliée à la route OAuth Instagram existante.
 - Retrait de l’état désactivé et du libellé « bientôt disponible » pour Instagram. Les traductions existantes sont conservées.
 - Aucun changement aux identifiants, autorisations, paramètres Meta ou callbacks OAuth ; aucune connexion externe n’a été déclenchée pendant la vérification.
+
+## 12 novembre 2026 — Visibilité des comptes Instagram avant sélection d’un média
+
+- Correction d’un cas identifié dans le sélecteur de publication : un compte Instagram connecté disparaissait lorsqu’aucun média n’était sélectionné.
+- Le compte reste désormais visible, avec une option désactivée et la raison « Aucun média n’est sélectionné ». Les types compatibles deviennent sélectionnables avec l’image ou la vidéo choisie.
+- La sélection d’un média reste obligatoire pour Instagram. Les filtres d’accès au workspace, les comptes inactifs et les anciens connecteurs non pris en charge ne sont pas modifiés.
+- Test DOM des six cas Instagram direct/Buffer × sans média/image/vidéo, avec lecture de comptes simulée et aucune publication.
