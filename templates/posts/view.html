@@ -104,7 +104,7 @@
         <p class="postPreviewNotice">{{ t('js.editor.preview_note') }}</p>
         <div class="lpPhone lp-{{ preview_platform }}"><div class="lpScreen">
           <div class="lpStatus"><b>9:41</b><i></i><span>● ◔ ▰</span></div>
-          <div class="lpAppbar">{% if preview_platform == 'instagram' %}<b>Instagram</b><span>♡　✉</span>{% elif preview_platform == 'facebook' %}<b class="lpFacebook">facebook</b><span>⌕　☰</span>{% else %}<b class="lpLinkedin">in</b><span>⌕　✉</span>{% endif %}</div>
+          <div class="lpAppbar">{% include 'partials/preview_brand.html' %}<span>⌕　✉</span></div>
           <div class="lpPost">
             <div class="lpAuthor"><span class="lpAvatar">{{ preview_account[:1]|upper }}</span><div><b>{{ preview_account }}</b><small>{{ t('pv.preview.now') }}</small></div><i>•••</i></div>
             {% if preview_platform != 'instagram' %}<div class="lpText" data-live-post-text="{{ i }}">{{ idea.full_text }}</div>{% endif %}

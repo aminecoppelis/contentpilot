@@ -222,9 +222,7 @@
       <article class="strategyPhoneItem">
         <div class="spPhone p-{{ preview_type }}"><div class="spScreen">
           <div class="spStatus"><b>9:41</b><span class="spIsland"></span><span class="spSignals">▴▴▴ 5G <i></i></span></div>
-          {% if preview_type == 'li' %}<div class="spTopbar"><b class="spLinkedinLogo">in</b><span class="spSearch">{{ t('pv.preview.search') }}</span><span>○</span></div>
-          {% elif preview_type == 'fb' %}<div class="spTopbar"><b class="spFacebookLogo">facebook</b><span>⊕ &nbsp; ⌕ &nbsp; ○</span></div>
-          {% else %}<div class="spTopbar"><b class="spInstagramLogo">Instagram</b><span>♡ &nbsp; ✉</span></div>{% endif %}
+          <div class="spTopbar">{% include 'partials/preview_brand.html' %}<span class="spSearch">{{ t('pv.preview.search') }}</span><span>○</span></div>
           <div class="spFeed"><article class="spPost sp-{{ preview_type }}">
             <div class="spPostHead">{% if preview_type == 'ig' %}<span class="spAvatarRing"><i>{{ (selected.account_label or 'C')[:1]|upper }}</i></span>{% else %}<span class="spAvatar">{{ (selected.account_label or 'C')[:1]|upper }}</span>{% endif %}<span class="spWho"><b>{{ selected.account_label or 'Votre compte' }}</b><small>{% if preview_type == 'li' %}{{ selected.platform_label }} · {% endif %}2 h · ◎</small></span><strong>···</strong></div>
             {% if preview_type != 'ig' %}<div class="spText">{{ (post.post_text or post.action_title or 'Le contenu sera disponible après sa génération.')[:620] }}{% if (post.post_text or '')|length > 620 %}…{% endif %}</div>{% endif %}
