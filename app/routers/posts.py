@@ -550,6 +550,14 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
             user.active_workspace_id, request_id, idea_id,
         )
 
+    async with pool.acquire() as conn:
+        publication_jobs = await conn.fetch('''SELECT pp.id::text AS publication_id, pp.idea_id::text
+            FROM public.post_publications pp JOIN public.post_ideas pi ON pi.id=pp.idea_id AND pi.workspace_id=pp.workspace_id
+            WHERE pp.workspace_id=$1::uuid AND pp.platform='youtube' AND pi.deleted_at IS NULL
+              AND (pp.status IN ('processing','failed','published') OR (pp.status='scheduled' AND pp.scheduled_at<=now()))
+              AND ($2::uuid IS NULL OR pi.request_id=$2::uuid) AND ($3::uuid IS NULL OR pi.id=$3::uuid)
+            ORDER BY pp.created_at ASC''', user.active_workspace_id, request_id, idea_id) if not request_deleted else []
+
     def _load(value, default):
         if value is None:
             return default
@@ -648,6 +656,7 @@ async def get_post_view(request: Request, idea_id: str | None = None, request_id
         "generated_count": generated_count,
         "expected_count": expected_count,
         "background_jobs": background_jobs,
+        "publication_jobs": [dict(job) for job in publication_jobs],
         "origin_context": dict(origin_context) if origin_context else None,
         "ideas_json": [
             {

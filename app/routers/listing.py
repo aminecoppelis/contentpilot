@@ -204,6 +204,9 @@ SELECT
     COALESCE(pp.updated_at, pp.created_at) AS last_modified_at,
     COALESCE(pp.error_message, pp.response ->> 'error') AS error_message,
     pp.published_at,
+    pp.response->'provider_response'->>'url' AS video_url,
+    pp.response->'provider_response'->>'id' AS video_id,
+    pp.upload_bytes, pp.upload_total_bytes,
     pi.title AS idea_title,
     cu.first_name || ' ' || cu.last_name AS created_by_name,
     pu.first_name || ' ' || pu.last_name AS published_by_name

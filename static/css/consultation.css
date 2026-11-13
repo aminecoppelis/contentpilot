@@ -318,3 +318,10 @@ body{background:#f7f8fa}
 .pixabaySuggestions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
 .pixabaySuggestions button[aria-pressed="true"]{background:#2563eb!important;border-color:#2563eb!important;color:#fff!important}
 #pixabayStatus{margin-top:12px}#pixabayStatus.error{color:#b91c1c}
+#youtubeFields{margin-top:16px;padding:16px;border:1px solid var(--line,#e2e8f0);border-radius:14px;min-width:0}
+#youtubeFields[hidden]{display:none!important}
+#youtubeFields legend{font-weight:800;padding:0 6px}
+#youtubeFields label{display:block;margin:12px 0 6px;font-weight:600}
+#youtubeFields input,#youtubeFields select,#youtubeFields textarea{box-sizing:border-box;width:100%;max-width:100%;font:inherit}
+#youtubeFields p,[data-youtube-progress] p{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+[data-youtube-progress] progress{width:100%;accent-color:var(--brand,#3b82f6)}

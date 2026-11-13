@@ -18,7 +18,7 @@ class PublicationStatusTests(unittest.IsolatedAsyncioTestCase):
                    post_text='Example text', hashtags=[], cta='', recommended_format='Post',
                    seo_keywords=[], media_count=0, request_subject='Subject')
         conn = AsyncMock()
-        conn.fetch.side_effect = [[row], []]
+        conn.fetch.side_effect = [[row], [], []]
         pool = MagicMock()
         pool.acquire.return_value.__aenter__ = AsyncMock(return_value=conn)
         request = Request({'type': 'http', 'path': '/app/posts/view', 'query_string': b'', 'headers': []})

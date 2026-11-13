@@ -34,7 +34,7 @@ def _media_type_from_row(row) -> str:
     return value if value in ("image", "video") else "none"
 
 
-async def _claim_batch(limit: int = 5) -> list[dict]:
+async def _claim_batch(limit: int = 1) -> list[dict]:
     """Réserve atomiquement les publications arrivées à échéance."""
     pool = get_pool()
     async with pool.acquire() as conn:
@@ -52,8 +52,9 @@ async def _claim_batch(limit: int = 5) -> list[dict]:
               ON pr.id=pi.request_id AND pr.workspace_id=pp.workspace_id AND pr.deleted_at IS NULL
             LEFT JOIN public.post_media pm
               ON pm.id=pp.media_id AND pm.workspace_id=pp.workspace_id AND pm.idea_id=pp.idea_id
-            WHERE pp.status='scheduled'
-              AND pp.publish_mode='scheduled'
+            WHERE (pp.status='scheduled'
+                   OR (pp.platform='youtube' AND pp.status='processing' AND pp.updated_at < now()-interval '15 minutes'))
+              AND (pp.publish_mode='scheduled' OR pp.platform='youtube')
               AND pp.scheduled_at IS NOT NULL
               AND pp.scheduled_at <= now()
             ORDER BY pp.scheduled_at ASC, pp.created_at ASC, pp.id ASC
@@ -70,7 +71,7 @@ async def _claim_batch(limit: int = 5) -> list[dict]:
                 SET status='processing', updated_at=now(),
                     response=COALESCE(response,'{}'::jsonb)
                       || jsonb_build_object('worker_claimed_at',now()::text)
-                WHERE id = ANY($1::uuid[]) AND status='scheduled'
+                WHERE id = ANY($1::uuid[])
                 """,
                 ids,
             )
@@ -111,7 +112,21 @@ async def _restore_idea_status(conn, idea_id: str, workspace_id: str) -> None:
 
 
 async def run_publication_cycle(limit: int = 5) -> dict:
-    jobs = await _claim_batch(limit=limit)
+    # Claim just before execution: large uploads must not hold a batch of
+    # unstarted jobs whose leases could expire in another worker process.
+    totals = {'stage': 'idle', 'processed': 0, 'published': 0, 'failed': 0}
+    for _ in range(limit):
+        result = await _run_claimed_publication()
+        if result['stage'] == 'idle':
+            break
+        totals['stage'] = 'processed'
+        for key in ('processed', 'published', 'failed'):
+            totals[key] += result.get(key, 0)
+    return totals
+
+
+async def _run_claimed_publication() -> dict:
+    jobs = await _claim_batch(limit=1)
     if not jobs:
         return {"stage": "idle", "processed": 0}
 
@@ -166,11 +181,22 @@ async def run_publication_cycle(limit: int = 5) -> dict:
                     publish_content_type=publication_type,
                     # La date est gérée par notre worker : Buffer doit publier maintenant.
                     buffer_schedule=False,
+                    **({'youtube_context': {'publication_id': publication_id, 'workspace_id': workspace_id,
+                                           'options': base_response.get('youtube') or {}}} if platform == 'youtube' else {}),
                 )
                 error_message = outcome_error(outcome)
+                if platform == 'youtube' and not error_message and not outcome.get('id'):
+                    error_message = 'YouTube n’a pas confirmé l’identifiant de la vidéo.'
         except Exception as exc:  # noqa: BLE001
+            from app.services.youtube import UploadInterrupted
+            if isinstance(exc, UploadInterrupted):
+                async with pool.acquire() as conn:
+                    await conn.execute("""UPDATE public.post_publications SET status='scheduled',
+                        scheduled_at=now()+interval '1 minute', error_message=$3, updated_at=now()
+                        WHERE id=$1::uuid AND workspace_id=$2::uuid""", publication_id, workspace_id, str(exc))
+                continue
             logger.exception("Publication programmée %s impossible", publication_id)
-            error_message = str(exc)
+            error_message = str(exc) or "La publication a échoué sans confirmation du fournisseur."
             outcome = {"error": error_message}
 
         status = "failed" if error_message else "published"

@@ -244,8 +244,14 @@ async def publish_buffer(account, platform: str, media_type: str, media_url: str
 
 async def publish_to_account(account, *, platform: str, media_type: str, media_url: str | None,
                              text: str, publish_content_type: str = "standard",
-                             buffer_schedule: bool = False, scheduled_at: str | None = None) -> dict:
+                             buffer_schedule: bool = False, scheduled_at: str | None = None,
+                             youtube_context: dict | None = None) -> dict:
     provider = str(account["provider"] or "").lower()
+    if provider == 'youtube':
+        from app.services.youtube import upload
+        if not youtube_context or platform != 'youtube' or media_type != 'video':
+            return {'error': 'Contexte de publication vidéo YouTube manquant.'}
+        return await upload(account, youtube_context['publication_id'], youtube_context['workspace_id'], youtube_context['options'])
     if provider == "facebook":
         return await publish_facebook(account, media_type, media_url, text)
     if provider == "instagram":

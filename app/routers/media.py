@@ -495,7 +495,30 @@ async def get_video_status(media_id: str, user=Depends(require_auth)):
 
 
 MAX_IMAGE_UPLOAD = 20 * 1024 * 1024
-MAX_VIDEO_UPLOAD = 100 * 1024 * 1024
+
+
+async def _store_uploaded_video(file, media_id, head, suffix):
+    """Stream large videos to disk with bounded memory and cleanup on failure."""
+    from app.config import get_settings
+    from app.services.media_storage import media_dir
+    destination = media_dir() / (media_id + suffix)
+    temporary = destination.with_suffix(suffix + '.upload')
+    limit = get_settings().media_video_upload_max_bytes
+    size = 0
+    try:
+        with temporary.open('xb') as output:
+            chunk = head
+            while chunk:
+                size += len(chunk)
+                if size > limit:
+                    raise ValueError(f'Vidéo trop volumineuse ({limit // (1024 * 1024)} Mo maximum).')
+                output.write(chunk)
+                chunk = await file.read(1024 * 1024)
+        temporary.replace(destination)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
+    return str(destination), destination.name, size
 
 
 def _uploaded_media_format(data: bytes) -> tuple[str, str, str]:
@@ -530,17 +553,20 @@ async def post_ideas_media_upload(idea_id: str = Form(...), file: UploadFile = F
     try:
         if not await _idea_exists(idea_id, user.active_workspace_id):
             return JSONResponse({"success": False, "message": "Idée introuvable."}, status_code=404)
-        data = await file.read(MAX_VIDEO_UPLOAD + 1)
-        if len(data) > MAX_VIDEO_UPLOAD:
-            return JSONResponse({"success": False, "message": "Vidéo trop volumineuse (100 Mo maximum)."}, status_code=413)
+        head = await file.read(64)
+        media_id = str(uuid4())
         try:
-            media_type, suffix, mime = _uploaded_media_format(data)
+            if len(head) >= 12 and head[4:8] == b'ftyp':
+                media_type, suffix, mime = _uploaded_media_format(head)
+                file_path, file_name, size_bytes = await _store_uploaded_video(file, media_id, head, suffix)
+            else:
+                data = head + await file.read(MAX_IMAGE_UPLOAD + 1)
+                if len(data) > MAX_IMAGE_UPLOAD:
+                    return JSONResponse({'success': False, 'message': 'Photo trop volumineuse (20 Mo maximum).'}, status_code=413)
+                media_type, suffix, mime = _uploaded_media_format(data)
+                file_path, file_name, size_bytes = _write_media(media_id, data, suffix)
         except ValueError as exc:
             return JSONResponse({"success": False, "message": str(exc)}, status_code=422)
-        if media_type == "image" and len(data) > MAX_IMAGE_UPLOAD:
-            return JSONResponse({"success": False, "message": "Photo trop volumineuse (20 Mo maximum)."}, status_code=413)
-        media_id = str(uuid4())
-        file_path, file_name, size_bytes = _write_media(media_id, data, suffix)
         url = _public_url(file_name)
         try:
             async with get_pool().acquire() as conn:

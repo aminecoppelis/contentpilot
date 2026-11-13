@@ -60,6 +60,7 @@ def accessible_account_query(*, active_only: bool = False) -> str:
         WHERE a.id = $1::uuid
           AND a.deleted_at IS NULL
           AND (a.workspace_id = $2::uuid OR saw.account_id IS NOT NULL)
+          AND (a.provider <> 'youtube' OR a.workspace_id = $2::uuid)
           AND (saw.revoked_at IS NULL OR saw.account_id IS NULL)
           {active_clause}
         LIMIT 1

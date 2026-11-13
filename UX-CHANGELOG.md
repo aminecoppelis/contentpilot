@@ -1,5 +1,13 @@
 # UX changelog
 
+## 13 novembre 2026 — Publication YouTube
+
+- Ajout de YouTube dans Mes réseaux et dans la fenêtre de publication partagée, avec choix Vidéo/Short, titre, description, tags, visibilité et public enfant. Libellés dans les sept langues.
+- OAuth Google avec state lié à la session, à l'utilisateur et à l'entreprise ; jetons chiffrés et renouvelés côté serveur, révocation depuis le menu du compte. Les connexions YouTube ne peuvent pas être partagées entre entreprises.
+- Upload resumable par blocs, reprise sur les octets confirmés par Google et sauvegarde chiffrée de la session. Réutilisation du worker et de l'historique existants pour les envois immédiats et programmés. Aucun statut publié sans identifiant confirmé par YouTube.
+- Import vidéo en flux vers le disque, limité à 2 Gio par défaut. Migration additive `015_youtube.sql`, configuration et première publication documentées dans `docs/YOUTUBE.md`.
+- Vérification automatisée : tests Python et DOM locaux, avec réponses fournisseur contrôlées. Aucune autorisation Google ni publication réelle effectuée ; la recette réelle et l'application de la migration au déploiement restent explicites dans la documentation.
+
 ## 12 novembre 2026 — Double génération du même média
 
 - Cause identifiée dans le code : la route synchrone créait une image `pending/running` sans verrou de worker. Le worker pouvait la réclamer pendant l'appel au fournisseur et produire une deuxième image sous le même identifiant, avec écrasement du fichier et des URL.

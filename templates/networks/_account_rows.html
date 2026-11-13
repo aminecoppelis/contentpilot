@@ -8,7 +8,7 @@
     {% if a.is_legacy_instagram %}<div class="mini capabilityBad">{{ t('net.legacy_instagram') }}</div>{% endif %}
   </td>
   <td><span class="badge providerBadge {{ a.provider }}">
-    {% if a.provider in ['facebook', 'instagram', 'buffer'] %}<img class="providerBadgeLogo" src="/static/img/{{ a.provider }}.svg" alt="" width="17" height="17" aria-hidden="true">{% endif %}
+    {% if a.provider in ['facebook', 'instagram', 'buffer', 'youtube'] %}<img class="providerBadgeLogo" src="/static/img/{{ a.provider }}.svg" alt="" width="17" height="17" aria-hidden="true">{% endif %}
     <span>{{ a.provider_label }}</span>
   </span></td>
   <td>{{ a.account_label or '-' }}</td>
@@ -51,8 +51,8 @@
         <button type="button" role="menuitem" onclick='removeNetworkFromWorkspace({{ a.id|tojson }},this)'>{{ t('net.remove_from_workspace') }}</button>
       {% endif %}
       {% if a.is_owner_workspace %}
-        <button type="button" role="menuitem" onclick='openShareNetworkModal({{ a.id|tojson }},{{ (a.display_name or a.external_username or a.provider)|tojson }})'>{{ t('net.share_modal.submit') }}</button>
-        <button type="button" role="menuitem" class="danger" onclick='deleteNetwork({{ a.id|tojson }},this)'>{{ t('common.delete') }}</button>
+        {% if a.provider != 'youtube' %}<button type="button" role="menuitem" onclick='openShareNetworkModal({{ a.id|tojson }},{{ (a.display_name or a.external_username or a.provider)|tojson }})'>{{ t('net.share_modal.submit') }}</button>{% endif %}
+        <button type="button" role="menuitem" class="danger" onclick='deleteNetwork({{ a.id|tojson }},this)'>{{ t('yt.disconnect') if a.provider == 'youtube' else t('common.delete') }}</button>
       {% endif %}
     </div>
   </div></div></td>

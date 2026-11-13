@@ -299,6 +299,15 @@
         <textarea id="publishPostPreview" class="copyBox" readonly style="min-height:180px;margin-top:8px"></textarea>
       </div>
 
+      <fieldset id="youtubeFields" class="field" hidden>
+        <legend>YouTube</legend>
+        <label for="youtubeTitle">{{ t('yt.title') }}</label><input id="youtubeTitle" type="text" maxlength="100" style="width:100%">
+        <label for="youtubeDescription">{{ t('yt.description') }}</label><textarea id="youtubeDescription" class="copyBox" style="width:100%;min-height:100px"></textarea>
+        <label for="youtubeTags">{{ t('yt.tags') }}</label><input id="youtubeTags" type="text" style="width:100%">
+        <label for="youtubePrivacy">{{ t('yt.privacy') }}</label><select id="youtubePrivacy"><option value="private">{{ t('yt.private') }}</option><option value="unlisted">{{ t('yt.unlisted') }}</option><option value="public">{{ t('yt.public') }}</option></select>
+        <label for="youtubeKids">{{ t('yt.kids') }}</label><select id="youtubeKids"><option value="">{{ t('yt.choose') }}</option><option value="no">{{ t('yt.kids_no') }}</option><option value="yes">{{ t('yt.kids_yes') }}</option></select>
+        <p>{{ t('yt.short_hint') }}</p>
+      </fieldset>
       <div id="publishModalStatus" class="modalStatus"></div>
       <div class="modalActions">
         <button type="button" class="modalCancel" onclick="window.closePublishModal()">{{ t('common.cancel') }}</button>

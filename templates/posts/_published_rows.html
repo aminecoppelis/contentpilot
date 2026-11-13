@@ -2,7 +2,7 @@
 {% for r in rows %}
 <tr>
   <td class="publishedBulkCell"><input class="publishedRowCheck" type="checkbox" value="{{ r.publication_id }}" aria-label="{{ t('published.select_row') }}"></td>
-  <td><b>{{ r.idea_title or '' }}</b><div class="mini">{{ r.publication_id }}</div></td>
+  <td><b>{{ r.idea_title or '' }}</b><div class="mini">{{ r.publication_id }}</div>{% if r.platform == 'youtube' and r.status == 'published' and r.video_id %}<a href="https://www.youtube.com/watch?v={{ r.video_id|urlencode }}" target="_blank" rel="noopener noreferrer">{{ t('yt.open') }}</a>{% elif r.platform == 'youtube' and r.upload_total_bytes %}<div>{{ r.upload_bytes }} / {{ r.upload_total_bytes }} {{ t('yt.bytes') }}</div>{% endif %}</td>
   <td>{{ published_network_logo(r.platform, r.platform_label, r.publication_type or '') }}</td>
   <td><span class="status {{ r.status }}">{{ t('post.status.scheduled') if r.status == 'scheduled' else r.status_label }}</span></td>
   <td>{{ r.last_modified }}</td>

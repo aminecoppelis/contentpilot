@@ -12,6 +12,7 @@
     </div>
   </div>
   <div class="channelConnectors">
+    <a class="channelCard" href="/app/networks/youtube/connect"><span class="channelIcon" aria-hidden="true"><img src="/static/img/youtube.svg" alt="" width="30" height="24"></span><span><b>{{ t('yt.connect') }}</b><small>{{ t('yt.connect_hint') }}</small></span></a>
     <details class="networkComingSoon"><summary>{{ t('js.connections.other') }}</summary><div class="networkComingSoonCards">
     {% if auth_user.is_super_admin %}
     <button type="button" class="channelCard channelCardDisabled" disabled aria-disabled="true">

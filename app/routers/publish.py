@@ -41,6 +41,8 @@ def _parse_scheduled_at(value: str | None, timezone_name: str) -> datetime | Non
 
 def _infer_content_type(platform: str, media_type: str, target: dict, raw_idea: dict) -> str:
     explicit = str(target.get("publish_content_type") or "").strip().lower()
+    if platform == 'youtube':
+        return 'short' if explicit == 'short' else 'standard'
     if explicit in ("standard", "post"):
         return "standard"
     if explicit in ("reel", "story"):
@@ -65,6 +67,11 @@ def _validate_publication_combination(provider: str, platform: str, content_type
     connection = str((metadata or {}).get("connection_provider") or "").strip().lower()
     service = str((metadata or {}).get("service") or "").strip().lower()
     is_buffer = provider == "buffer" or connection == "buffer"
+
+    if provider == 'youtube':
+        if platform != 'youtube' or content_type not in ('standard', 'short') or media_type != 'video':
+            return 'YouTube accepte une vidéo classique ou un Short, avec un fichier vidéo sélectionné.'
+        return None
 
     if is_buffer:
         if platform == "linkedin":
@@ -185,6 +192,7 @@ async def post_ideas_publish(payload: dict = Body(...), user=Depends(require_aut
                   ON saw.account_id=a.id AND saw.workspace_id=$2::uuid
                 WHERE a.id = ANY($1::uuid[]) AND a.deleted_at IS NULL AND a.is_active=true
                   AND (a.workspace_id=$2::uuid OR saw.account_id IS NOT NULL)
+                  AND (a.provider <> 'youtube' OR a.workspace_id=$2::uuid)
                   AND (
                     CASE WHEN saw.account_id IS NULL AND a.workspace_id=$2::uuid THEN true
                          ELSE COALESCE(saw.is_active,false) AND saw.revoked_at IS NULL END
@@ -238,7 +246,18 @@ async def post_ideas_publish(payload: dict = Body(...), user=Depends(require_aut
             "published_by_user_id": user.id,
             "user_timezone": user.timezone,
         }
+        if transport_provider == 'youtube':
+            from app.services.youtube import video_options, YouTubeError
+            try:
+                base_response['youtube'] = video_options(target.get('youtube'))
+            except YouTubeError as exc:
+                results.append({'account_id': account_id, 'platform': platform, 'status': 'failed', 'error': str(exc)})
+                continue
         initial_status = "scheduled" if publish_mode == "scheduled" else "processing"
+        if transport_provider == 'youtube':
+            # Immediate uploads use the same durable publication worker as schedules.
+            initial_status = 'scheduled'
+            scheduled_dt = scheduled_dt or datetime.now(timezone.utc)
         async with pool.acquire() as conn:
             pub_row = await conn.fetchrow(
                 """
@@ -247,6 +266,7 @@ async def post_ideas_publish(payload: dict = Body(...), user=Depends(require_aut
                     status, publish_mode, scheduled_at, post_text_snapshot, hashtags_snapshot,
                     media_url_snapshot, response
                 ) VALUES ($1::uuid,$2::uuid,$3::uuid,$4::uuid,$5,$6,$7,$8,$9,$10,$11,$12,$13::jsonb)
+                ON CONFLICT DO NOTHING
                 RETURNING id::text AS publication_id
                 """,
                 idea_id, user.active_workspace_id, version_id, media_id, platform, content_type,
@@ -254,7 +274,16 @@ async def post_ideas_publish(payload: dict = Body(...), user=Depends(require_aut
                 json.dumps(base_response),
             )
 
+        if pub_row is None:
+            results.append({'account_id': account_id, 'platform': platform, 'status': 'failed',
+                            'error': 'Un envoi est déjà en cours ou programmé pour cette chaîne. Consultez les publications.'})
+            continue
         publication_id = pub_row["publication_id"]
+        if transport_provider == 'youtube' and publish_mode != 'scheduled':
+            results.append({'account_id': account_id, 'provider': transport_provider, 'platform': platform,
+                            'status': 'processing',
+                            'publication_id': publication_id, 'scheduled_at': scheduled_dt.isoformat()})
+            continue
         if publish_mode == "scheduled":
             async with pool.acquire() as conn:
               async with conn.transaction():
@@ -316,7 +345,7 @@ async def post_ideas_publish(payload: dict = Body(...), user=Depends(require_aut
         results.append({"account_id": account_id, "provider": transport_provider, "platform": platform,
                         "status": status, "publication_id": publication_id, "error": error_message})
 
-    has_success = any(r.get("status") in ("published", "scheduled") for r in results)
+    has_success = any(r.get("status") in ("published", "scheduled", "processing") for r in results)
     failures = [r for r in results if r.get("status") == "failed"]
     message = "Publication traitée."
     if has_success and failures:

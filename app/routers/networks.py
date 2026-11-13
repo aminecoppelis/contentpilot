@@ -69,6 +69,7 @@ def _network_access_list_sql(*, cursor: bool = False) -> str:
           ON saw.account_id = a.id AND saw.workspace_id = $1::uuid
         WHERE a.deleted_at IS NULL
           AND (a.workspace_id = $1::uuid OR saw.account_id IS NOT NULL)
+          AND (a.provider <> 'youtube' OR a.workspace_id = $1::uuid)
           AND (saw.revoked_at IS NULL OR saw.account_id IS NULL)
           {cursor_clause}
     """
@@ -104,6 +105,8 @@ def _decorate_network_rows(rows, timezone_name: str, now=None) -> list[dict]:
             label = "Instagram via Facebook · ancien/non utilisé"
         elif provider == "facebook":
             label = "Facebook · Meta"
+        elif provider == "youtube":
+            label = "YouTube · Google"
         else:
             label = "Meta"
         d["provider_label"] = label
@@ -113,7 +116,7 @@ def _decorate_network_rows(rows, timezone_name: str, now=None) -> list[dict]:
         account_parts = [username if provider == "buffer" else (f"@{username}" if username else ""), d.get("platform_account_name") or ""]
         d["account_label"] = " · ".join(part for part in account_parts if part)
         d["reconnect_url"] = "" if (is_buffer or not d.get("is_owner_workspace")) else (
-            f"/app/networks/{'facebook' if provider == 'facebook' else 'instagram'}/connect?force_reconnect=1")
+            f"/app/networks/{provider if provider in ('facebook', 'youtube') else 'instagram'}/connect?force_reconnect=1")
         expires = d.get("token_expires_at")
         d["token_expired"] = bool(provider == "instagram" and expires and expires <= now)
         d["token_temporary"] = bool(provider == "instagram" and not d["token_expired"] and d.get("token_mode") in ("short_lived", "short_lived_pending_exchange"))
@@ -153,7 +156,7 @@ async def get_networks(request: Request, user=Depends(require_auth),
     ]
 
     # Notice OAuth (port exact du bloc `notice` de l'original)
-    provider_label = {"facebook": "Facebook", "instagram": "Instagram", "buffer": "Buffer"}.get(
+    provider_label = {"facebook": "Facebook", "instagram": "Instagram", "buffer": "Buffer", "youtube": "YouTube"}.get(
         (oauth_provider or "").lower(), "réseau")
     notice, notice_type = "", "ok"
     if connected:
@@ -559,6 +562,14 @@ async def post_networks_action(payload: dict = Body(...), user=Depends(require_a
                     "success": False, "error": "FORBIDDEN",
                     "message": "Ce compte appartient à un autre workspace. Utilise « Retirer de ce workspace ».",
                 }, status_code=403)
+            if account['provider'] == 'youtube':
+                from app.services.youtube import revoke, YouTubeError
+                try:
+                    await revoke(account)
+                except YouTubeError as exc:
+                    return JSONResponse({'success': False, 'message': str(exc)}, status_code=502)
+                await conn.execute("UPDATE public.app_social_accounts SET token_ciphertext=NULL, token_expires_at=NULL WHERE id=$1::uuid AND workspace_id=$2::uuid",
+                                   account_id, user.active_workspace_id)
             await conn.execute(
                 "UPDATE public.app_social_accounts SET deleted_at=now(), is_active=false, updated_at=now() "
                 "WHERE id=$1::uuid", account_id)
@@ -590,6 +601,8 @@ async def post_networks_action(payload: dict = Body(...), user=Depends(require_a
             return JSONResponse({"success": True, "message": "Compte retiré de ce workspace."})
 
         if action == "share":
+            if account['provider'] == 'youtube':
+                return JSONResponse({'success': False, 'message': 'Une chaîne YouTube doit être connectée séparément dans chaque entreprise.'}, status_code=403)
             if not account["is_owner_workspace"]:
                 return JSONResponse({
                     "success": False, "error": "FORBIDDEN",
@@ -1026,6 +1039,7 @@ async def get_publishable_accounts(user=Depends(require_auth)):
               ON saw.account_id=a.id AND saw.workspace_id=$1::uuid
             WHERE a.deleted_at IS NULL AND a.is_active=true
               AND (a.workspace_id=$1::uuid OR saw.account_id IS NOT NULL)
+              AND (a.provider <> 'youtube' OR a.workspace_id=$1::uuid)
               AND (
                 CASE
                   WHEN saw.account_id IS NULL AND a.workspace_id=$1::uuid THEN true
