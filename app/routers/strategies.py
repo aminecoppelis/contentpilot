@@ -51,7 +51,7 @@ STRATEGY_STATUS_LABELS = {
     "generating": "Génération en cours", "draft": "Brouillon",
     "active": "Active", "failed": "Échec", "archived": "Archivée",
 }
-PLATFORM_LABELS = {"facebook": "Facebook", "instagram": "Instagram", "buffer": "Buffer", "linkedin": "LinkedIn"}
+PLATFORM_LABELS = {"facebook": "Facebook", "instagram": "Instagram", "buffer": "Buffer", "linkedin": "LinkedIn", "youtube": "YouTube"}
 
 STRATEGY_LANGUAGES = {
     "fr": "French",

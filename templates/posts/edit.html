@@ -69,6 +69,7 @@ function uniqValues(values){
   return Array.from(new Set((values||[]).map(function(v){return String(v||'').trim();}).filter(Boolean)));
 }
 function createMultiSelect(cfg){
+  function optionLabel(value){return cfg.name==='preferred_formats'&&value==='YouTube · Vidéo'?'YouTube · '+{{ t('yt.video')|tojson }}:value;}
   const mount=document.getElementById(cfg.mountId); if(!mount)return;
   const state={options:uniqValues(cfg.options),selected:uniqValues(cfg.selected)};
   mount.innerHTML='<div class="msBox"><div class="msTags"></div><input class="msSearch" type="text" autocomplete="off"></div><div class="msOptions"></div><div class="msHidden"></div>';
@@ -85,7 +86,7 @@ function createMultiSelect(cfg){
     state.selected.forEach(function(v){
       const t=document.createElement('span');t.className='msTag';
       t.innerHTML='<span></span><button type="button">×</button>';
-      t.querySelector('span').textContent=v;
+      t.querySelector('span').textContent=optionLabel(v);
       t.querySelector('button').onclick=function(e){e.stopPropagation();rem(v);};
       tagsEl.appendChild(t);
       const h=document.createElement('input');h.type='hidden';h.name=cfg.name;h.value=v;hidden.appendChild(h);
@@ -95,9 +96,9 @@ function createMultiSelect(cfg){
   function renderOpts(){
     const q=input.value.trim().toLowerCase();opts.innerHTML='';
     state.options.filter(function(o){
-      return !state.selected.includes(o)&&(!q||o.toLowerCase().includes(q));
+      return !state.selected.includes(o)&&(!q||(o+' '+optionLabel(o)).toLowerCase().includes(q));
     }).slice(0,12).forEach(function(o){
-      const b=document.createElement('button');b.type='button';b.className='msOption';b.textContent=o;
+      const b=document.createElement('button');b.type='button';b.className='msOption';b.textContent=optionLabel(o);
       b.onmousedown=function(e){e.preventDefault();add(o);input.focus();};opts.appendChild(b);
     });
     if(q&&!state.options.map(function(o){return o.toLowerCase();}).includes(q)

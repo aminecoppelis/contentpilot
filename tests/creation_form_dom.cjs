@@ -27,11 +27,20 @@ async function run(locale,sdk=true){
  const domainInput=domains.querySelector('.msSearch');assert.equal(w.document.activeElement,domainInput);
  domainInput.value='Solar';domainInput.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
  const company=form.querySelector('[name=company]');company.value='Example company';
+ const formats=w.document.getElementById('preferredFormatsSelect'),formatSearch=formats.querySelector('.msSearch');
+ formatSearch.value='YouTube';formatSearch.dispatchEvent(new w.Event('input',{bubbles:true}));
+ assert(formats.textContent.includes('YouTube · '+catalog['yt.video']),'Video label follows the interface language');
+ for(let n=0;n<2;n++){
+  const choice=[...formats.querySelectorAll('.msOption')].find(b=>b.textContent.includes('YouTube ·'));
+  assert(choice,'Both YouTube formats are available');choice.dispatchEvent(new w.MouseEvent('mousedown',{bubbles:true,cancelable:true}));
+  formatSearch.value='YouTube';formatSearch.dispatchEvent(new w.Event('input',{bubbles:true}));
+ }
  form.querySelector('[name=post_count]').value='2';w.document.getElementById('themeInput').value='Use a practical tone';w.document.getElementById('useMacaronCheckbox').checked=false;
  if(sdk)accordion.expandItem(false);
  form.dispatchEvent(new w.Event('submit',{cancelable:true}));await wait(50);
  assert.equal(calls.length,1);assert.equal(calls[0].url,'/app/post-ideas-generate');const payload=calls[0].payload;
- assert.equal(payload.company,'Example company');assert.equal(payload.prompt,'Use a practical tone');assert.equal(payload.post_count,2);assert.equal(payload.use_macaron,false);assert.equal(payload.content_domains.length,1);assert.equal(payload.preferred_formats.length,3);
+ assert.equal(payload.company,'Example company');assert.equal(payload.prompt,'Use a practical tone');assert.equal(payload.post_count,2);assert.equal(payload.use_macaron,false);assert.equal(payload.content_domains.length,1);assert.equal(payload.preferred_formats.length,5);
+ assert(payload.preferred_formats.includes('YouTube · Vidéo'));assert(payload.preferred_formats.includes('YouTube · Short'));
  assert.deepEqual(Object.keys(payload).sort(),['subject','prompt','commercial_objective','target_sector','language','constraints','post_count','company','website','solution','default_tags','content_domains','target_audience','preferred_formats','use_macaron'].sort());
  assert(!w.document.getElementById('submitBtn').disabled,'Failed generation allows retry');assert(!w.document.getElementById('loaderOverlay').classList.contains('isVisible'));assert.equal(company.value,'Example company');assert.equal(toasts.length,1);
  w.dispatchEvent(new w.Event('pagehide'));w.close();

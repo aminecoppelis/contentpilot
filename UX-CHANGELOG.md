@@ -1,5 +1,11 @@
 # UX changelog
 
+## 17 novembre 2026 — Formats YouTube dans la création
+
+- Ajout de « YouTube · Vidéo » et « YouTube · Short » dans les formats de création et de modification d'un sujet. Le libellé Vidéo suit la langue de l'interface ; les valeurs enregistrées restent stables.
+- Les sélections YouTube sont transmises à la génération avec les autres formats. Le nom YouTube est également reconnu dans les listes de comptes des stratégies.
+- Vérifications : test DOM avec le véritable Accordion Syncfusion dans les sept langues et avec repli sans SDK ; sélection des deux formats et contrôle du payload. Seize tests Python ciblés réussis. Aucun appel réel de génération ou de publication.
+
 ## 13 novembre 2026 — Publication YouTube
 
 - Ajout de YouTube dans Mes réseaux et dans la fenêtre de publication partagée, avec choix Vidéo/Short, titre, description, tags, visibilité et public enfant. Libellés dans les sept langues.

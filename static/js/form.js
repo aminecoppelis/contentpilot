@@ -21,6 +21,7 @@
     return Array.from(new Set((values||[]).map(function(v){return String(v||'').trim();}).filter(Boolean)));
   }
   function createMultiSelect(config){
+    function optionLabel(value){return config.name==='preferred_formats'&&value==='YouTube · Vidéo'?'YouTube · '+window.t('yt.video'):value;}
     var mount=document.getElementById(config.mountId);
     if(!mount)return {getValues:function(){return [];}};
     var state={options:uniqValues(config.options),selected:uniqValues(config.selected)};
@@ -47,7 +48,7 @@
       tagsEl.innerHTML='';hiddenEl.innerHTML='';
       state.selected.forEach(function(value){
         var tag=document.createElement('span');tag.className='msTag';
-        var text=document.createElement('span');text.textContent=value;
+        var text=document.createElement('span');text.textContent=optionLabel(value);
         var btn=document.createElement('button');btn.type='button';btn.setAttribute('aria-label',window.t('js.remove')+' '+value);btn.textContent='×';
         btn.addEventListener('click',function(event){event.stopPropagation();removeValue(value);});
         tag.appendChild(text);tag.appendChild(btn);tagsEl.appendChild(tag);
@@ -57,11 +58,11 @@
     }
     function renderOptions(){
       var q=input.value.trim().toLowerCase();
-      var available=state.options.filter(function(opt){return state.selected.indexOf(opt)<0&&(!q||opt.toLowerCase().indexOf(q)>=0);});
+      var available=state.options.filter(function(opt){return state.selected.indexOf(opt)<0&&(!q||(opt+' '+optionLabel(opt)).toLowerCase().indexOf(q)>=0);});
       optionsEl.innerHTML='';
       available.slice(0,12).forEach(function(opt){
         var btn=document.createElement('button');btn.type='button';btn.className='msOption';btn.innerHTML='<span></span><strong>+</strong>';
-        btn.querySelector('span').textContent=opt;
+        btn.querySelector('span').textContent=optionLabel(opt);
         btn.addEventListener('mousedown',function(event){event.preventDefault();addValue(opt);input.focus();});optionsEl.appendChild(btn);
       });
       var lowers=state.options.map(function(v){return v.toLowerCase();});
@@ -105,7 +106,7 @@
       mountId:'preferredFormatsSelect',name:'preferred_formats',
       placeholder:'Rechercher ou ajouter un format...',
       options:['LinkedIn · Post','Facebook · Post','Facebook · Reel','Instagram · Post','Instagram · Story',
-        'Instagram · Reel','Démo produit','Cas d\u2019usage','Conseil pratique','Avant / Après','Mini-guide','Article expert'],
+        'Instagram · Reel','YouTube · Vidéo','YouTube · Short','Démo produit','Cas d\u2019usage','Conseil pratique','Avant / Après','Mini-guide','Article expert'],
       selected:['LinkedIn · Post','Facebook · Post','Instagram · Post']
     })
   };

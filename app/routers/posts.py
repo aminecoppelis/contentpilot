@@ -978,7 +978,7 @@ DOMAIN_OPTIONS = ["Intelligence artificielle", "Agents IA", "Automatisation", "L
                    "Business Intelligence", "Transformation numérique des entreprises"]
 AUDIENCE_OPTIONS = ["PME", "Indépendants", "Grandes entreprises", "Directions métiers", "Dirigeants", "DSI / IT"]
 FORMAT_OPTIONS = ["LinkedIn · Post", "Facebook · Post", "Facebook · Reel", "Instagram · Post",
-                   "Instagram · Story", "Instagram · Reel", "Démo produit", "Cas d\u2019usage",
+                   "Instagram · Story", "Instagram · Reel", "YouTube · Vidéo", "YouTube · Short", "Démo produit", "Cas d\u2019usage",
                    "Conseil pratique", "Avant / Après", "Mini-guide", "Article expert"]
 
 
