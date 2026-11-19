@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ t('pn.title') }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/form.css?v=20260902-v90-new-subject-overflow-2"><link rel="stylesheet" href="/static/css/creation-form.css?v=1">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/form.css?v=20260902-v90-new-subject-overflow-2"><link rel="stylesheet" href="/static/css/creation-form.css?v=3-brand-profile-placement">{% endblock %}
 {% block content %}
 <a class="pageBack" href="/app/posts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>{{ t('nav.subjects') }}</a>
 <section class="card newSubjectCard">
@@ -9,7 +9,11 @@
     <p class="subtitle">{{ t('pn.card.subtitle') }}</p>
   </div>
   <form id="ideasForm" method="post" action="/app/post-ideas-generate">
+    {% set saved_profile = brand_profile|default(none) %}
+    {% set prefill = saved_profile if saved_profile and saved_profile.auto_apply else {} %}
+    {% set use_brand_macaron = prefill.use_macaron if 'use_macaron' in prefill else auth_user.macaron_enabled %}
     <p class="creationIntro">{{ t('js.creation.intro') }}</p>
+    <script id="brandProfileData" type="application/json">{{ saved_profile|tojson }}</script>
     <section class="creationBrief" aria-labelledby="creationBriefTitle"><h3 id="creationBriefTitle">{{ t('js.creation.brief') }}</h3>
 <div class="field" data-field="subject">
       <label>{{ t('pn.f.subject') }}<span class="req">*</span></label>
@@ -82,35 +86,45 @@
       <div class="hint">{{ t('pn.f.audience.hint') }}</div>
     </div></div></div></div>
       <div><div><h4>{{ t('js.creation.brand') }}</h4></div><div><div class="creationOptionsContent">
+    <div class="brandProfileTools brandProfileReuse">
+      <div><b>{{ t('js.brand.title') }}</b><p>{{ t('js.brand.scope') }}</p></div>
+      <button type="button" id="brandProfileApply" {% if not saved_profile %}hidden{% endif %}>{{ t('js.brand.apply') }}</button>
+    </div>
 <div class="grid"><div class="field"><label>{{ t('pn.f.company') }}</label>
-        <input name="company" placeholder="{{ t('pn.f.company.ph') }}"></div><div class="field"><label>{{ t('pn.f.website') }}</label>
-        <input name="website" placeholder="{{ t('pn.f.website.ph') }}"></div></div><div class="grid"><div class="field"><label>{{ t('pn.f.solution') }}</label>
-        <input name="solution" placeholder="{{ t('pn.f.solution.ph') }}"></div><div class="field"><label>{{ t('pn.f.tags') }}</label>
-        <input name="default_tags" placeholder="{{ t('pn.f.tags.ph') }}">
+        <input name="company" maxlength="200" value="{{ prefill.company|default('') }}" placeholder="{{ t('pn.f.company.ph') }}"></div><div class="field"><label>{{ t('pn.f.website') }}</label>
+        <input name="website" maxlength="500" value="{{ prefill.website|default('') }}" placeholder="{{ t('pn.f.website.ph') }}"></div></div><div class="grid"><div class="field"><label>{{ t('pn.f.solution') }}</label>
+        <input name="solution" maxlength="1000" value="{{ prefill.solution|default('') }}" placeholder="{{ t('pn.f.solution.ph') }}"></div><div class="field"><label>{{ t('pn.f.tags') }}</label>
+        <input name="default_tags" maxlength="1000" value="{{ prefill.default_tags|default('') }}" placeholder="{{ t('pn.f.tags.ph') }}">
         <div class="hint">{{ t('pn.f.tags.hint') }}</div>
       </div></div><div class="field"><label>{{ t('pn.f.constraints') }}</label>
       <textarea name="constraints" maxlength="900" data-char-limit="900"
-        placeholder="{{ t('pn.f.constraints.ph') }}">{{ t('pn.f.constraints.default') }}</textarea>
+        placeholder="{{ t('pn.f.constraints.ph') }}">{{ prefill.constraints if 'constraints' in prefill else t('pn.f.constraints.default') }}</textarea>
     </div><div class="field" style="margin-top:20px;padding:16px 18px;background:rgba(248,250,252,0.92);border:1px solid #e2e8f0;border-radius:18px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:14px">
         <label style="display:inline-flex;align-items:center;cursor:pointer">
-          <input type="checkbox" name="use_macaron" id="useMacaronCheckbox" onchange="document.getElementById('newMacaronPreview').style.display=this.checked?'flex':'none'" value="true" {% if auth_user.macaron_enabled %}checked{% endif %} style="width:20px;height:20px;accent-color:var(--brand);cursor:pointer">
+          <input type="checkbox" name="use_macaron" id="useMacaronCheckbox" onchange="document.getElementById('newMacaronPreview').style.display=this.checked?'flex':'none'" value="true" {% if use_brand_macaron %}checked{% endif %} style="width:20px;height:20px;accent-color:var(--brand);cursor:pointer">
         </label>
         <div>
           <b style="display:block;font-size:14px;color:var(--ink-1)">{{ t('pn.f.macaron.title') }}</b>
           <span style="display:block;font-size:12px;color:var(--ink-2);margin-top:2px">{{ t('pn.f.macaron.desc') }}</span>
         </div>
       </div>
-      <div id="newMacaronPreview" style="display:{{ 'flex' if auth_user.macaron_enabled else 'none' }};align-items:center;gap:10px">
+      <div id="newMacaronPreview" style="display:{{ 'flex' if use_brand_macaron else 'none' }};align-items:center;gap:10px">
         <div style="width:40px;height:40px;border-radius:10px;background:#fff;border:1px solid #cbd5e1;display:flex;align-items:center;justify-content:center;padding:4px;box-shadow:0 2px 6px rgba(0,0,0,0.05)">
           <img src="{{ auth_user.macaron_url or '/static/branding/coppelis-solutions-ia-badge.png' }}" alt="Macaron" style="max-width:100%;max-height:100%;object-fit:contain">
         </div>
         <div style="font-size:12px">
           <span style="display:block;font-weight:700;color:var(--ink-1)">{{ auth_user.macaron_position_display }}</span>
-          <a href="/app/account#macaronCard" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:none;font-weight:700;font-size:11px">{{ t('pn.f.macaron.customize') }} ↗</a>
+          <a href="/app/account#macaronCard" target="_blank" rel="noopener" style="color:var(--brand);text-decoration:none;font-weight:700;font-size:11px">{{ t('pn.f.macaron.customize') }} ↗</a><small>{{ t('js.brand.badge_hint') }}</small>
         </div>
       </div>
-    </div></div></div></div>
+    </div>
+    <div class="brandProfileTools brandProfileSave">
+      <label for="brandProfileAuto"><input type="checkbox" id="brandProfileAuto" {% if saved_profile and saved_profile.auto_apply %}checked{% endif %}> {{ t('js.brand.auto') }}</label>
+      <button type="button" id="brandProfileSave">{{ t('js.brand.save') }}</button>
+      <p id="brandProfileStatus" role="status" aria-live="polite">{% if prefill %}{{ t('js.brand.prefilled') }}{% elif saved_profile %}{{ t('js.brand.available') }}{% endif %}</p>
+    </div>
+    </div></div></div>
     </div></section>
     <div class="creationSubmit"><p>{{ t('js.creation.no_publish') }}</p>
     <button id="submitBtn" class="btn-primary newSubjectSubmit" type="submit">{{ t('pn.submit') }}</button>
@@ -132,4 +146,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/creation-form.js?v=1"></script><script src="/static/js/form.js?v=24-youtube-formats"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/creation-form.js?v=1"></script><script src="/static/js/form.js?v=24-youtube-formats"></script><script src="/static/js/brand-profile.js?v=1"></script>{% endblock %}

@@ -1,5 +1,24 @@
 # UX changelog
 
+## 19 novembre 2026 — Confidentialité et conditions d'utilisation
+
+- Mention « En continuant, vous acceptez… » avec liens réels actifpilot.com sur les pages de connexion et d'inscription, en français et en anglais.
+- Pages publiques `/privacy` et `/terms` (également sous `/app`) avec sélecteur FR/EN, styles responsive et contact email cliquable. Texte français des CGU repris de la pièce jointe, politique française reprise du message et traductions anglaises ajoutées ; date du 9 mars 2026 conservée.
+- Tests de disponibilité sans authentification ni accès DB, langue et liens, présence des dernières sections et échappement HTML. Cette intégration publie les textes fournis ; elle ne modifie pas les traitements de données ni les mécanismes de consentement du produit.
+
+## 18 novembre 2026 — Réglages de création réutilisables
+
+- Dans la création d'un contenu : enregistrer les informations entreprise, site, solution, tags, consignes et activation du macaron ; réutiliser explicitement ces réglages ou activer le préremplissage des prochains contenus.
+- Persistance en base par utilisateur et workspace actif (`016_creation_brand_profiles.sql`), commune aux sessions et appareils. Le logo et la position du macaron continuent d'être lus depuis Mon compte.
+- Préremplissage au rendu initial, sans chargement tardif écrasant la saisie ; réutilisation manuelle confirmée si les champs ont été modifiés ; erreurs de sauvegarde sans perte des saisies. Aucun contenu ni publication créé par l'enregistrement du profil.
+- Libellés dans les sept langues. Vérifications : 100 tests Python réussis ; test DOM d'enregistrement/réutilisation/échec et parcours Accordion dans les sept langues. Migration à appliquer au prochain démarrage (ou manuellement si les migrations automatiques sont désactivées).
+
+## 18 novembre 2026 — Audit global de l'application
+
+- Ajout de `AUDIT-APPLICATION-2026-11-18.md` : existant, dix constats priorisés avec sources dans le code, améliorations UX, huit propositions fonctionnelles et plan de livraison.
+- Vérification locale : 97 tests Python réussis et reproduction isolée d'un calcul de faux statut publié après une exception sans message.
+- Aucun code applicatif ni donnée modifié pour cet audit ; aucune publication, connexion externe ou recette de la VM de production effectuée. Les contrôles d'exploitation et la recette visuelle restent explicitement à réaliser.
+
 ## 17 novembre 2026 — Formats YouTube dans la création
 
 - Ajout de « YouTube · Vidéo » et « YouTube · Short » dans les formats de création et de modification d'un sujet. Le libellé Vidéo suit la langue de l'interface ; les valeurs enregistrées restent stables.

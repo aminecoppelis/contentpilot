@@ -5,3 +5,13 @@
 .creationSubmit{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:var(--space-5)}.creationSubmit>p{margin:0;color:var(--ink-2);font-size:13px;line-height:1.5}.has-sidebar .creationSubmit .newSubjectSubmit{min-height:44px;margin:0}
 .creationGeneratingSkeleton{display:grid;gap:12px;padding:18px;border:1px solid var(--line);border-radius:var(--radius-md);margin-bottom:20px}.creationGeneratingSkeleton span{height:12px;border-radius:6px;background-color:var(--surface-2)}.creationGeneratingSkeleton span:first-child{width:65%}.creationGeneratingSkeleton span:last-child{width:80%}
 @media(max-width:900px){.creationSettings{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.creationSettings>.field:last-child{grid-column:1/-1}}@media(max-width:600px){.creationSettings,.creationOptionsContent>.grid{grid-template-columns:minmax(0,1fr)}.has-sidebar .newSubjectCard form{padding:20px 16px}.has-sidebar #creationOptions .e-acrdn-panel .e-acrdn-content{padding:16px}}
+.brandProfileTools{margin:0;padding:14px 16px;border:1px solid var(--line,#e2e8f0);border-radius:14px;background:var(--surface,#fff);display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.brandProfileTools>div{flex:1 1 240px;min-width:0}.brandProfileTools p{margin:4px 0 0;font-size:13px;color:var(--ink-2);line-height:1.5}.brandProfileTools>p{flex-basis:100%}
+.brandProfileReuse{background:var(--surface-2,#f8fafc)}.brandProfileTools.brandProfileReuse button{background:var(--surface,#fff);color:var(--brand,#3b82f6)}
+.brandProfileSave{border-width:1px 0 0;border-radius:0;padding:18px 0 0}
+.brandProfileTools button{padding:9px 13px;border:1px solid var(--line,#e2e8f0);border-radius:10px;background:var(--brand,#3b82f6);color:#fff;font:inherit;cursor:pointer}
+.brandProfileTools [hidden]{display:none!important}
+.brandProfileTools label{display:flex;gap:8px;align-items:center;font-size:13px}
+.brandProfileTools input[type=checkbox]{width:18px;height:18px;margin:0;accent-color:var(--brand,#3b82f6)}
+.brandProfileTools button:disabled{opacity:.6;cursor:wait}
+.brandProfileTools .isError{color:var(--danger-ink,#b91c1c)}

@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="{{ legal_locale }}">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ legal_title }} · Actifpilot</title><link rel="stylesheet" href="/static/css/legal.css?v=1"></head>
+<body><header><a class="brand" href="/app/login">Actifpilot</a><nav aria-label="{{ 'Langue' if legal_locale == 'fr' else 'Language' }}"><a href="/{{ document }}?lang=fr" lang="fr" {% if legal_locale == 'fr' %}aria-current="page"{% endif %}>Français</a><a href="/{{ document }}?lang=en" lang="en" {% if legal_locale == 'en' %}aria-current="page"{% endif %}>English</a></nav></header>
+<main><h1>{{ legal_title }}</h1>{{ legal_body }}</main>
+<footer><a href="/privacy?lang={{ legal_locale }}">{{ 'Confidentialité' if legal_locale == 'fr' else 'Privacy' }}</a><a href="/terms?lang={{ legal_locale }}">{{ 'Conditions d’utilisation' if legal_locale == 'fr' else 'Terms of use' }}</a><a href="/app/login?lang={{ legal_locale }}">{{ 'Connexion' if legal_locale == 'fr' else 'Sign in' }}</a></footer></body>
+</html>

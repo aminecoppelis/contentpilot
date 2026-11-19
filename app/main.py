@@ -82,6 +82,9 @@ app.mount("/public-media", StaticFiles(directory=str(get_settings().media_storag
 # en base avant la migration. Il pointe vers LE MÊME dossier, sans duplication.
 app.mount("/n8n-files/public-media", StaticFiles(directory=str(get_settings().media_storage_path), check_dir=False), name="legacy-public-media")
 from app.templating import templates
+from app.routers import legal
+app.include_router(legal.router)
+app.include_router(legal.router, prefix='/app', include_in_schema=False)
 
 # Tous les routeurs métier sous /app (équivalent du /webhook/V0 original)
 for router in (auth.router, posts.router, media.router, publish.router,

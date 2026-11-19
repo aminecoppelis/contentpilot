@@ -199,7 +199,7 @@
     </form>
 
     <div class="links">{{ t('auth.login.no_account') }} <a href="/app/register?redirect={{ redirect }}">{{ t('auth.login.create') }}</a></div>
-    <div class="authFoot">{{ t('auth.foot', privacy=('<a href="#">' ~ t('auth.foot.privacy') ~ '</a>'), terms=('<a href="#">' ~ t('auth.foot.terms') ~ '</a>')) | safe }}</div>
+    {% include 'partials/auth_legal.html' %}
   </main>
 </div>
 <script>

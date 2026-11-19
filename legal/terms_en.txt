@@ -1,0 +1,134 @@
+Last updated: 9 March 2026
+
+These Terms of Use (the “Terms”) govern access to and use of the website and artificial intelligence analysis platform (the “Platform”), published by COPPELIS SARL, whose registered office is located at 27, avenue de l'Opéra, 75001 Paris, France, registered with the Paris Trade and Companies Register under number 750 132 946 (the “Publisher”).
+
+The Platform is available to both consumers and professionals. Use of the Platform implies full and unconditional acceptance of these Terms.
+
+1. Definitions
+
+Consumer User: any natural person acting for non-professional purposes.
+Professional User: any natural or legal person acting in the course of their professional or commercial activity.
+Content: images, videos, files or data uploaded by the user.
+Services: automated visual content analysis services provided by the Platform.
+
+2. Purpose of the Platform
+
+The Platform offers automated visual content analysis services (images and videos) using artificial intelligence technologies, including:
+
+- assessment of visual quality,
+- detection of events, anomalies or objects,
+- verification of visual rules or criteria.
+
+The Services are decision-support tools. Results are generated automatically and cannot replace human, professional, regulatory or legal analysis.
+
+3. Access to the Platform
+
+3.1 Access requirements
+
+The Platform is available to:
+
+- adults with legal capacity,
+- legal entities through a duly authorised representative.
+
+3.2 Account creation
+
+Access to certain Services requires the creation of a user account. The user undertakes to provide accurate, complete and up-to-date information.
+
+The user is responsible for keeping their credentials confidential and for any use made through their account.
+
+3.3 Free and paid offers
+
+The Services may be offered:
+
+- free of charge (a Free plan with limitations),
+- through subscriptions,
+- through credit systems,
+- through API access intended primarily for Professional Users.
+
+Pricing terms are described on the website and may change.
+
+4. Permitted use
+
+The user undertakes to use the Platform in accordance with applicable laws and regulations and these Terms.
+
+It is strictly prohibited to:
+
+- use the Platform for illegal or fraudulent purposes or purposes contrary to public policy,
+- upload Content that infringes third-party rights (copyright, image rights, personal data),
+- use the Platform for sensitive or prohibited purposes (illegal surveillance, manipulation, misleading deepfakes, etc.),
+- attempt to compromise the security or proper operation of the Platform,
+- reverse engineer or make unauthorised use of the models or systems.
+
+5. User Content
+
+5.1 Ownership
+
+The user retains full ownership of their Content.
+
+5.2 Technical licence
+
+The user grants the Publisher a non-exclusive, worldwide and limited licence strictly necessary to host, process and analyse the Content in order to provide the Services.
+
+Content is never used for commercial or advertising purposes without the user’s explicit consent.
+
+5.3 Responsibility for Content
+
+The user warrants that they have all necessary rights and authorisations for the Content they upload.
+
+6. AI-generated results
+
+The results provided by the Platform are generated automatically and may contain errors, biases or approximations.
+
+The Publisher does not guarantee the absolute accuracy or completeness of the results. The user remains solely responsible for interpreting and using the results.
+
+7. Intellectual property
+
+The Platform, its software, algorithms, AI models, interfaces, trademarks and content are protected by intellectual property law and remain the exclusive property of the Publisher or its partners.
+
+Any unauthorised reproduction or use is prohibited.
+
+8. Personal data
+
+The processing of personal data is governed by the Privacy Policy available on the website.
+
+9. Liability
+
+9.1 Consumer Users
+
+For Consumer Users, the Publisher is liable in accordance with applicable consumer law.
+
+However, the Publisher cannot be held liable for decisions made by the user based on the results provided.
+
+9.2 Professional Users
+
+For Professional Users, the Platform is provided “as is”.
+
+To the extent permitted by law, the Publisher disclaims liability for indirect damage (loss of revenue, loss of data, business losses).
+
+The Publisher’s total liability is limited to the amount actually paid by the Professional User during the preceding twelve (12) months.
+
+10. Term, suspension and termination
+
+The user may stop using the Platform at any time.
+
+The Publisher reserves the right to suspend or terminate an account in the event of a breach of the Terms, abusive or illegal use, or a risk to the Platform’s security.
+
+Termination terms for paid services vary depending on the offer subscribed to.
+
+11. Service availability
+
+The Publisher strives to ensure optimal availability of the Platform, without guaranteeing continuous or uninterrupted access.
+
+12. Changes to the Terms
+
+The Publisher reserves the right to amend these Terms at any time. The applicable version is the one published on the website at the time of use.
+
+13. Governing law and jurisdiction
+
+These Terms are governed by French law.
+
+In the event of a dispute, and unless mandatory provisions provide otherwise, the competent courts are those with jurisdiction over the Publisher’s registered office.
+
+14. Contact
+
+For any questions about these Terms, users may contact the Publisher at: contact_customer@actifpilot.com.

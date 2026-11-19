@@ -1,0 +1,107 @@
+Dernière mise à jour : 09/03/2026
+
+Les présentes Conditions Générales d’Utilisation (ci-après les « CGU ») encadrent l’accès et l’utilisation du site internet et de la plateforme d’analyse par intelligence artificielle (ci-après la « Plateforme »), édités par La Société COPPELIS SARL, dont le siège social est situé 27, avenue de l'Opéra, 75001 Paris, France, immatriculée au Registre du Commerce et des Sociétés de Paris sous le numéro 750 132 946, (ci-après l’« Éditeur »).
+
+La Plateforme est accessible aussi bien aux particuliers qu’aux professionnels. L’utilisation de la Plateforme implique l’acceptation pleine et entière des présentes CGU.
+
+1. Définitions
+Utilisateur Particulier : toute personne physique agissant à des fins non professionnelles.
+Utilisateur Professionnel : toute personne physique ou morale agissant dans le cadre de son activité professionnelle ou commerciale.
+Contenus : images, vidéos, fichiers ou données téléversés par l’utilisateur.
+Services : services d’analyse automatisée de contenus visuels fournis par la Plateforme.
+2. Objet de la Plateforme
+La Plateforme propose des services d’analyse automatisée de contenus visuels (images et vidéos) à l’aide de technologies d’intelligence artificielle, permettant notamment :
+
+l’évaluation de la qualité visuelle,
+la détection d’événements, d’anomalies ou d’objets,
+la vérification de règles ou critères visuels.
+Les Services constituent des outils d’aide à la décision. Les résultats fournis sont générés automatiquement et ne sauraient se substituer à une analyse humaine, professionnelle, réglementaire ou juridique.
+
+3. Accès à la Plateforme
+3.1 Conditions d’accès
+La Plateforme est accessible :
+
+aux personnes physiques majeures disposant de la capacité juridique,
+aux personnes morales par l’intermédiaire d’un représentant dûment habilité.
+3.2 Création de compte
+L’accès à certains Services nécessite la création d’un compte utilisateur. L’utilisateur s’engage à fournir des informations exactes, complètes et à jour.
+
+L’utilisateur est responsable de la confidentialité de ses identifiants et de toute utilisation réalisée depuis son compte.
+
+3.3 Offres gratuites et payantes
+Les Services peuvent être proposés :
+
+gratuitement (offre Free avec limitations),
+via des abonnements,
+via des systèmes de crédits,
+via des accès API réservés principalement aux Utilisateurs Professionnels.
+Les conditions tarifaires sont décrites sur le site et peuvent évoluer.
+
+4. Utilisation autorisée
+L’utilisateur s’engage à utiliser la Plateforme conformément aux lois et réglementations en vigueur et aux présentes CGU.
+
+Il est strictement interdit :
+
+d’utiliser la Plateforme à des fins illégales, frauduleuses ou contraires à l’ordre public,
+de téléverser des Contenus portant atteinte aux droits de tiers (droits d’auteur, droit à l’image, données personnelles),
+d’utiliser la Plateforme pour des usages sensibles ou interdits (surveillance illégale, manipulation, deepfakes trompeurs, etc.),
+de tenter de compromettre la sécurité ou le bon fonctionnement de la Plateforme,
+de procéder à toute rétroingénierie ou exploitation non autorisée des modèles ou systèmes.
+5. Contenus utilisateurs
+5.1 Propriété
+L’utilisateur conserve l’entière propriété de ses Contenus.
+
+5.2 Licence technique
+L’utilisateur concède à l’Éditeur une licence non exclusive, mondiale et limitée, strictement nécessaire à l’hébergement, au traitement et à l’analyse des Contenus afin de fournir les Services.
+
+Les Contenus ne sont jamais exploités à des fins commerciales ou publicitaires sans accord explicite de l’utilisateur.
+
+5.3 Responsabilité des Contenus
+L’utilisateur garantit disposer de tous les droits et autorisations nécessaires sur les Contenus qu’il téléverse.
+
+6. Résultats générés par l’IA
+Les résultats fournis par la Plateforme sont générés automatiquement et peuvent comporter des erreurs, biais ou approximations.
+
+L’Éditeur ne garantit ni l’exactitude absolue ni l’exhaustivité des résultats. L’utilisateur demeure seul responsable de l’interprétation et de l’usage des résultats.
+
+7. Propriété intellectuelle
+La Plateforme, ses logiciels, algorithmes, modèles d’IA, interfaces, marques et contenus sont protégés par le droit de la propriété intellectuelle et demeurent la propriété exclusive de l’Éditeur ou de ses partenaires.
+
+Toute reproduction ou exploitation non autorisée est interdite.
+
+8. Données personnelles
+Le traitement des données personnelles est régi par la Politique de Confidentialité, accessible sur le site.
+
+9. Responsabilité
+9.1 Utilisateurs Particuliers
+Pour les Utilisateurs Particuliers, l’Éditeur est responsable conformément aux dispositions légales applicables en matière de consommation.
+
+Toutefois, l’Éditeur ne saurait être tenu responsable des décisions prises par l’utilisateur sur la base des résultats fournis.
+
+9.2 Utilisateurs Professionnels
+Pour les Utilisateurs Professionnels, la Plateforme est fournie « en l’état ».
+
+Dans les limites autorisées par la loi, l’Éditeur décline toute responsabilité pour les dommages indirects (perte de chiffre d’affaires, perte de données, préjudice commercial).
+
+La responsabilité totale de l’Éditeur est plafonnée au montant effectivement payé par l’Utilisateur Professionnel au cours des douze (12) derniers mois.
+
+10. Durée, suspension et résiliation
+L’utilisateur peut cesser d’utiliser la Plateforme à tout moment.
+
+L’Éditeur se réserve le droit de suspendre ou résilier un compte en cas de violation des CGU, d’utilisation abusive ou illégale, ou de risque pour la sécurité de la Plateforme.
+
+Les conditions de résiliation des services payants varient selon l’offre souscrite.
+
+11. Disponibilité du service
+L’Éditeur s’efforce d’assurer une disponibilité optimale de la Plateforme, sans garantie d’accessibilité continue ou sans interruption.
+
+12. Modification des CGU
+L’Éditeur se réserve le droit de modifier les présentes CGU à tout moment. La version applicable est celle publiée sur le site au moment de l’utilisation.
+
+13. Droit applicable et juridiction
+Les présentes CGU sont régies par le droit français.
+
+En cas de litige, et sauf disposition impérative contraire, les tribunaux compétents seront ceux du ressort du siège social de l’Éditeur.
+
+14. Contact
+Pour toute question relative aux présentes CGU, l’utilisateur peut contacter l’Éditeur à l’adresse suivante : contact_customer@actifpilot.com.

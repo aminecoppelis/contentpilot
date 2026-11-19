@@ -1353,5 +1353,19 @@
   "yt.open": "Auf YouTube öffnen",
   "yt.bytes": "Bytes",
   "yt.uploading": "YouTube-Upload wartet oder läuft",
-  "yt.disconnect": "Google trennen und Zugriff widerrufen"
+  "yt.disconnect": "Google trennen und Zugriff widerrufen",
+  "js.brand.title": "Ihre wiederverwendbaren Einstellungen",
+  "js.brand.scope": "Speichern Sie Informationen und Anweisungen für das aktive Unternehmen. Die Einstellungen gelten nur für Ihr Konto.",
+  "js.brand.save": "Einstellungen speichern",
+  "js.brand.apply": "Meine Einstellungen verwenden",
+  "js.brand.auto": "Künftige Inhalte nach dem Speichern vorausfüllen",
+  "js.brand.prefilled": "Ihre Einstellungen wurden vorausgefüllt. Sie können sie bearbeiten.",
+  "js.brand.available": "Gespeicherte Einstellungen sind verfügbar.",
+  "js.brand.saved": "Einstellungen gespeichert.",
+  "js.brand.saving": "Wird gespeichert…",
+  "js.brand.error": "Speichern fehlgeschlagen. Ihre Eingaben bleiben erhalten; versuchen Sie es erneut.",
+  "js.brand.replace": "Eingegebene Informationen und Anweisungen durch gespeicherte Einstellungen ersetzen?",
+  "js.brand.unsaved": "Änderungen sind nicht im Profil gespeichert.",
+  "js.brand.badge_hint": "Hier wird die Aktivierung des Badges gespeichert. Bild und Position legen Sie unter Mein Konto fest.",
+  "js.brand.applied": "Einstellungen angewendet. Sie können sie für diesen Inhalt anpassen."
 }

@@ -21,6 +21,7 @@ from app.services.copy_ready import build_copy_ready_text
 from app.user_timezone import format_user_datetime
 from app.pagination import page_meta
 from app.i18n import resolve_locale, translate
+from app.services.brand_profiles import BrandProfile, load_brand_profile, save_brand_profile
 
 router = APIRouter(tags=["Posts"])
 from app.templating import templates, render_fragment
@@ -78,8 +79,15 @@ async def _add_publication_statuses(requests: list[dict], workspace_id: str) -> 
 
 @router.get("/posts/new", response_class=HTMLResponse)
 async def get_posts_new(request: Request, user=Depends(require_auth)):
+    profile = await load_brand_profile(user.id, user.active_workspace_id)
     return templates.TemplateResponse(request, "posts/new.html", {
-        "active_nav": "posts","auth_user": user})
+        "active_nav": "posts","auth_user": user, "brand_profile": profile})
+
+
+@router.post('/posts/brand-profile')
+async def post_brand_profile(profile: BrandProfile, user=Depends(require_auth)):
+    await save_brand_profile(user.id, user.active_workspace_id, profile)
+    return JSONResponse({'success': True, 'data': profile.model_dump()})
 
 
 @router.post("/post-ideas-generate")

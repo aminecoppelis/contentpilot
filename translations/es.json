@@ -1353,5 +1353,19 @@
   "yt.open": "Abrir en YouTube",
   "yt.bytes": "bytes",
   "yt.uploading": "Carga de YouTube pendiente o en curso",
-  "yt.disconnect": "Desconectar y revocar Google"
+  "yt.disconnect": "Desconectar y revocar Google",
+  "js.brand.title": "Tus ajustes reutilizables",
+  "js.brand.scope": "Guarda tus datos e instrucciones para la empresa activa. Los ajustes son personales de tu cuenta.",
+  "js.brand.save": "Guardar estos ajustes",
+  "js.brand.apply": "Usar mis ajustes",
+  "js.brand.auto": "Rellenar futuros contenidos tras guardar",
+  "js.brand.prefilled": "Tus ajustes han rellenado este formulario. Puedes editarlos.",
+  "js.brand.available": "Hay ajustes guardados disponibles.",
+  "js.brand.saved": "Ajustes guardados.",
+  "js.brand.saving": "Guardando…",
+  "js.brand.error": "No se pudo guardar. Se conservan los datos; inténtalo de nuevo.",
+  "js.brand.replace": "¿Sustituir los datos e instrucciones introducidos por tus ajustes guardados?",
+  "js.brand.unsaved": "Cambios no guardados en tu perfil.",
+  "js.brand.badge_hint": "Aquí se guarda la activación de la insignia. Su imagen y posición se configuran en Mi cuenta.",
+  "js.brand.applied": "Ajustes aplicados. Puedes adaptarlos a este contenido."
 }

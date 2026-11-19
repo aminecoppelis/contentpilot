@@ -1,0 +1,119 @@
+Dernière mise à jour : 09/03/2026
+
+La présente Politique de Confidentialité décrit la manière dont la Société COPPELIS SARL (« nous », « notre », « la Plateforme ») collecte, utilise, conserve et protège les données personnelles des utilisateurs (« vous ») dans le cadre de l’utilisation de notre plateforme SaaS accessible via actifpilot.com.
+
+Nous nous engageons à respecter la réglementation applicable, notamment le Règlement (UE) 2016/679 (RGPD) et les lois relatives à la protection des données personnelles.
+
+1. Responsable du traitement
+
+Le responsable du traitement des données est :
+
+- Société : COPPELIS SARL
+- Adresse : 27, avenue de l'Opéra, 75001 Paris, France
+- Email de contact : contact_customer@actifpilot.com
+
+2. Données personnelles collectées
+
+Nous collectons uniquement les données strictement nécessaires à la fourniture du service.
+
+2.1 Données fournies directement
+
+- Nom, prénom
+- Adresse email professionnelle
+- Informations de facturation
+- Identifiants de connexion
+
+2.2 Données techniques
+
+- Adresse IP
+- Logs de connexion
+- Type de navigateur et système d’exploitation
+- Horodatages d’accès
+
+2.3 Contenus téléversés
+
+- Images et vidéos fournies volontairement par l’utilisateur
+- Métadonnées associées aux fichiers
+
+⚠️ Les contenus téléversés ne sont jamais utilisés à des fins d’entraînement de modèles IA sans accord explicite préalable.
+
+3. Finalités du traitement
+
+Les données sont traitées pour les finalités suivantes :
+
+- Fourniture et fonctionnement du service SaaS
+- Analyse automatisée des images et vidéos
+- Gestion des comptes utilisateurs
+- Facturation et paiements
+- Support client et assistance technique
+- Amélioration des performances et de la sécurité
+- Respect des obligations légales
+
+4. Base légale du traitement
+
+Les traitements reposent sur :
+
+- L’exécution du contrat
+- Le consentement explicite de l’utilisateur (le cas échéant)
+- Le respect d’obligations légales
+- L’intérêt légitime lié à la sécurité et à l’amélioration du service
+
+5. Conservation des données
+
+- Données de compte : conservées tant que le compte est actif
+- Données de facturation : durée légale applicable
+- Fichiers (images/vidéos) : Supprimés automatiquement selon les paramètres choisis par l’utilisateur, ou sur demande explicite
+
+6. Partage des données
+
+Les données ne sont jamais revendues. Elles peuvent être partagées uniquement avec :
+
+- Prestataires techniques (hébergement, paiement, sécurité)
+- Autorités légales si requis par la loi
+
+Tous les sous-traitants respectent des engagements stricts de confidentialité et de conformité RGPD.
+
+7. Hébergement et sécurité
+
+- Données hébergées dans des centres conformes aux standards de sécurité (ISO 27001 ou équivalent)
+- Chiffrement des données en transit (TLS)
+- Contrôles d’accès stricts
+- Journalisation et surveillance continue
+
+8. Transferts hors UE
+
+Si des données sont transférées hors de l’Union Européenne, ces transferts sont encadrés par :
+
+- Clauses contractuelles types de la Commission Européenne
+- Ou décisions d’adéquation reconnues
+
+9. Droits des utilisateurs
+
+Conformément au RGPD, vous disposez des droits suivants :
+
+- Droit d’accès
+- Droit de rectification
+- Droit à l’effacement
+- Droit à la limitation du traitement
+- Droit d’opposition
+- Droit à la portabilité
+
+Pour exercer vos droits : contact_customer@actifpilot.com
+
+10. Cookies
+
+La plateforme peut utiliser des cookies strictement nécessaires au fonctionnement du service et à la mesure d’audience. Un bandeau de consentement est mis en place lorsque requis.
+
+11. Confidentialité des analyses IA
+
+- Les analyses sont automatisées
+- Aucun contrôle humain sans autorisation
+- Aucune réutilisation des données client à des fins commerciales
+
+12. Modifications de la politique
+
+Nous nous réservons le droit de modifier la présente Politique à tout moment. Les utilisateurs seront informés en cas de changement majeur.
+
+13. Contact
+
+Pour toute question relative à la protection des données : contact_customer@actifpilot.com.

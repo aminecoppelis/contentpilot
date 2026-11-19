@@ -199,7 +199,7 @@
       <button class="btn primary" type="submit">{{ t('auth.register.submit') }}</button>
     </form>
     <div class="links">{{ t('auth.register.has_account') }} <a href="/app/login?redirect={{ redirect }}">{{ t('auth.register.login') }}</a></div>
-    <div class="authFoot">{{ t('auth.foot', privacy=('<a href="#">' ~ t('auth.foot.privacy') ~ '</a>'), terms=('<a href="#">' ~ t('auth.foot.terms') ~ '</a>')) | safe }}</div>
+    {% include 'partials/auth_legal.html' %}
   </main>
 </div>
 <script>

@@ -1353,5 +1353,19 @@
   "yt.open": "Apri su YouTube",
   "yt.bytes": "byte",
   "yt.uploading": "Caricamento YouTube in attesa o in corso",
-  "yt.disconnect": "Disconnetti e revoca Google"
+  "yt.disconnect": "Disconnetti e revoca Google",
+  "js.brand.title": "Le tue impostazioni riutilizzabili",
+  "js.brand.scope": "Salva informazioni e istruzioni per l’azienda attiva. Le impostazioni sono personali del tuo account.",
+  "js.brand.save": "Salva queste impostazioni",
+  "js.brand.apply": "Usa le mie impostazioni",
+  "js.brand.auto": "Precompila i prossimi contenuti dopo il salvataggio",
+  "js.brand.prefilled": "Le tue impostazioni hanno precompilato il modulo. Puoi modificarle.",
+  "js.brand.available": "Sono disponibili impostazioni salvate.",
+  "js.brand.saved": "Impostazioni salvate.",
+  "js.brand.saving": "Salvataggio…",
+  "js.brand.error": "Salvataggio non riuscito. I dati inseriti sono conservati; riprova.",
+  "js.brand.replace": "Sostituire informazioni e istruzioni inserite con le impostazioni salvate?",
+  "js.brand.unsaved": "Modifiche non salvate nel profilo.",
+  "js.brand.badge_hint": "Qui viene salvata l’attivazione del badge. Immagine e posizione si impostano in Il mio account.",
+  "js.brand.applied": "Impostazioni applicate. Puoi adattarle a questo contenuto."
 }

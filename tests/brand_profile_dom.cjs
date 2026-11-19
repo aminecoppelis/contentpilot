@@ -1,0 +1,22 @@
+const fs=require('fs'),assert=require('node:assert/strict'),{execFileSync}=require('node:child_process');
+const {JSDOM,VirtualConsole}=require('../.cache/grid-tests/node_modules/jsdom');
+execFileSync('venv/Scripts/python.exe',['-m','tests.render_creation_fixtures']);
+const dom=new JSDOM(fs.readFileSync('.cache/creation-fr.html','utf8'),{runScripts:'outside-only',url:'http://localhost/app/posts/new',virtualConsole:new VirtualConsole()});
+const w=dom.window,form=w.document.getElementById('ideasForm'),catalog=JSON.parse(fs.readFileSync('translations/fr.json','utf8'));
+w.t=k=>catalog[k]||k;
+let fail=false,allow=false,calls=[];
+w.pgConfirm=async()=>allow;
+w.fetch=async(url,request)=>{assert.equal(url,'/app/posts/brand-profile');const payload=JSON.parse(request.body);calls.push(payload);return {ok:!fail,json:async()=>fail?{success:false}:{success:true,data:payload}};};
+w.eval(fs.readFileSync('static/js/brand-profile.js','utf8'));
+const save=w.document.getElementById('brandProfileSave'),apply=w.document.getElementById('brandProfileApply'),auto=w.document.getElementById('brandProfileAuto');
+const settle=()=>new Promise(r=>setTimeout(r,0));
+(async()=>{
+ assert(apply.hidden);form.elements.company.value='My company';form.elements.constraints.value='';form.elements.use_macaron.checked=false;auto.checked=true;
+ save.click();await settle();assert.equal(calls.length,1);assert.equal(calls[0].use_macaron,false);assert.equal(calls[0].auto_apply,true);assert.equal(calls[0].constraints,'');assert(!apply.hidden);
+ form.elements.company.value='Unsaved content';apply.click();await settle();assert.equal(form.elements.company.value,'Unsaved content','Cancel preserves current entries');
+ allow=true;apply.click();await settle();assert.equal(form.elements.company.value,'My company');assert.equal(form.elements.constraints.value,'');assert.equal(form.elements.use_macaron.checked,false);assert.equal(w.document.getElementById('newMacaronPreview').style.display,'none');
+ fail=true;form.elements.company.value='Keep on failure';save.click();await settle();assert.equal(form.elements.company.value,'Keep on failure');assert(!save.disabled);assert(w.document.getElementById('brandProfileStatus').classList.contains('isError'));
+ form.elements.company.value='Other';apply.click();await settle();assert.equal(form.elements.company.value,'My company','Failed save preserves the previous saved profile');
+ assert(!calls.some(c=>'subject' in c),'Saving a profile cannot create a content or publish it');
+ w.close();console.log('PASS: explicit save, opt-in autofill setting, guarded reuse, disabled badge, empty instructions and failure recovery; mocked storage only');
+})().catch(e=>{console.error(e.stack?.slice(0,1500));w.close();process.exit(1);});

@@ -1,0 +1,119 @@
+Last updated: 9 March 2026
+
+This Privacy Policy describes how COPPELIS SARL (“we”, “our”, “the Platform”) collects, uses, retains and protects users’ personal data (“you”) when you use our SaaS platform available at actifpilot.com.
+
+We undertake to comply with applicable regulations, including Regulation (EU) 2016/679 (GDPR) and laws relating to the protection of personal data.
+
+1. Data controller
+
+The data controller is:
+
+- Company: COPPELIS SARL
+- Address: 27, avenue de l'Opéra, 75001 Paris, France
+- Contact email: contact_customer@actifpilot.com
+
+2. Personal data collected
+
+We collect only the data strictly necessary to provide the service.
+
+2.1 Data provided directly
+
+- First and last name
+- Professional email address
+- Billing information
+- Login credentials
+
+2.2 Technical data
+
+- IP address
+- Connection logs
+- Browser type and operating system
+- Access timestamps
+
+2.3 Uploaded content
+
+- Images and videos voluntarily provided by the user
+- Metadata associated with the files
+
+⚠️ Uploaded content is never used to train AI models without prior explicit consent.
+
+3. Purposes of processing
+
+Data is processed for the following purposes:
+
+- Provision and operation of the SaaS service
+- Automated analysis of images and videos
+- User account management
+- Billing and payments
+- Customer support and technical assistance
+- Performance and security improvements
+- Compliance with legal obligations
+
+4. Legal basis for processing
+
+Processing is based on:
+
+- Performance of the contract
+- The user’s explicit consent, where applicable
+- Compliance with legal obligations
+- Legitimate interests relating to security and service improvement
+
+5. Data retention
+
+- Account data: retained for as long as the account is active
+- Billing data: the applicable statutory retention period
+- Files (images/videos): automatically deleted according to the settings chosen by the user, or upon explicit request
+
+6. Data sharing
+
+Data is never sold. It may only be shared with:
+
+- Technical service providers (hosting, payments, security)
+- Legal authorities where required by law
+
+All processors comply with strict confidentiality and GDPR compliance commitments.
+
+7. Hosting and security
+
+- Data hosted in facilities compliant with security standards (ISO 27001 or equivalent)
+- Encryption of data in transit (TLS)
+- Strict access controls
+- Continuous logging and monitoring
+
+8. Transfers outside the EU
+
+If data is transferred outside the European Union, such transfers are governed by:
+
+- European Commission standard contractual clauses
+- Or recognised adequacy decisions
+
+9. Users’ rights
+
+Under the GDPR, you have the following rights:
+
+- Right of access
+- Right to rectification
+- Right to erasure
+- Right to restriction of processing
+- Right to object
+- Right to data portability
+
+To exercise your rights: contact_customer@actifpilot.com
+
+10. Cookies
+
+The platform may use cookies strictly necessary for the operation of the service and audience measurement. A consent banner is provided where required.
+
+11. Confidentiality of AI analyses
+
+- Analyses are automated
+- No human review without authorisation
+- No reuse of customer data for commercial purposes
+
+12. Changes to this policy
+
+We reserve the right to amend this Policy at any time. Users will be informed of major changes.
+
+13. Contact
+
+For any questions regarding data protection: contact_customer@actifpilot.com.
