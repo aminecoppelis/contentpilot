@@ -1,0 +1,191 @@
+- generic [ref=f8e1]:
+  - banner [ref=f8e2]:
+    - link [ref=f8e130] [cursor=pointer]:
+      - /url: /?lang=fr
+      - img "Actifpilot" [ref=f8e131]
+    - navigation "Navigation principale" [ref=f8e132]:
+      - link "Accueil" [ref=f8e133] [cursor=pointer]:
+        - /url: /?lang=fr
+      - link "Offres" [ref=f8e134] [cursor=pointer]:
+        - /url: /offers?lang=fr
+      - link "Comment ça fonctionne" [ref=f8e135] [cursor=pointer]:
+        - /url: /how-it-works?lang=fr
+      - link "Sécurité & RGPD" [ref=f8e136] [cursor=pointer]:
+        - /url: /gdpr?lang=fr
+      - link "Tarifs" [ref=f8e137] [cursor=pointer]:
+        - /url: /pricing?lang=fr
+      - link "Contact" [ref=f8e138] [cursor=pointer]:
+        - /url: /contact?lang=fr
+    - generic [ref=f8e139]:
+      - button "Changer le thème" [active] [ref=f8e140] [cursor=pointer]
+      - generic [ref=f8e143]:
+        - generic [ref=f8e144]: Langue
+        - combobox "Langue" [ref=f8e145] [cursor=pointer]:
+          - option "FR" [selected]
+          - option "EN"
+          - option "ES"
+          - option "IT"
+          - option "DE"
+          - option "RU"
+          - option "AR"
+      - link "Connexion" [ref=f8e146] [cursor=pointer]:
+        - /url: /app/login?lang=fr
+      - link "Inscription" [ref=f8e147] [cursor=pointer]:
+        - /url: /app/register?lang=fr
+  - main [ref=f8e6]:
+    - generic [ref=f8e8]:
+      - generic [ref=f8e9]:
+        - generic [ref=f8e10]: Votre espace de création
+        - heading "Créez, illustrez et publiez vos contenus sociaux" [level=1] [ref=f8e11]
+        - paragraph [ref=f8e12]: Créez des textes, des images et des vidéos pour vos réseaux sociaux. Retrouvez vos idées, vos médias et vos publications programmées dans un même espace, avec vos consignes de marque.
+        - generic [ref=f8e13]:
+          - link "Inscription" [ref=f8e14] [cursor=pointer]:
+            - /url: /app/register?lang=fr
+            - text: Inscription
+            - generic [aria-hidden] [ref=f8e15]: ↗
+          - link "Tarifs" [ref=f8e16] [cursor=pointer]:
+            - /url: /pricing?lang=fr
+      - figure "Illustration du parcours de création" [ref=f8e148]:
+        - generic [ref=f8e149]:
+          - generic [aria-hidden] [ref=f8e150]: ● ● ●
+          - generic [ref=f8e151]: ACTIF PILOT
+          - generic [aria-hidden] [ref=f8e152]: ✦
+        - generic [ref=f8e153]:
+          - complementary [aria-hidden] [ref=f8e154]:
+            - generic [ref=f8e155]: ◈
+            - generic [ref=f8e156]: ✎
+            - generic [ref=f8e157]: ▧
+            - generic [ref=f8e158]: ▦
+          - generic [ref=f8e159]:
+            - generic [ref=f8e160]: Création de contenus IA
+            - heading "Créez, illustrez et publiez vos contenus sociaux" [level=3] [ref=f8e161]
+            - generic [aria-hidden] [ref=f8e166]:
+              - generic [ref=f8e167]: ✦
+              - generic [ref=f8e168]: ▧
+              - generic [ref=f8e169]: ▶
+            - generic [ref=f8e170]:
+              - generic [aria-hidden] [ref=f8e171]: ✓
+              - text: Vérification avant envoi
+            - generic [ref=f8e172]: Publication & programmation ↗
+    - generic [ref=f8e18]:
+      - generic [ref=f8e19]:
+        - generic [ref=f8e20]: Offres
+        - heading "Toute votre création de contenus sociaux, au même endroit" [level=2] [ref=f8e21]
+      - generic [ref=f8e22]:
+        - article [ref=f8e23]:
+          - generic [aria-hidden] [ref=f8e24]: ✦
+          - heading "Création de contenus IA" [level=3] [ref=f8e25]
+          - paragraph [ref=f8e26]: Transformez un sujet en propositions de posts. Précisez votre audience, votre objectif et vos formats, puis retravaillez le texte et ses variantes avant publication.
+          - link "Inscription" [ref=f8e27] [cursor=pointer]:
+            - /url: /app/register?lang=fr
+            - text: Inscription
+            - generic [aria-hidden] [ref=f8e28]: ↗
+        - article [ref=f8e29]:
+          - generic [aria-hidden] [ref=f8e30]: ▧
+          - heading "Images et vidéos" [level=3] [ref=f8e31]
+          - paragraph [ref=f8e32]: Importez vos fichiers depuis votre ordinateur, recherchez des photos sur Pixabay ou générez un visuel. Choisissez explicitement le média qui accompagnera votre contenu.
+          - link "Inscription" [ref=f8e33] [cursor=pointer]:
+            - /url: /app/register?lang=fr
+            - text: Inscription
+            - generic [aria-hidden] [ref=f8e34]: ↗
+        - article [ref=f8e35]:
+          - generic [aria-hidden] [ref=f8e36]: ↗
+          - heading "Publication & programmation" [level=3] [ref=f8e37]
+          - paragraph [ref=f8e38]: Retrouvez vos comptes connectés et préparez vos envois au même endroit. Choisissez une publication immédiate ou une date future et consultez le résultat par destination.
+          - link "Inscription" [ref=f8e39] [cursor=pointer]:
+            - /url: /app/register?lang=fr
+            - text: Inscription
+            - generic [aria-hidden] [ref=f8e40]: ↗
+    - generic [ref=f8e42]:
+      - generic [ref=f8e43]:
+        - generic [ref=f8e44]: Comment ça fonctionne
+        - heading "Un workflow simple, du brief à la publication" [level=2] [ref=f8e45]
+      - generic [ref=f8e46]:
+        - article [ref=f8e47]:
+          - generic [aria-hidden] [ref=f8e48]: ◈
+          - heading "Vos consignes de marque" [level=3] [ref=f8e49]
+          - paragraph [ref=f8e50]: Renseignez votre entreprise, vos liens et vos consignes. Enregistrez vos réglages pour les réutiliser, activez le préremplissage et personnalisez votre macaron dans votre compte.
+          - link "Inscription" [ref=f8e51] [cursor=pointer]:
+            - /url: /app/register?lang=fr
+            - text: Inscription
+            - generic [aria-hidden] [ref=f8e52]: ↗
+        - article [ref=f8e53]:
+          - generic [aria-hidden] [ref=f8e54]: ✓
+          - heading "Vérification avant envoi" [level=3] [ref=f8e55]
+          - paragraph [ref=f8e56]: Relisez le texte, consultez l’aperçu et vérifiez le compte, le média et la date. Vous gardez la main sur la version destinée à vos réseaux sociaux.
+          - link "Inscription" [ref=f8e57] [cursor=pointer]:
+            - /url: /app/register?lang=fr
+            - text: Inscription
+            - generic [aria-hidden] [ref=f8e58]: ↗
+        - article [ref=f8e59]:
+          - generic [aria-hidden] [ref=f8e60]: ▦
+          - heading "Organisation par entreprise" [level=3] [ref=f8e61]
+          - paragraph [ref=f8e62]: Choisissez votre espace de travail, retrouvez ses stratégies et ses comptes sociaux, puis organisez les actions et les publications dans le calendrier.
+          - link "Inscription" [ref=f8e63] [cursor=pointer]:
+            - /url: /app/register?lang=fr
+            - text: Inscription
+            - generic [aria-hidden] [ref=f8e64]: ↗
+    - generic [ref=f8e66]:
+      - generic [ref=f8e67]:
+        - heading "Publication & programmation" [level=2] [ref=f8e68]
+        - paragraph [ref=f8e69]: Retrouvez vos comptes connectés et préparez vos envois au même endroit. Choisissez une publication immédiate ou une date future et consultez le résultat par destination.
+      - generic [ref=f8e70]:
+        - generic [ref=f8e71]: LinkedIn
+        - generic [ref=f8e76]: Instagram
+        - generic [ref=f8e79]: Facebook
+        - generic [ref=f8e82]: YouTube
+      - link "Comment ça fonctionne ↗" [ref=f8e85] [cursor=pointer]:
+        - /url: /how-it-works?lang=fr
+    - generic [ref=f8e87]:
+      - generic [ref=f8e88]:
+        - generic [ref=f8e89]: FAQ
+        - heading "Vous avez des questions ?" [level=2] [ref=f8e90]
+      - generic [ref=f8e91]:
+        - group [ref=f8e92]:
+          - generic "Quels contenus puis-je préparer ?" [ref=f8e93] [cursor=pointer]
+        - group [ref=f8e94]:
+          - generic "Puis-je utiliser mes propres images et vidéos ?" [ref=f8e95] [cursor=pointer]
+        - group [ref=f8e96]:
+          - generic "L’IA publie-t-elle automatiquement ce qu’elle écrit ?" [ref=f8e97] [cursor=pointer]
+        - group [ref=f8e98]:
+          - generic "Comment connaître les tarifs et obtenir de l’aide ?" [ref=f8e99] [cursor=pointer]
+    - generic [ref=f8e102]:
+      - heading "Prêt à créer vos prochains contenus ?" [level=2] [ref=f8e103]
+      - paragraph [ref=f8e104]: Passez de l’idée à un contenu préparé, illustré et prêt à être programmé. Créez votre compte ou échangez avec notre équipe pour présenter votre besoin.
+      - generic [ref=f8e105]:
+        - link "Inscription" [ref=f8e106] [cursor=pointer]:
+          - /url: /app/register?lang=fr
+        - link "Contact" [ref=f8e107] [cursor=pointer]:
+          - /url: /contact?lang=fr
+  - contentinfo [ref=f8e108]:
+    - generic [ref=f8e109]:
+      - generic [ref=f8e110]:
+        - link [ref=f8e111] [cursor=pointer]:
+          - /url: /?lang=fr
+          - img "Actifpilot" [ref=f8e174]
+        - paragraph [ref=f8e113]: Créez et préparez vos contenus pour les réseaux sociaux. Textes, images, vidéos et programmation, dans un même espace.
+      - generic [ref=f8e114]:
+        - heading "Solutions" [level=3] [ref=f8e115]
+        - link "Offres" [ref=f8e116] [cursor=pointer]:
+          - /url: /offers?lang=fr
+        - link "Comment ça fonctionne" [ref=f8e117] [cursor=pointer]:
+          - /url: /how-it-works?lang=fr
+      - generic [ref=f8e118]:
+        - heading "Plateforme" [level=3] [ref=f8e119]
+        - link "Tarifs" [ref=f8e120] [cursor=pointer]:
+          - /url: /pricing?lang=fr
+        - link "Sécurité & RGPD" [ref=f8e121] [cursor=pointer]:
+          - /url: /gdpr?lang=fr
+        - link "Politique de confidentialité" [ref=f8e122] [cursor=pointer]:
+          - /url: /privacy?lang=fr
+        - link "Conditions d'utilisation" [ref=f8e123] [cursor=pointer]:
+          - /url: /terms?lang=fr
+        - link "Contact" [ref=f8e124] [cursor=pointer]:
+          - /url: /contact?lang=fr
+      - generic [ref=f8e125]:
+        - heading "Compte" [level=3] [ref=f8e126]
+        - link "Connexion" [ref=f8e127] [cursor=pointer]:
+          - /url: /app/login?lang=fr
+        - link "Inscription" [ref=f8e128] [cursor=pointer]:
+          - /url: /app/register?lang=fr
+    - generic [ref=f8e129]: © 2026 ACTIF PILOT. Tous droits réservés.

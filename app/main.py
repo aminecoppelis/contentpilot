@@ -83,6 +83,8 @@ app.mount("/public-media", StaticFiles(directory=str(get_settings().media_storag
 app.mount("/n8n-files/public-media", StaticFiles(directory=str(get_settings().media_storage_path), check_dir=False), name="legacy-public-media")
 from app.templating import templates
 from app.routers import legal
+from app.routers import public_pages
+app.include_router(public_pages.router)
 app.include_router(legal.router)
 app.include_router(legal.router, prefix='/app', include_in_schema=False)
 
@@ -141,8 +143,3 @@ async def get_not_found_page(request: Request):
 @app.get("/health")
 async def health():
     return {"status": "ok"}
-
-
-@app.get("/")
-async def root():
-    return RedirectResponse("/app/dashboard", status_code=302)

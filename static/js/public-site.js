@@ -1,0 +1,7 @@
+(function(){
+ var header=document.querySelector('.publicHeader'),toggle=document.querySelector('.publicMenuToggle');
+ function close(){if(header)header.classList.remove('publicMenuOpen');if(toggle)toggle.setAttribute('aria-expanded','false');}
+ if(toggle){toggle.addEventListener('click',function(){var open=header.classList.toggle('publicMenuOpen');toggle.setAttribute('aria-expanded',String(open));});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&header.classList.contains('publicMenuOpen')){close();toggle.focus();}});document.addEventListener('click',function(e){if(!header.contains(e.target))close();});}
+ var theme=document.querySelector('.publicThemeToggle');if(theme)theme.addEventListener('click',function(){var value=document.documentElement.dataset.theme==='light'?'dark':'light';document.documentElement.dataset.theme=value;try{localStorage.setItem('theme',value);}catch(e){} });
+ var form=document.getElementById('publicContactForm');if(form)form.addEventListener('submit',function(e){e.preventDefault();if(!form.reportValidity())return;var values=new FormData(form),lines=['name','email','company','phone'].map(function(name){var label=form.querySelector('label[for="contact-'+name+'"]');return label.textContent.replace(/\s*\*$/,'')+': '+values.get(name);});lines.push('',''+values.get('message'));window.location.href='mailto:contact_customer@actifpilot.com?subject='+encodeURIComponent('Actifpilot — '+values.get('subject'))+'&body='+encodeURIComponent(lines.join('\n'));});
+})();

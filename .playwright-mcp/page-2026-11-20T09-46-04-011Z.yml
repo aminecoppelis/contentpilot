@@ -1,0 +1,137 @@
+- generic [active] [ref=f9e1]:
+  - banner [ref=f9e2]:
+    - button "Main navigation" [ref=f9e3] [cursor=pointer]
+  - main [ref=f9e6]:
+    - generic [ref=f9e9]:
+      - generic [ref=f9e10]: Your creative workspace
+      - heading "Create, illustrate and publish your social content" [level=1] [ref=f9e11]
+      - paragraph [ref=f9e12]: Create text, images and videos for your social networks. Keep your ideas, media and scheduled posts in one workspace, with your brand guidelines.
+      - generic [ref=f9e13]:
+        - link "Sign up" [ref=f9e14] [cursor=pointer]:
+          - /url: /app/register?lang=en
+          - text: Sign up
+          - generic [aria-hidden] [ref=f9e15]: ↗
+        - link "Pricing" [ref=f9e16] [cursor=pointer]:
+          - /url: /pricing?lang=en
+    - generic [ref=f9e18]:
+      - generic [ref=f9e19]:
+        - generic [ref=f9e20]: Offers
+        - heading "All your social content creation, in one place" [level=2] [ref=f9e21]
+      - generic [ref=f9e22]:
+        - article [ref=f9e23]:
+          - generic [aria-hidden] [ref=f9e24]: ✦
+          - heading "AI content creation" [level=3] [ref=f9e25]
+          - paragraph [ref=f9e26]: Turn a topic into post suggestions. Specify your audience, goals and formats, then refine the text and its variations before publication.
+          - link "Sign up" [ref=f9e27] [cursor=pointer]:
+            - /url: /app/register?lang=en
+            - text: Sign up
+            - generic [aria-hidden] [ref=f9e28]: ↗
+        - article [ref=f9e29]:
+          - generic [aria-hidden] [ref=f9e30]: ▧
+          - heading "Images and videos" [level=3] [ref=f9e31]
+          - paragraph [ref=f9e32]: Upload files from your computer, search for photos on Pixabay or generate a visual. Explicitly choose the media that will accompany your content.
+          - link "Sign up" [ref=f9e33] [cursor=pointer]:
+            - /url: /app/register?lang=en
+            - text: Sign up
+            - generic [aria-hidden] [ref=f9e34]: ↗
+        - article [ref=f9e35]:
+          - generic [aria-hidden] [ref=f9e36]: ↗
+          - heading "Publishing & scheduling" [level=3] [ref=f9e37]
+          - paragraph [ref=f9e38]: Find your connected accounts and prepare your posts in one place. Choose immediate publication or a future date and review the result for each destination.
+          - link "Sign up" [ref=f9e39] [cursor=pointer]:
+            - /url: /app/register?lang=en
+            - text: Sign up
+            - generic [aria-hidden] [ref=f9e40]: ↗
+    - generic [ref=f9e42]:
+      - generic [ref=f9e43]:
+        - generic [ref=f9e44]: How it works
+        - heading "A simple workflow, from brief to publication" [level=2] [ref=f9e45]
+      - generic [ref=f9e46]:
+        - article [ref=f9e47]:
+          - generic [aria-hidden] [ref=f9e48]: ◈
+          - heading "Your brand guidelines" [level=3] [ref=f9e49]
+          - paragraph [ref=f9e50]: Enter your company, links and instructions. Save settings for reuse, enable prefilling and customise your brand badge in your account.
+          - link "Sign up" [ref=f9e51] [cursor=pointer]:
+            - /url: /app/register?lang=en
+            - text: Sign up
+            - generic [aria-hidden] [ref=f9e52]: ↗
+        - article [ref=f9e53]:
+          - generic [aria-hidden] [ref=f9e54]: ✓
+          - heading "Review before sending" [level=3] [ref=f9e55]
+          - paragraph [ref=f9e56]: Read the text, check the preview and verify the account, media and date. You control the version intended for your social networks.
+          - link "Sign up" [ref=f9e57] [cursor=pointer]:
+            - /url: /app/register?lang=en
+            - text: Sign up
+            - generic [aria-hidden] [ref=f9e58]: ↗
+        - article [ref=f9e59]:
+          - generic [aria-hidden] [ref=f9e60]: ▦
+          - heading "Organisation by company" [level=3] [ref=f9e61]
+          - paragraph [ref=f9e62]: Choose your workspace, find its strategies and social accounts, and organise actions and publications in the calendar.
+          - link "Sign up" [ref=f9e63] [cursor=pointer]:
+            - /url: /app/register?lang=en
+            - text: Sign up
+            - generic [aria-hidden] [ref=f9e64]: ↗
+    - generic [ref=f9e66]:
+      - generic [ref=f9e67]:
+        - heading "Publishing & scheduling" [level=2] [ref=f9e68]
+        - paragraph [ref=f9e69]: Find your connected accounts and prepare your posts in one place. Choose immediate publication or a future date and review the result for each destination.
+      - generic [ref=f9e70]:
+        - generic [ref=f9e71]: LinkedIn
+        - generic [ref=f9e76]: Instagram
+        - generic [ref=f9e79]: Facebook
+        - generic [ref=f9e82]: YouTube
+      - link "How it works ↗" [ref=f9e85] [cursor=pointer]:
+        - /url: /how-it-works?lang=en
+    - generic [ref=f9e87]:
+      - generic [ref=f9e88]:
+        - generic [ref=f9e89]: FAQ
+        - heading "Have questions?" [level=2] [ref=f9e90]
+      - generic [ref=f9e91]:
+        - group [ref=f9e92]:
+          - generic "What content can I prepare?" [ref=f9e93] [cursor=pointer]
+        - group [ref=f9e94]:
+          - generic "Can I use my own images and videos?" [ref=f9e95] [cursor=pointer]
+        - group [ref=f9e96]:
+          - generic "Does AI automatically publish what it writes?" [ref=f9e97] [cursor=pointer]
+        - group [ref=f9e98]:
+          - generic "How can I find out about pricing and get help?" [ref=f9e99] [cursor=pointer]
+    - generic [ref=f9e102]:
+      - heading "Ready to create your next content?" [level=2] [ref=f9e103]
+      - paragraph [ref=f9e104]: Turn an idea into content that is prepared, illustrated and ready to schedule. Create an account or contact our team to discuss your needs.
+      - generic [ref=f9e105]:
+        - link "Sign up" [ref=f9e106] [cursor=pointer]:
+          - /url: /app/register?lang=en
+        - link "Contact" [ref=f9e107] [cursor=pointer]:
+          - /url: /contact?lang=en
+  - contentinfo [ref=f9e108]:
+    - generic [ref=f9e109]:
+      - generic [ref=f9e110]:
+        - link [ref=f9e111] [cursor=pointer]:
+          - /url: /?lang=en
+          - img "Actifpilot" [ref=f9e112]
+        - paragraph [ref=f9e113]: Create and prepare content for social networks. Text, images, videos and scheduling in one workspace.
+      - generic [ref=f9e114]:
+        - heading "Solutions" [level=3] [ref=f9e115]
+        - link "Offers" [ref=f9e116] [cursor=pointer]:
+          - /url: /offers?lang=en
+        - link "How it works" [ref=f9e117] [cursor=pointer]:
+          - /url: /how-it-works?lang=en
+      - generic [ref=f9e118]:
+        - heading "Platform" [level=3] [ref=f9e119]
+        - link "Pricing" [ref=f9e120] [cursor=pointer]:
+          - /url: /pricing?lang=en
+        - link "Security & GDPR" [ref=f9e121] [cursor=pointer]:
+          - /url: /gdpr?lang=en
+        - link "Privacy Policy" [ref=f9e122] [cursor=pointer]:
+          - /url: /privacy?lang=en
+        - link "Terms of Use" [ref=f9e123] [cursor=pointer]:
+          - /url: /terms?lang=en
+        - link "Contact" [ref=f9e124] [cursor=pointer]:
+          - /url: /contact?lang=en
+      - generic [ref=f9e125]:
+        - heading "Account" [level=3] [ref=f9e126]
+        - link "Sign in" [ref=f9e127] [cursor=pointer]:
+          - /url: /app/login?lang=en
+        - link "Sign up" [ref=f9e128] [cursor=pointer]:
+          - /url: /app/register?lang=en
+    - generic [ref=f9e129]: © 2026 ACTIF PILOT. All rights reserved.

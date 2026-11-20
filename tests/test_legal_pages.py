@@ -36,7 +36,8 @@ class LegalPagesTests(unittest.TestCase):
         for locale in ('fr','en'):
             html=template.render(locale=locale,t=lambda key,**kw:translate(key,locale,**kw))
             for page in ('privacy','terms'):
-                self.assertIn('href="https://actifpilot.com/'+page+'?lang='+locale+'"',html)
+                self.assertIn('href="/'+page+'?lang='+locale+'"',html)
+            self.assertNotIn('https://actifpilot.com',html)
             self.assertNotIn('href="#"',html)
             self.assertIn('<strong>',html)
         for name in ('login.html','register.html'):

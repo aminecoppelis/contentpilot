@@ -1,5 +1,28 @@
 # UX changelog
 
+## 20 novembre 2026 — Page d'accueil publique
+
+- La racine `/` affiche désormais une vraie page d'accueil publique : présentation de la création sociale, illustration du parcours, fonctionnalités, organisation, réseaux, FAQ et inscription/contact.
+- Entrée Accueil et retour du logo vers la racine ; navigation et contenus dans les sept langues. Les routes applicatives `/app/*` restent accessibles depuis Connexion.
+- Même charte Inter/Actifpilot, mode clair et mode sombre, aperçu illustratif sur grand écran et disposition adaptée au mobile. Pas de témoignages ou résultats chiffrés inventés.
+- Vérifications : 108 tests Python réussis ; accueil contrôlé en navigateur local sur ordinateur en clair/sombre et sur mobile, sans débordement dans les vues testées.
+
+## 20 novembre 2026 — Charte Actifpilot et pages de présentation complètes
+
+- Référence consultée en navigateur : actifpilot.com, pages Offres, Fonctionnement, Sécurité, Tarifs et Contact. Reprise de la police Inter, des logos publics, des dimensions typographiques, de la palette, des cartes arrondies et du pied de page. Les contenus présentent la création de contenus sociaux, et non les services QHSE du site de référence.
+- Deux thèmes : fond clair et textes foncés en clair ; bleu nuit et textes blancs uniquement en sombre. Choix conservé entre les pages ; mode clair par défaut sans préférence enregistrée.
+- Pages enrichies dans les sept langues : fonctionnalités détaillées, workflow, comparaison, organisation par entreprise, confidentialité, présentation des besoins tarifaires, FAQ et appels à l'action. Aucun prix, témoignage ou engagement d'hébergement/certification repris sans validation pour ce produit.
+- Contact : champs nom, email, entreprise, téléphone, sujet et message ; préparation dans la messagerie de l'utilisateur, avec indication explicite de ce fonctionnement et sans faux message de livraison.
+- Menu responsive avec ouverture/fermeture et Échap, bascule de thème et footer partagé sur les pages publiques et juridiques. Liens sur le domaine courant.
+- Vérifications : 107 tests Python réussis ; rendu Playwright local en clair/sombre sur ordinateur, contact mobile et fonctionnement arabe RTL sans débordement sur les vues contrôlées. Aucun accès à la DB, worker, envoi SMTP ou publication réelle pendant la recette visuelle.
+
+## 19 novembre 2026 — Menu public multilingue
+
+- Menu commun : Offres, Comment ça fonctionne, Sécurité & RGPD, Tarifs, Contact, sélecteur des sept langues, Connexion et Inscription.
+- Présent sur la connexion, l'inscription, les documents juridiques et les cinq nouvelles pages publiques. Liens relatifs au domaine courant, conservation de la langue et de la destination de connexion, présentation responsive et arabe RTL.
+- Contenus de présentation traduits ; la page Tarifs dirige vers le contact, sans montant ni formule commerciale inventés. La page Sécurité renvoie vers les textes juridiques sans annoncer de certification ou conformité non vérifiée.
+- Tests des 35 combinaisons rubrique/langue et des deux formulaires d'authentification dans les sept langues. Aucun accès DB ou envoi externe nécessaire.
+
 ## 19 novembre 2026 — Confidentialité et conditions d'utilisation
 
 - Mention « En continuant, vous acceptez… » avec liens réels actifpilot.com sur les pages de connexion et d'inscription, en français et en anglais.
