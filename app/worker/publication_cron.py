@@ -193,7 +193,7 @@ async def _run_claimed_publication() -> dict:
                 async with pool.acquire() as conn:
                     await conn.execute("""UPDATE public.post_publications SET status='scheduled',
                         scheduled_at=now()+interval '1 minute', error_message=$3, updated_at=now()
-                        WHERE id=$1::uuid AND workspace_id=$2::uuid""", publication_id, workspace_id, str(exc))
+                        WHERE id=$1::uuid AND workspace_id=$2::uuid AND status='processing'""", publication_id, workspace_id, str(exc))
                 continue
             logger.exception("Publication programmée %s impossible", publication_id)
             error_message = str(exc) or "La publication a échoué sans confirmation du fournisseur."
@@ -203,7 +203,7 @@ async def _run_claimed_publication() -> dict:
         response_payload = {**base_response, "provider_response": outcome, "worker_executed": True}
         async with pool.acquire() as conn:
           async with conn.transaction():
-            await conn.execute(
+            updated = await conn.execute(
                 """
                 UPDATE public.post_publications
                 SET status=$2, response=$3::jsonb, error_message=$4,
@@ -213,11 +213,13 @@ async def _run_claimed_publication() -> dict:
                     END,
                     published_at=CASE WHEN $2='published' THEN now() ELSE published_at END,
                     updated_at=now()
-                WHERE id=$1::uuid AND workspace_id=$6::uuid
+                WHERE id=$1::uuid AND workspace_id=$6::uuid AND status='processing'
                 """,
                 publication_id, status, json.dumps(response_payload),
                 (error_message or "")[:1800] or None, published_by_user_id, workspace_id,
             )
+            if updated == 'UPDATE 0':
+                continue
             if status == "published":
                 await conn.execute(
                     """

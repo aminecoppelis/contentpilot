@@ -11,6 +11,12 @@ from app.templating import templates
 
 router = APIRouter(tags=['Legal'])
 DOCUMENTS = Path(__file__).resolve().parents[2] / 'legal'
+GOOGLE_POLICY_LINKS = (
+    'https://security.google.com/settings/security/permissions',
+    'https://policies.google.com/privacy',
+    'https://developers.google.com/terms/api-services-user-data-policy',
+    'https://www.youtube.com/t/terms',
+)
 
 
 def document_html(text):
@@ -33,6 +39,8 @@ def document_html(text):
         else:
             blocks.append('<p>'+str(escape(block)).replace('\n','<br>')+'</p>')
     html='\n'.join(blocks).replace('contact_customer@actifpilot.com','<a href="mailto:contact_customer@actifpilot.com">contact_customer@actifpilot.com</a>')
+    for url in GOOGLE_POLICY_LINKS:
+        html = html.replace(url, f'<a href="{url}">{url}</a>')
     return Markup(html)
 
 

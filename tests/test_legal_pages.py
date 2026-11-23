@@ -23,11 +23,18 @@ class LegalPagesTests(unittest.TestCase):
                         response=self.client.get(prefix+'/'+document,params={'lang':lang})
                         self.assertEqual(response.status_code,200)
                         self.assertIn('<html lang="'+lang+'">',response.text)
-                        self.assertIn('09/03/2026' if lang=='fr' else '9 March 2026',response.text)
                         self.assertIn('<h2>'+str(last_section)+'. Contact</h2>',response.text)
                         self.assertIn('mailto:contact_customer@actifpilot.com',response.text)
                         self.assertIn('COPPELIS SARL',response.text)
-                        if document=='terms':self.assertIn('750 132 946',response.text)
+                        if document == 'terms':
+                            self.assertIn('09/03/2026' if lang == 'fr' else '9 March 2026', response.text)
+                            self.assertIn('750 132 946', response.text)
+                        else:
+                            self.assertIn('23/11/2026' if lang == 'fr' else '23 November 2026', response.text)
+                            self.assertIn('SocialAI', response.text)
+                            self.assertIn('youtube.readonly', response.text)
+                            self.assertIn('youtube.upload', response.text)
+                            self.assertIn('href="https://security.google.com/settings/security/permissions"', response.text)
             pool.assert_not_called()
 
     def test_footers_have_requested_links_and_language(self):

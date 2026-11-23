@@ -27,6 +27,7 @@ from app.worker.publication_cron import run_publication_cycle
 from app.worker.post_generation_cron import run_post_generation_cycle
 from app.worker.strategy_generation_cron import run_strategy_generation_cycle
 from app.config import get_settings
+from app.services.youtube import check_authorizations
 
 logger = logging.getLogger("worker.scheduler")
 
@@ -164,6 +165,14 @@ def start_scheduler() -> None:
         _instagram_refresh_job,
         CronTrigger.from_crontab("17 */6 * * *"),
         id="instagram_token_refresh",
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=300,
+    )
+    scheduler.add_job(
+        check_authorizations,
+        CronTrigger.from_crontab("37 */6 * * *"),
+        id="youtube_authorization_check",
         max_instances=1,
         coalesce=True,
         misfire_grace_time=300,

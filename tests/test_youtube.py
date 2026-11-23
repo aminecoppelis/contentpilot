@@ -175,10 +175,36 @@ class YouTubeTests(unittest.IsolatedAsyncioTestCase):
              patch.object(yt.httpx, 'AsyncClient', return_value=client), patch.object(yt, 'encrypt_token', side_effect=encrypt), patch.object(yt, 'decrypt_token', side_effect=decrypt):
             self.assertEqual(await yt.access_token('account', 'company'), 'new')
         self.assertIn('workspace_id=$2::uuid', conn.fetchrow.await_args.args[0])
-        self.assertEqual(conn.fetchrow.await_args.args[1:], ('account', 'company'))
+        self.assertEqual(conn.fetchrow.await_args.args[1:], ('account', 'company', False))
         saved = conn.execute.await_args.args[3]
         self.assertNotIn('refresh', saved)
         self.assertEqual(json.loads(decrypt(saved))['refresh_token'], 'refresh')
+
+    async def test_authorization_check_purges_only_confirmed_revocation(self):
+        settings = SimpleNamespace(google_client_id='id', google_client_secret='secret')
+        for status, error in [(400, 'invalid_grant'), (503, 'server_error')]:
+            with self.subTest(error=error):
+                conn = AsyncMock()
+                conn.fetchrow.return_value = {
+                    'token_ciphertext': json.dumps({'refresh_token': 'refresh'}),
+                    'token_expires_at': None,
+                }
+                client = httpx.AsyncClient(transport=httpx.MockTransport(
+                    lambda request: httpx.Response(status, json={'error': error})
+                ))
+                with patch.object(yt, 'get_pool', return_value=mock_pool(conn)), \
+                     patch.object(yt, 'configured', return_value=settings), \
+                     patch.object(yt, 'decrypt_token', side_effect=lambda value: value), \
+                     patch.object(yt.httpx, 'AsyncClient', return_value=client):
+                    expected = yt.AuthorizationRevoked if status == 400 else yt.YouTubeError
+                    with self.assertRaises(expected):
+                        await yt.access_token('account', 'company', verify=True)
+                self.assertEqual(conn.execute.await_count, 3 if status == 400 else 0)
+                if status == 400:
+                    sql, account, workspace = conn.execute.await_args.args
+                    self.assertIn("- 'provider_response'", sql)
+                    self.assertIn('youtube_upload_ciphertext=NULL', sql)
+                    self.assertEqual((account, workspace), ('account', 'company'))
 
     async def test_chunk_upload_recovers_server_offset_and_saves_confirmation(self):
         cipher = Fernet(Fernet.generate_key())

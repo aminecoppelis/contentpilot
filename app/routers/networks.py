@@ -563,13 +563,12 @@ async def post_networks_action(payload: dict = Body(...), user=Depends(require_a
                     "message": "Ce compte appartient à un autre workspace. Utilise « Retirer de ce workspace ».",
                 }, status_code=403)
             if account['provider'] == 'youtube':
-                from app.services.youtube import revoke, YouTubeError
+                from app.services.youtube import disconnect, YouTubeError
                 try:
-                    await revoke(account)
+                    await disconnect(conn, account_id, user.active_workspace_id)
                 except YouTubeError as exc:
                     return JSONResponse({'success': False, 'message': str(exc)}, status_code=502)
-                await conn.execute("UPDATE public.app_social_accounts SET token_ciphertext=NULL, token_expires_at=NULL WHERE id=$1::uuid AND workspace_id=$2::uuid",
-                                   account_id, user.active_workspace_id)
+                return JSONResponse({"success": True, "message": "Connexion supprimée."})
             await conn.execute(
                 "UPDATE public.app_social_accounts SET deleted_at=now(), is_active=false, updated_at=now() "
                 "WHERE id=$1::uuid", account_id)

@@ -1,6 +1,6 @@
-Last updated: 9 March 2026
+Last updated: 23 November 2026
 
-This Privacy Policy describes how COPPELIS SARL (“we”, “our”, “the Platform”) collects, uses, retains and protects users’ personal data (“you”) when you use our SaaS platform available at actifpilot.com.
+This Privacy Policy describes how COPPELIS SARL (“we”, “our”) collects, uses, retains and protects your personal data when you use SocialAI at socialai.actifpilot.com.
 
 We undertake to comply with applicable regulations, including Regulation (EU) 2016/679 (GDPR) and laws relating to the protection of personal data.
 
@@ -117,3 +117,18 @@ We reserve the right to amend this Policy at any time. Users will be informed of
 13. Contact
 
 For any questions regarding data protection: contact_customer@actifpilot.com.
+
+14. Google user data and YouTube
+
+14.1 Data accessed and why
+When you choose to connect YouTube, SocialAI uses Google OAuth and YouTube API Services. The youtube.readonly permission lets SocialAI identify and display the authorized channel using its identifier, title and handle when available. The youtube.upload permission lets SocialAI upload videos you choose, immediately or at the time you schedule. For each upload, SocialAI sends YouTube the video and the publication settings you provide, including the title, description, visibility and made-for-kids designation.
+
+14.2 Storage, sharing and use
+SocialAI stores channel details, granted permissions, token expiry and encrypted access and refresh tokens in its database. SocialAI uses the tokens to maintain the connection and carry out the YouTube actions you authorize. The publication history stores results such as the video identifier, link and visibility returned by YouTube. Authorized users of the connected workspace can see channel details and publication results. Publication data is sent to Google for the upload, and the visibility you select determines who can view the published video on YouTube. Google user data obtained through this integration is used to provide the YouTube features described here. SocialAI does not sell it, use it for advertising or use it to train AI models. SocialAI’s use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including its Limited Use requirements.
+
+14.3 Retention, revocation and deletion
+SocialAI stores the authorization tokens while the connection is active. In SocialAI, open Networks and disconnect your YouTube account to revoke its authorization and remove the stored tokens. You can also revoke access in your Google Account at https://security.google.com/settings/security/permissions. SocialAI removes stored channel details and YouTube API publication results when you disconnect in SocialAI or when a periodic check detects that Google has revoked the authorization. SocialAI retains the original media and local publication records. For questions or deletion requests, contact contact_customer@actifpilot.com. Disconnecting SocialAI does not delete videos already uploaded to YouTube. Manage those videos from YouTube Studio.
+
+Google Privacy Policy: https://policies.google.com/privacy
+Google API Services User Data Policy: https://developers.google.com/terms/api-services-user-data-policy
+YouTube Terms of Service: https://www.youtube.com/t/terms

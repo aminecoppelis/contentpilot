@@ -1,4 +1,7 @@
 {
+  "js.site.youtube_title": "Mit SocialAI auf YouTube veröffentlichen",
+  "js.site.youtube_description": "SocialAI hilft Teams, Inhalte für soziale Medien zu erstellen, zu planen und zu veröffentlichen. Wenn du YouTube verbindest, nutzt SocialAI die YouTube-API, um den freigegebenen Kanal zu identifizieren und die ausgewählten Videos sofort oder zum geplanten Zeitpunkt hochzuladen.",
+  "js.site.youtube_ai_policy": "KI-Funktionen helfen bei der Erstellung und Vorbereitung redaktioneller Inhalte. Es ist verboten, SocialAI zum Erstellen oder Verbreiten intimer Aufnahmen ohne Einwilligung zu nutzen. Das gilt auch für KI-generierte Aufnahmen.",
   "acc.back_to_subjects": "Zurück zu den Beiträgen",
   "acc.cancel": "Stornieren",
   "acc.edit": "Zu ändern",

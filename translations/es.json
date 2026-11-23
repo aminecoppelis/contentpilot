@@ -1,4 +1,7 @@
 {
+  "js.site.youtube_title": "Publica en YouTube con SocialAI",
+  "js.site.youtube_description": "SocialAI ayuda a los equipos a crear, programar y publicar contenido en redes sociales. Al conectar YouTube, SocialAI usa su API para identificar el canal que autorizas y subir los vídeos que elijas, de inmediato o en la fecha programada.",
+  "js.site.youtube_ai_policy": "Las funciones de IA ayudan a crear y preparar contenido editorial. Está prohibido usar SocialAI para crear o difundir imágenes íntimas no consentidas, incluidas las generadas por IA.",
   "acc.back_to_subjects": "Volver a publicaciones",
   "acc.cancel": "Cancelar",
   "acc.edit": "para modificar",

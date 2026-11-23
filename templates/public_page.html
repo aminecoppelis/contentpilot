@@ -1,10 +1,20 @@
 {% macro card(kind, icon, features=[]) %}<article class="publicCard"><span class="publicIcon" aria-hidden="true">{{ icon }}</span><h3>{{ t('js.site.' ~ kind ~ '_title') }}</h3><p>{{ t('js.site.' ~ kind ~ '_desc') }}</p>{% if features %}<ul class="publicList">{% for feature in features %}<li>{{ feature }}</li>{% endfor %}</ul>{% endif %}<a class="publicButton" href="/app/register?lang={{ locale }}">{{ t('js.public.signup') }} <span aria-hidden="true">↗</span></a></article>{% endmacro %}
-<!doctype html><html lang="{{ locale }}" dir="{{ dir }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ t('js.public.' ~ public_section) }} — ACTIF PILOT</title>{% include 'partials/public_head.html' %}</head>
+<!doctype html><html lang="{{ locale }}" dir="{{ dir }}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ t('js.public.' ~ public_section) }} — {{ 'SocialAI' if public_section == 'home' else 'ACTIF PILOT' }}</title>{% include 'partials/public_head.html' %}</head>
 <body class="publicSite">{% include 'partials/public_menu.html' %}
 <main>
-<section class="publicHero {{ 'publicHomeHero' if public_section == 'home' }}"><div class="publicContainer"><div class="publicHeroText"><span class="publicEyebrow">{{ t('js.site.features_title') if public_section == 'home' else t('js.public.' ~ public_section) }}</span><h1>{{ t('js.site.' ~ public_section ~ '_title') }}</h1><p>{{ t('js.public.' ~ public_section ~ '_body') }}</p>{% if public_section not in ['contact','pricing'] %}<div class="publicButtons"><a class="publicButton primary" href="/app/register?lang={{ locale }}">{{ t('js.public.signup') }} <span aria-hidden="true">↗</span></a><a class="publicButton" href="/pricing?lang={{ locale }}">{{ t('js.public.pricing') }}</a></div>{% endif %}</div>{% if public_section == 'home' %}{% include 'partials/public_studio_preview.html' %}{% endif %}</div></section>
+<section class="publicHero {{ 'publicHomeHero' if public_section == 'home' }}"><div class="publicContainer"><div class="publicHeroText"><span class="publicEyebrow">{{ 'SocialAI' if public_section == 'home' else t('js.public.' ~ public_section) }}</span><h1>{{ t('js.site.' ~ public_section ~ '_title') }}</h1><p>{{ t('js.public.' ~ public_section ~ '_body') }}</p>{% if public_section not in ['contact','pricing'] %}<div class="publicButtons"><a class="publicButton primary" href="/app/register?lang={{ locale }}">{{ t('js.public.signup') }} <span aria-hidden="true">↗</span></a><a class="publicButton" href="/pricing?lang={{ locale }}">{{ t('js.public.pricing') }}</a></div>{% endif %}</div>{% if public_section == 'home' %}{% include 'partials/public_studio_preview.html' %}{% endif %}</div></section>
 
 {% if public_section == 'home' %}
+<section class="publicSection" aria-labelledby="public-youtube-title">
+  <div class="publicContainer">
+    <div class="publicSectionIntro">
+      <h2 id="public-youtube-title">{{ t('js.site.youtube_title') }}</h2>
+      <p>{{ t('js.site.youtube_description') }}</p>
+      <p>{{ t('js.site.youtube_ai_policy') }}</p>
+      <a class="publicButton" href="/privacy?lang={{ 'fr' if locale == 'fr' else 'en' }}">{{ t('auth.foot.privacy') }}</a>
+    </div>
+  </div>
+</section>
 <section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><span class="publicEyebrow">{{ t('js.public.offers') }}</span><h2>{{ t('js.site.offers_title') }}</h2></div><div class="publicGrid">{{ card('create','✦') }}{{ card('media','▧') }}{{ card('publish','↗') }}</div></div></section>
 <section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><span class="publicEyebrow">{{ t('js.public.how') }}</span><h2>{{ t('js.site.workflow_title') }}</h2></div><div class="publicGrid">{% for kind in ['brand','review','workspace'] %}{{ card(kind,['◈','✓','▦'][loop.index0]) }}{% endfor %}</div></div></section>
 <section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><h2>{{ t('js.site.publish_title') }}</h2><p>{{ t('js.site.publish_desc') }}</p></div><div class="publicNetworks">{% from 'partials/network_badges.html' import network_svg %}{% for platform,label in [('linkedin','LinkedIn'),('instagram','Instagram'),('facebook','Facebook'),('youtube','YouTube')] %}<span>{{ network_svg(platform,24) }} {{ label }}</span>{% endfor %}</div><div class="publicButtons"><a class="publicButton" href="/how-it-works?lang={{ locale }}">{{ t('js.public.how') }} ↗</a></div></div></section>

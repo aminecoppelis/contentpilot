@@ -1,4 +1,7 @@
 {
+  "js.site.youtube_title": "Publish to YouTube with SocialAI",
+  "js.site.youtube_description": "SocialAI helps teams create, schedule and publish social media content. When you connect YouTube, SocialAI uses the YouTube API to identify the channel you authorize and upload the videos you choose, immediately or at the scheduled time.",
+  "js.site.youtube_ai_policy": "AI features help create and prepare editorial content. Using SocialAI to create or distribute non-consensual intimate imagery, including AI-generated imagery, is prohibited.",
   "acc.back_to_subjects": "Back to topics",
   "acc.cancel": "Cancel",
   "acc.edit": "Edit",

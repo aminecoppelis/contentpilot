@@ -32,6 +32,10 @@ class UploadInterrupted(YouTubeError):
     """Retry the same saved session; never create a second upload automatically."""
 
 
+class AuthorizationRevoked(YouTubeError):
+    pass
+
+
 def configured():
     settings = get_settings()
     if not (settings.google_client_id and settings.google_client_secret and settings.token_encryption_key):
@@ -56,7 +60,9 @@ def checked(response: httpx.Response) -> dict:
     if response.status_code >= 400:
         err = body.get('error') or {}
         reason = ((err.get('errors') or [{}])[0].get('reason') if isinstance(err, dict) else err)
-        if response.status_code == 401 or reason == 'invalid_grant':
+        if reason == 'invalid_grant':
+            raise AuthorizationRevoked('Autorisation Google expirée ou révoquée. Reconnectez la chaîne YouTube.')
+        if response.status_code == 401:
             raise YouTubeError('Autorisation Google expirée ou révoquée. Reconnectez la chaîne YouTube.')
         if reason in ('quotaExceeded', 'dailyLimitExceeded', 'uploadLimitExceeded'):
             raise YouTubeError('Quota YouTube atteint. Réessayez après son renouvellement.')
@@ -100,14 +106,66 @@ async def revoke(account):
         raise YouTubeError('Révocation Google non confirmée. Réessayez la déconnexion.') from None
 
 
-async def access_token(account_id: str, workspace_id: str, *, force=False) -> str:
+async def purge_authorized_data(conn, account_id, workspace_id):
+    """Keep local publication history while removing the disconnected Google account data."""
+    await conn.execute('''UPDATE public.app_social_accounts
+        SET token_ciphertext=NULL, token_expires_at=NULL, external_account_id=NULL,
+            external_username=NULL, external_parent_id=NULL, display_name=NULL,
+            platform_account_name=NULL, scopes=NULL, metadata='{}'::jsonb,
+            deleted_at=COALESCE(deleted_at, now()), is_active=false, updated_at=now()
+        WHERE id=$1::uuid AND workspace_id=$2::uuid AND provider='youtube' ''', account_id, workspace_id)
+    await conn.execute('''UPDATE public.app_social_account_workspaces
+        SET is_active=false, revoked_at=COALESCE(revoked_at, now()), updated_at=now()
+        WHERE account_id=$1::uuid''', account_id)
+    await conn.execute('''UPDATE public.post_publications
+        SET response=(COALESCE(response, '{}'::jsonb) - 'provider_response'),
+            youtube_upload_ciphertext=NULL, upload_bytes=0, upload_total_bytes=0,
+            status=CASE WHEN status IN ('scheduled','processing','pending','queued') THEN 'failed' ELSE status END,
+            error_message=CASE WHEN status IN ('scheduled','processing','pending','queued')
+                               THEN 'Connexion YouTube révoquée.' ELSE NULL END, updated_at=now()
+        WHERE workspace_id=$2::uuid AND platform='youtube' AND response->>'social_account_id'=$1::text''',
+        str(account_id), workspace_id)
+
+
+async def disconnect(conn, account_id, workspace_id):
+    account = await conn.fetchrow('''SELECT token_ciphertext FROM public.app_social_accounts
+        WHERE id=$1::uuid AND workspace_id=$2::uuid AND provider='youtube' FOR UPDATE''', account_id, workspace_id)
+    if account:
+        await revoke(account)
+        await purge_authorized_data(conn, account_id, workspace_id)
+
+
+async def check_authorizations():
+    """Check even unused accounts and sweep pre-existing disconnected records."""
+    async with get_pool().acquire() as conn:
+        rows = await conn.fetch('''SELECT id, workspace_id, deleted_at FROM public.app_social_accounts
+            WHERE provider='youtube' AND (token_ciphertext IS NOT NULL
+                OR (deleted_at IS NOT NULL AND external_account_id IS NOT NULL))''')
+    for row in rows:
+        account_id, workspace_id = str(row['id']), str(row['workspace_id'])
+        if row['deleted_at']:
+            async with get_pool().acquire() as conn:
+                async with conn.transaction():
+                    await disconnect(conn, account_id, workspace_id)
+            continue
+        try:
+            await access_token(account_id, workspace_id, verify=True)
+        except AuthorizationRevoked:
+            # The refresh transaction commits the purge before reporting the revocation.
+            continue
+        except (YouTubeError, httpx.HTTPError):
+            # Configuration or transient failures do not establish revocation.
+            continue
+
+
+async def access_token(account_id: str, workspace_id: str, *, force=False, verify=False) -> str:
     """Lock refreshes across processes and enforce owner workspace, even for shares."""
     s = configured()
     async with get_pool().acquire() as conn:
       async with conn.transaction():
         row = await conn.fetchrow('''SELECT token_ciphertext, token_expires_at FROM public.app_social_accounts
             WHERE id=$1::uuid AND workspace_id=$2::uuid AND provider='youtube'
-              AND is_active=true AND deleted_at IS NULL FOR UPDATE''', account_id, workspace_id)
+              AND (is_active=true OR $3::boolean) AND deleted_at IS NULL FOR UPDATE''', account_id, workspace_id, verify)
         if not row:
             raise YouTubeError('Chaîne YouTube inactive ou inaccessible dans cette entreprise.')
         try:
@@ -117,19 +175,26 @@ async def access_token(account_id: str, workspace_id: str, *, force=False) -> st
         if not force and row['token_expires_at'] and row['token_expires_at'] > datetime.now(timezone.utc) + timedelta(minutes=2):
             return tokens['access_token']
         async with httpx.AsyncClient(timeout=60) as client:
-            data = checked(await client.post(TOKEN_URL, data={
+            response = await client.post(TOKEN_URL, data={
                 'client_id': s.google_client_id, 'client_secret': s.google_client_secret,
                 'refresh_token': tokens['refresh_token'], 'grant_type': 'refresh_token',
-            }))
-        if not data.get('access_token'):
-            raise YouTubeError('Renouvellement du jeton Google impossible. Reconnectez YouTube.')
-        tokens['access_token'] = data['access_token']
-        tokens['refresh_token'] = data.get('refresh_token') or tokens['refresh_token']
-        await conn.execute('''UPDATE public.app_social_accounts SET token_ciphertext=$3,
-            token_expires_at=$4, updated_at=now() WHERE id=$1::uuid AND workspace_id=$2::uuid''',
-            account_id, workspace_id, encrypt_token(json.dumps(tokens)),
-            datetime.now(timezone.utc) + timedelta(seconds=int(data.get('expires_in', 3600))))
-        return tokens['access_token']
+            })
+        try:
+            data = checked(response)
+        except AuthorizationRevoked as exc:
+            await purge_authorized_data(conn, account_id, workspace_id)
+            revoked = exc
+        else:
+            if not data.get('access_token'):
+                raise YouTubeError('Renouvellement du jeton Google impossible. Reconnectez YouTube.')
+            tokens['access_token'] = data['access_token']
+            tokens['refresh_token'] = data.get('refresh_token') or tokens['refresh_token']
+            await conn.execute('''UPDATE public.app_social_accounts SET token_ciphertext=$3,
+                token_expires_at=$4, updated_at=now() WHERE id=$1::uuid AND workspace_id=$2::uuid''',
+                account_id, workspace_id, encrypt_token(json.dumps(tokens)),
+                datetime.now(timezone.utc) + timedelta(seconds=int(data.get('expires_in', 3600))))
+            return tokens['access_token']
+    raise revoked
 
 
 def video_options(value: dict) -> dict:
@@ -198,10 +263,12 @@ async def upload(account, publication_id: str, workspace_id: str, options: dict)
     token = await access_token(str(account['id']), workspace_id)
     async def save(offset):
         async with get_pool().acquire() as conn:
-            await conn.execute('''UPDATE public.post_publications SET youtube_upload_ciphertext=$3,
+            updated = await conn.execute('''UPDATE public.post_publications SET youtube_upload_ciphertext=$3,
                 upload_bytes=$4, upload_total_bytes=$5, updated_at=now()
                 WHERE id=$1::uuid AND workspace_id=$2::uuid AND status='processing' ''',
                 publication_id, workspace_id, encrypt_token(json.dumps(state)), offset, size)
+            if updated == 'UPDATE 0':
+                raise YouTubeError('La publication YouTube a été interrompue.')
 
     async with httpx.AsyncClient(timeout=120, follow_redirects=False) as client:
         async def request(method, url, **kwargs):

@@ -1,6 +1,6 @@
-Dernière mise à jour : 09/03/2026
+Dernière mise à jour : 23/11/2026
 
-La présente Politique de Confidentialité décrit la manière dont la Société COPPELIS SARL (« nous », « notre », « la Plateforme ») collecte, utilise, conserve et protège les données personnelles des utilisateurs (« vous ») dans le cadre de l’utilisation de notre plateforme SaaS accessible via actifpilot.com.
+La présente Politique de Confidentialité décrit la manière dont COPPELIS SARL collecte, utilise, conserve et protège vos données personnelles lorsque vous utilisez SocialAI à l’adresse socialai.actifpilot.com.
 
 Nous nous engageons à respecter la réglementation applicable, notamment le Règlement (UE) 2016/679 (RGPD) et les lois relatives à la protection des données personnelles.
 
@@ -117,3 +117,18 @@ Nous nous réservons le droit de modifier la présente Politique à tout moment.
 13. Contact
 
 Pour toute question relative à la protection des données : contact_customer@actifpilot.com.
+
+14. Données utilisateur Google et YouTube
+
+14.1 Données consultées et finalités
+Lorsque vous choisissez de connecter YouTube, SocialAI utilise Google OAuth et les services API YouTube. L’autorisation youtube.readonly permet d’identifier et d’afficher la chaîne autorisée à partir de son identifiant, de son nom et de son identifiant public lorsqu’il est disponible. L’autorisation youtube.upload permet d’envoyer les vidéos que vous choisissez, immédiatement ou à la date programmée. SocialAI transmet à YouTube la vidéo et les paramètres de publication renseignés, dont le titre, la description, la visibilité et l’indication que la vidéo est destinée ou non aux enfants.
+
+14.2 Stockage, partage et utilisation
+SocialAI conserve en base les informations de la chaîne, les autorisations, la date d’expiration et les jetons d’accès et d’actualisation chiffrés. Ces jetons servent à maintenir la connexion et à effectuer les actions YouTube que vous autorisez. L’historique des publications conserve les résultats renvoyés par YouTube, dont l’identifiant, le lien et la visibilité de la vidéo. Les utilisateurs habilités de l’espace de travail peuvent voir les informations de la chaîne et les résultats de publication. Les données de publication sont transmises à Google pour l’envoi, et la visibilité choisie détermine qui peut consulter la vidéo sur YouTube. SocialAI utilise les données utilisateur Google obtenues via cette intégration pour les fonctionnalités YouTube décrites ici. Ces données ne sont ni vendues, ni utilisées à des fins publicitaires ou pour entraîner des modèles d’IA. L’utilisation et le transfert des informations reçues des API Google respectent les règles relatives aux données utilisateur des services d’API Google, dont les exigences d’utilisation limitée.
+
+14.3 Conservation, révocation et suppression
+Les jetons d’autorisation sont conservés tant que la connexion est active. Dans SocialAI, ouvrez Réseaux et déconnectez le compte YouTube pour révoquer son autorisation et supprimer les jetons stockés. Vous pouvez également révoquer l’accès depuis votre compte Google à l’adresse https://security.google.com/settings/security/permissions. SocialAI supprime les informations de chaîne et les résultats de publication reçus de YouTube lors de la déconnexion dans SocialAI ou lorsqu’une vérification périodique détecte que Google a révoqué l’autorisation. Les fichiers sources et les enregistrements de publication locaux sont conservés. Pour toute question ou demande de suppression, écrivez à contact_customer@actifpilot.com. Les vidéos déjà envoyées restent gérables dans YouTube Studio.
+
+Règles de confidentialité de Google : https://policies.google.com/privacy
+Règles relatives aux données utilisateur des services d’API Google : https://developers.google.com/terms/api-services-user-data-policy
+Conditions d’utilisation de YouTube : https://www.youtube.com/t/terms
