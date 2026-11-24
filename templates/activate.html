@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{{ (t('activate.title_ok') if activated else t('activate.title_ko')) }} · {{ t('app.name') }}</title>
+  {% include 'partials/favicon.html' %}
   <script>
     (function(){ try { document.documentElement.setAttribute('data-theme', localStorage.getItem('theme') === 'dark' ? 'dark' : 'light'); } catch(e){ document.documentElement.setAttribute('data-theme','light'); } })();
   </script>

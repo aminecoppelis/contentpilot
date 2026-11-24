@@ -99,7 +99,7 @@
   "adm.ws.back": "العودة إلى الإعدادات",
   "adm.ws.desc": "ينشئ جداول نموذج تعدد مساحات العمل إن لم تكن موجودة ويصلح مشاركات الحسابات الاجتماعية الموروثة. هذه العملية قابلة للتكرار بأمان.",
   "adm.ws.title": "تهيئة مساحات العمل",
-  "app.name": "Post Generator",
+  "app.name": "SocialAI",
   "auth.field.confirm_password": "تأكيد كلمة المرور",
   "auth.field.email": "البريد الإلكتروني",
   "auth.field.firstname": "الاسم الأول",

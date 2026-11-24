@@ -303,13 +303,12 @@ summary:focus-visible,
 .sidebar-logo .brand .brand-mark {
   flex: 0 0 auto;
   width: 26px; height: 26px;
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 8px;
-  background: var(--brand-grad);
-  color: #fff;
+  display: none;
 }
-.sidebar-logo .brand .brand-mark svg { width: 15px; height: 15px; }
-.sidebar-logo .brand .brand-text { overflow: hidden; text-overflow: ellipsis; }
+.pg-nav-collapsed .sidebar .sidebar-logo .brand-mark,
+.sidebar.collapsed .sidebar-logo .brand-mark { display: block; }
+.sidebar-logo .brand .brand-text img { display: block; max-width: 100%; height: auto; }
+[data-theme=dark] .sidebar-logo .brand img { filter: brightness(0) invert(1); }
 
 .sidebar-collapse-btn {
   flex: 0 0 auto;

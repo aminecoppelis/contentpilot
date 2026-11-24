@@ -99,7 +99,7 @@
   "adm.ws.back": "Volver a la configuración",
   "adm.ws.desc": "Crea las tablas del modelo de múltiples espacios de trabajo si no existen y corrige el uso compartido de cuentas sociales heredado de la antigua lógica automática. Esta operación es idempotente.",
   "adm.ws.title": "Inicialización de espacios de trabajo.",
-  "app.name": "Generador de publicaciones",
+  "app.name": "SocialAI",
   "auth.field.confirm_password": "Confirmar Contraseña",
   "auth.field.email": "Correo electrónico",
   "auth.field.firstname": "Nombre de pila",

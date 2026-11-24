@@ -99,7 +99,7 @@
   "adm.ws.back": "Torna alle impostazioni",
   "adm.ws.desc": "Crea le tabelle del modello multi-workspace se non esistono e corregge la condivisione degli account social ereditata dalla vecchia logica automatica. Questa operazione è idempotente.",
   "adm.ws.title": "Inizializzazione degli spazi di lavoro",
-  "app.name": "Generatore di post",
+  "app.name": "SocialAI",
   "auth.field.confirm_password": "Conferma password",
   "auth.field.email": "E-mail",
   "auth.field.firstname": "Nome",

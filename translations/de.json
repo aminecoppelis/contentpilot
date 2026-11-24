@@ -99,7 +99,7 @@
   "adm.ws.back": "Zurück zu den Einstellungen",
   "adm.ws.desc": "Erstellt die Multi-Workspace-Modelltabellen, wenn diese nicht vorhanden sind, und korrigiert die von der alten automatischen Logik übernommene gemeinsame Nutzung von sozialen Konten. Diese Operation ist idempotent.",
   "adm.ws.title": "Initialisierung von Arbeitsbereichen",
-  "app.name": "Postgenerator",
+  "app.name": "SocialAI",
   "auth.field.confirm_password": "Passwort bestätigen",
   "auth.field.email": "E-Mail",
   "auth.field.firstname": "Vorname",
