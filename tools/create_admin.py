@@ -4,13 +4,16 @@
 import argparse
 import asyncio
 from getpass import GetPassWarning, getpass
+import os
 from pathlib import Path
 import sys
 import warnings
 
 import asyncpg
+from pydantic import ValidationError
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.database import close_pool, init_pool  # noqa: E402
 from app.security import hash_password, is_valid_email, is_valid_password  # noqa: E402
@@ -62,7 +65,11 @@ def main() -> int:
     if not is_valid_password(password) or len(password.encode('utf-8')) > 72:
         parser.error('Le mot de passe doit contenir au moins 10 caractères et au plus 72 octets UTF-8.')
     try:
+        os.chdir(PROJECT_ROOT)
         created = asyncio.run(create_admin(email, hash_password(password)))
+    except ValidationError:
+        print('Configuration invalide. Vérifiez DATABASE_URL dans le fichier .env à la racine du projet.', file=sys.stderr)
+        return 1
     except (asyncpg.PostgresError, OSError) as exc:
         print(f'Création impossible. Vérifiez la configuration et le schéma de la base ({type(exc).__name__}).', file=sys.stderr)
         return 1
