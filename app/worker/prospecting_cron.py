@@ -2,7 +2,6 @@
 import asyncio
 import logging
 import re
-from urllib.parse import urlsplit
 from uuid import uuid4
 
 import httpx
@@ -13,21 +12,6 @@ from app.services import ai, unipile
 logger = logging.getLogger(__name__)
 MAX_PAGES = 3
 AI_ERRORS = (ai.AIGenerationError, httpx.HTTPError, asyncio.TimeoutError)
-
-
-def linkedin_photo(item):
-    for key in ('public_picture_url', 'profile_picture_url', 'profile_picture_url_large'):
-        value = item.get(key)
-        if not isinstance(value, str) or len(value) > 4096 or any(char.isspace() for char in value):
-            continue
-        try:
-            url = urlsplit(value)
-            if (url.scheme == 'https' and (url.hostname or '').endswith('.licdn.com')
-                    and not url.username and not url.password and url.port in (None, 443)):
-                return value
-        except ValueError:
-            continue
-    return ''
 
 
 def real_profiles(data):
@@ -54,7 +38,7 @@ def real_profiles(data):
         fields = {'name': str(item.get('name') or item.get('display_name') or '')[:250],
                   'first_name': str(item.get('first_name') or '')[:120],
                   'headline': str(item.get('headline') or item.get('description') or '')[:400],
-                  'location': location[:200] if isinstance(location, str) else '', 'photo_url': linkedin_photo(item)}
+                  'location': location[:200] if isinstance(location, str) else '', 'photo_url': unipile.linkedin_photo(item)}
         profiles.setdefault(slug, fields)
         if len(profiles) == 10:
             break

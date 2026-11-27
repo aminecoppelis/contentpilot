@@ -27,6 +27,7 @@ PROVIDER = 'unipile_linkedin'
 ACCOUNT_ID = re.compile(r'[A-Za-z0-9_-]{1,128}')
 # Allow two 25-second Unipile calls per recipient within the proxy's 300-second timeout.
 MAX_RECIPIENTS = 5
+photo_requests = asyncio.Semaphore(3)
 
 
 class ConnectionNotification(BaseModel):
@@ -83,6 +84,30 @@ async def new_campaign(request: Request, user=Depends(require_admin)):
 @router.get('/prospecting/campaigns/{campaign_id}', response_class=HTMLResponse)
 async def campaign_detail(request: Request, campaign_id: UUID, result: str = '', user=Depends(require_admin)):
     return await render_page(request, user, result, campaign_id, view='detail')
+
+
+@router.get('/prospecting/campaigns/{campaign_id}/photos/{slug}', include_in_schema=False)
+async def contact_photo(campaign_id: UUID, slug: str, user=Depends(require_admin)):
+    async with get_pool().acquire() as conn:
+        await owned_campaign(conn, user, campaign_id)
+        exists = await conn.fetchval('''SELECT EXISTS (SELECT 1 FROM public.linkedin_prospecting_contacts
+            WHERE campaign_id=$1 AND profile_slug=$2)''', campaign_id, slug)
+        account = await connected_account(conn, user) if exists else None
+    headers = {'Cache-Control': 'private, max-age=120', 'Referrer-Policy': 'no-referrer'}
+    if not account:
+        return Response(status_code=404, headers=headers)
+    try:
+        async with photo_requests:
+            profile = await asyncio.wait_for(unipile.get_profile(account['unipile_account_id'], slug), timeout=8)
+    except (unipile.UnipileError, asyncio.TimeoutError):
+        return Response(status_code=404, headers=headers)
+    url = unipile.linkedin_photo(profile)
+    if not url:
+        return Response(status_code=404, headers=headers)
+    async with get_pool().acquire() as conn:
+        await conn.execute('''UPDATE public.linkedin_prospecting_contacts SET photo_url=$3
+            WHERE campaign_id=$1 AND profile_slug=$2''', campaign_id, slug, url)
+    return RedirectResponse(url, status_code=302, headers=headers)
 
 
 async def campaign_statistics(conn, user, campaign_id=None):

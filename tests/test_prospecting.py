@@ -16,6 +16,32 @@ from app.services import unipile
 from app.worker import prospecting_cron
 
 
+def test_missing_search_photo_is_fetched_from_the_full_linkedin_profile():
+    campaign_id = uuid4()
+    user = AuthUser(id=str(uuid4()), active_workspace_id=str(uuid4()), email='admin@example.com',
+                    session_id='test-session', request_token='test-token', is_super_admin=True)
+    conn = AsyncMock()
+    conn.fetchrow.side_effect = [{'id': campaign_id}, {'unipile_account_id': 'acc_example'}]
+    conn.fetchval.return_value = True
+
+    @asynccontextmanager
+    async def acquire():
+        yield conn
+
+    app = FastAPI()
+    app.include_router(prospecting.router, prefix='/app')
+    app.dependency_overrides[prospecting.require_admin] = lambda: user
+    url = 'https://media.licdn.com/dms/image/profile-photo'
+    profile = AsyncMock(return_value={'specifics': {'linkedin': {'public_picture_url_large': url}}})
+    with TestClient(app) as client, patch.object(prospecting, 'get_pool', return_value=SimpleNamespace(acquire=acquire)), \
+         patch.object(unipile, 'get_profile', profile):
+        response = client.get(f'/app/prospecting/campaigns/{campaign_id}/photos/contact-ia', follow_redirects=False)
+    assert response.status_code == 302
+    assert response.headers['location'] == url
+    profile.assert_awaited_once_with('acc_example', 'contact-ia')
+    assert conn.execute.await_args.args[1:] == (campaign_id, 'contact-ia', url)
+
+
 def test_search_keeps_linkedin_results_when_both_ai_steps_fail():
     job = {'id': uuid4(), 'target': 'Responsable IA B2B', 'goal': 'Discovery call', 'offer': 'Assessment',
            'unipile_account_id': 'acc_example', 'search_keywords': '', 'search_locale': 'fr'}

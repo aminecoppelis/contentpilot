@@ -87,6 +87,25 @@ async def get_profile(account_id: str, slug: str) -> dict:
     return await request('GET', profile, params={'account_id': account_id})
 
 
+def linkedin_photo(profile: dict) -> str:
+    specifics = profile.get('specifics')
+    linkedin = specifics.get('linkedin', specifics) if isinstance(specifics, dict) else {}
+    sources = (profile, linkedin) if isinstance(linkedin, dict) else (profile,)
+    for source in sources:
+        for key in ('public_picture_url', 'public_picture_url_large', 'profile_picture_url', 'profile_picture_url_large'):
+            value = source.get(key)
+            if not isinstance(value, str) or len(value) > 4096 or any(char.isspace() for char in value):
+                continue
+            try:
+                url = urlsplit(value)
+                if (url.scheme == 'https' and (url.hostname or '').endswith('.licdn.com')
+                        and not url.username and not url.password and url.port in (None, 443)):
+                    return value
+            except ValueError:
+                continue
+    return ''
+
+
 async def send_message(account_id: str, provider_id: str, message: str) -> dict:
     if uses_v2():
         return await request('POST', f'{account_id}/inboxes/CLASSIC/chats/send',

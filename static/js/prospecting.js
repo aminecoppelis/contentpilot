@@ -1,7 +1,12 @@
 (() => {
   document.querySelectorAll('[data-prospecting-avatar]').forEach(image => {
-    image.addEventListener('error', () => { image.hidden = true; });
-    if (image.complete && !image.naturalWidth) image.hidden = true;
+    const fallback = new URL(image.dataset.photoFallback, window.location.href).href;
+    function recoverPhoto() {
+      if (image.src === fallback) image.hidden = true;
+      else image.src = fallback;
+    }
+    image.addEventListener('error', recoverPhoto);
+    if (image.complete && !image.naturalWidth) recoverPhoto();
   });
   const detail = document.querySelector('[data-prospecting-detail]');
   const dashboard = document.querySelector('[data-prospecting-dashboard]');
