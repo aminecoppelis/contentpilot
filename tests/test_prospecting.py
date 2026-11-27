@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
+import httpx
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -11,6 +12,37 @@ from app.dependencies import auth
 from app.models.auth import AuthUser
 from app.routers import prospecting
 from app.services import unipile
+
+
+def test_v2_links_an_existing_linkedin_account_with_the_server_key():
+    user = AuthUser(id=str(uuid4()), active_workspace_id=str(uuid4()), email='test@example.com',
+                    session_id='test-session', request_token='test-token', is_super_admin=True)
+    conn = AsyncMock()
+    conn.fetchval.return_value = 'acc_example'
+
+    @asynccontextmanager
+    async def acquire():
+        yield conn
+
+    app = FastAPI()
+    app.include_router(prospecting.router, prefix='/app')
+    app.dependency_overrides[prospecting.require_admin] = lambda: user
+
+    def unipile_response(request):
+        assert str(request.url) == 'https://api.unipile.com/v2/accounts/acc_example'
+        assert request.headers['X-API-KEY'] == 'test-key'
+        return httpx.Response(200, json={'id': 'acc_example', 'provider': 'linkedin', 'status': 'running', 'name': 'LinkedIn Test'})
+
+    upstream = httpx.AsyncClient(transport=httpx.MockTransport(unipile_response))
+    settings = SimpleNamespace(unipile_dsn='', unipile_api_key='test-key')
+    with TestClient(app) as client, patch.object(prospecting, 'form_token', return_value='test-csrf'), \
+         patch.object(prospecting, 'get_pool', return_value=SimpleNamespace(acquire=acquire)), \
+         patch.object(unipile, 'get_settings', return_value=settings), \
+         patch.object(unipile.httpx, 'AsyncClient', return_value=upstream):
+        response = client.post('/app/prospecting/attach', data={'csrf': 'test-csrf', 'account_id': 'acc_example'},
+                               follow_redirects=False)
+    assert response.headers['location'] == '/app/prospecting?result=attached'
+    assert conn.fetchval.await_args.args[1:] == (user.id, user.active_workspace_id, 'acc_example', 'LinkedIn Test')
 
 
 def test_prospecting_denies_direct_access_to_non_admins():
@@ -50,6 +82,7 @@ def test_send_is_scoped_to_the_active_account_and_deduplicates_the_same_submissi
     async def acquire():
         yield conn
 
+    conn.transaction = acquire
     app = FastAPI()
     app.include_router(prospecting.router, prefix='/app')
     app.dependency_overrides[prospecting.require_admin] = lambda: user
@@ -87,16 +120,19 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
     user = AuthUser(id=str(uuid4()), active_workspace_id=str(uuid4()), email='test@example.com',
                     session_id='test-session', request_token='test-token', is_super_admin=True)
     account = {'unipile_account_id': 'account_id', 'display_name': 'Sender'}
-    campaign = {'id': campaign_id, 'name': 'Campaign', 'target': 'SaaS marketing leads'}
+    campaign = {'id': campaign_id, 'name': 'Campaign', 'target': 'SaaS marketing leads',
+                'goal': 'Discovery call', 'offer': 'Workflow assessment'}
     conn = AsyncMock()
-    conn.fetchrow.side_effect = [campaign, account, account, campaign, campaign, campaign, campaign]
+    conn.fetchrow.side_effect = [campaign, account, account, campaign, campaign, campaign, campaign,
+                                 campaign, account, account]
     conn.fetchval.return_value = campaign_id
     conn.execute.return_value = 'UPDATE 1'
     prospect = {'profile_slug': 'jean-test', 'display_name': 'Jean Test', 'headline': 'Marketing',
                 'location': 'Paris', 'reason': 'Matching role', 'relevance': 90, 'status': None}
     conn.fetch.side_effect = [[campaign], [{**prospect, 'added_at': None},
                                          {**prospect, 'profile_slug': 'marie-test', 'display_name': 'Marie Test',
-                                          'added_at': datetime.now(timezone.utc)}], [], [], [{'profile_slug': 'marie-test'}]]
+                                          'added_at': datetime.now(timezone.utc)}], [], [], [{'profile_slug': 'marie-test'}],
+                              [{**prospect, 'profile_slug': 'marie-test'}], [], []]
 
     @asynccontextmanager
     async def acquire():
@@ -105,14 +141,16 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
     app = FastAPI()
     app.include_router(prospecting.router, prefix='/app')
     app.dependency_overrides[prospecting.require_admin] = lambda: user
-    search = AsyncMock(return_value={'items': [
-        {'type': 'PEOPLE', 'public_profile_url': 'https://www.linkedin.com/in/jean-test',
-         'name': 'Jean Test', 'headline': 'Marketing', 'location': 'Paris'},
-        {'type': 'PEOPLE', 'public_profile_url': 'https://example.com/in/fake', 'name': 'Untrusted profile'},
+    search = AsyncMock(return_value={'data': [
+        {'type': 'individual', 'profile_url': 'https://www.linkedin.com/in/jean-test',
+         'display_name': 'Jean Test', 'description': 'Marketing', 'specifics': {'linkedin': {'location': 'Paris'}}},
+        {'type': 'individual', 'profile_url': 'https://example.com/in/fake', 'display_name': 'Untrusted profile'},
     ]})
     ranking = AsyncMock(return_value=[{'index': 0, 'score': 90, 'reason': 'Matching role'},
                                       {'index': 9, 'score': 100, 'reason': 'Invented profile'}])
     send = AsyncMock(return_value=prospecting.notice('batch_processed', campaign_id))
+    message_drafts = AsyncMock(return_value=[{'index': 0, 'text': 'Hello Marie, I noticed your experience.'}])
+    campaign_draft = AsyncMock(return_value={key: campaign[key] for key in ('name', 'target', 'goal', 'offer')})
     base = f'/app/prospecting/campaigns/{campaign_id}'
     form = {'csrf': 'test-csrf'}
     with TestClient(app) as client, patch.object(prospecting, 'form_token', return_value='test-csrf'), \
@@ -121,6 +159,9 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
          patch.object(unipile, 'search_contacts', search), \
          patch.object(prospecting.ai, 'prospecting_keywords', AsyncMock(return_value='Marketing')), \
          patch.object(prospecting.ai, 'rank_prospecting_contacts', ranking), \
+         patch.object(prospecting.ai, 'draft_prospecting_campaign', campaign_draft), \
+         patch.object(prospecting.ai, 'draft_prospecting_messages', message_drafts), \
+         patch.object(unipile, 'get_profile', AsyncMock(return_value={'first_name': 'Marie', 'description': 'B2B strategy'})), \
          patch.object(prospecting, 'send_batch', send):
         created = client.post('/app/prospecting/campaigns', data={**form, 'name': 'Campaign', 'target': campaign['target']}, follow_redirects=False)
         assert 'result=campaign_created' in created.headers['location']
@@ -131,12 +172,21 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
         assert all(label in page.text for label in ('Suggested profiles', 'Campaign contacts', 'Jean Test', 'Marie Test'))
         added = client.post(base + '/contacts', data={**form, 'slugs': 'marie-test'}, follow_redirects=False)
         assert 'result=contacts_added' in added.headers['location']
-        message = {**form, 'submission_id': str(uuid4()), 'message': 'Hello'}
+        message = {**form, 'submission_id': str(uuid4()), 'message:jean-test': 'Hello Jean', 'message:marie-test': 'Hello Marie'}
         rejected = client.post(base + '/send', data={**message, 'slugs': 'jean-test'}, follow_redirects=False)
         assert 'result=pick_contacts' in rejected.headers['location']
         accepted = client.post(base + '/send', data={**message, 'slugs': 'marie-test'}, follow_redirects=False)
         assert 'result=batch_processed' in accepted.headers['location']
-    assert conn.executemany.await_args.args[1] == [(campaign_id, 'jean-test', 'Jean Test', 'Marketing', 'Paris', 'Matching role', 90)]
+        drafted = client.post(base + '/draft-messages', data={**form, 'slugs': 'marie-test'}, follow_redirects=False)
+        assert 'result=message_drafts_ready' in drafted.headers['location']
+        brief = client.post('/app/prospecting/campaigns/draft', data={
+            **form, 'target': campaign['target'], 'goal': campaign['goal'], 'offer': campaign['offer'],
+        })
+        assert brief.status_code == 200
+        assert 'Workflow assessment' in brief.text
+    assert conn.executemany.await_args_list[0].args[1] == [(campaign_id, 'jean-test', 'Jean Test', 'Marketing', 'Paris', 'Matching role', 90)]
+    assert conn.executemany.await_args.args[1] == [(campaign_id, 'marie-test', 'Hello Marie, I noticed your experience.')]
+    assert message_drafts.await_args.args[1] == [{'index': 0, 'first_name': 'Marie', 'headline': 'B2B strategy', 'location': 'Paris'}]
     assert ranking.await_args.args[1] == [{'index': 0, 'headline': 'Marketing', 'location': 'Paris'}]
     send.assert_awaited_once()
-    assert send.await_args.args[-3:] == (['marie-test'], 'Hello', campaign_id)
+    assert send.await_args.args[-3:] == (['marie-test'], {'marie-test': 'Hello Marie'}, campaign_id)
