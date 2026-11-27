@@ -5,6 +5,7 @@
 <section class="publicHero {{ 'publicHomeHero' if public_section == 'home' }}"><div class="publicContainer"><div class="publicHeroText"><span class="publicEyebrow">{{ 'SocialAI' if public_section == 'home' else t('js.public.' ~ public_section) }}</span><h1>{{ t('js.site.' ~ public_section ~ '_title') }}</h1><p>{{ t('js.public.' ~ public_section ~ '_body') }}</p>{% if public_section not in ['contact','pricing'] %}<div class="publicButtons"><a class="publicButton primary" href="/app/register?lang={{ locale }}">{{ t('js.public.signup') }} <span aria-hidden="true">↗</span></a><a class="publicButton" href="/pricing?lang={{ locale }}">{{ t('js.public.pricing') }}</a></div>{% endif %}</div>{% if public_section == 'home' %}{% include 'partials/public_studio_preview.html' %}{% endif %}</div></section>
 
 {% if public_section == 'home' %}
+<section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><h2>{{ t('js.site.publish_title') }}</h2><p>{{ t('js.site.publish_desc') }}</p></div><div class="publicNetworks">{% from 'partials/network_badges.html' import network_svg %}{% for platform,label in [('linkedin','LinkedIn'),('instagram','Instagram'),('facebook','Facebook'),('youtube','YouTube')] %}<span>{{ network_svg(platform,24) }} {{ label }}</span>{% endfor %}</div><div class="publicButtons"><a class="publicButton" href="/how-it-works?lang={{ locale }}">{{ t('js.public.how') }} ↗</a></div></div></section>
 <section class="publicSection" aria-labelledby="public-youtube-title">
   <div class="publicContainer">
     <div class="publicSectionIntro">
@@ -17,7 +18,7 @@
 </section>
 <section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><span class="publicEyebrow">{{ t('js.public.offers') }}</span><h2>{{ t('js.site.offers_title') }}</h2></div><div class="publicGrid">{{ card('create','✦') }}{{ card('media','▧') }}{{ card('publish','↗') }}</div></div></section>
 <section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><span class="publicEyebrow">{{ t('js.public.how') }}</span><h2>{{ t('js.site.workflow_title') }}</h2></div><div class="publicGrid">{% for kind in ['brand','review','workspace'] %}{{ card(kind,['◈','✓','▦'][loop.index0]) }}{% endfor %}</div></div></section>
-<section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><h2>{{ t('js.site.publish_title') }}</h2><p>{{ t('js.site.publish_desc') }}</p></div><div class="publicNetworks">{% from 'partials/network_badges.html' import network_svg %}{% for platform,label in [('linkedin','LinkedIn'),('instagram','Instagram'),('facebook','Facebook'),('youtube','YouTube')] %}<span>{{ network_svg(platform,24) }} {{ label }}</span>{% endfor %}</div><div class="publicButtons"><a class="publicButton" href="/how-it-works?lang={{ locale }}">{{ t('js.public.how') }} ↗</a></div></div></section>
+
 {% elif public_section == 'offers' %}
 <section class="publicSection"><div class="publicContainer"><div class="publicGrid">
 {{ card('create','✦',[t('pn.f.language'),t('pn.f.formats'),t('pn.f.audience')]) }}

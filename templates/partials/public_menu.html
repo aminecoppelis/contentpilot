@@ -6,15 +6,20 @@
     <a href="/{{ path }}?lang={{ locale }}" {% if request.url.path == '/' ~ path %}aria-current="page"{% endif %}>{{ t('js.public.' ~ key) }}</a>
     {% endfor %}
   </nav>
-  <div class="publicActions">
-    <button type="button" class="publicThemeToggle" aria-label="{{ t('common.change_theme') }}"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 13A9 9 0 0 1 11 3.2 9 9 0 1 0 20.8 13Z"/></svg></button>
+  <div class="publicUtilities">
     <form method="get" action="{{ request.url.path }}" class="publicLanguage">
       {% for key,value in request.query_params.multi_items() if key != 'lang' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
       <label class="publicSrOnly" for="publicLanguage">{{ t('menu.language') }}</label>
       <select id="publicLanguage" name="lang" onchange="this.form.submit()">{% for lc in supported_locales %}<option value="{{ lc }}" {% if lc == locale %}selected{% endif %}>{{ locale_short[lc] }}</option>{% endfor %}</select>
       <noscript><button type="submit">{{ t('common.save') }}</button></noscript>
     </form>
-    <a href="/app/login?lang={{ locale }}">{{ t('js.public.login') }}</a>
+    <a class="publicLogin" href="/app/login?lang={{ locale }}" aria-label="{{ t('js.public.login') }}">
+      <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5v1"/></svg>
+      <span>{{ t('js.public.login') }}</span>
+    </a>
+  </div>
+  <div class="publicActions">
+    <button type="button" class="publicThemeToggle" aria-label="{{ t('common.change_theme') }}"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 13A9 9 0 0 1 11 3.2 9 9 0 1 0 20.8 13Z"/></svg></button>
     <a class="publicSignup" href="/app/register?lang={{ locale }}">{{ t('js.public.signup') }}</a>
   </div>
 </header>
