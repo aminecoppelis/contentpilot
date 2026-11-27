@@ -5,7 +5,9 @@
     {% for path,key in [('','home'),('offers','offers'),('how-it-works','how'),('gdpr','security'),('pricing','pricing'),('contact','contact')] %}
     <a href="/{{ path }}?lang={{ locale }}" {% if request.url.path == '/' ~ path %}aria-current="page"{% endif %}>{{ t('js.public.' ~ key) }}</a>
     {% endfor %}
+    <button type="button" class="publicThemeToggle" aria-label="{{ t('common.change_theme') }}"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 13A9 9 0 0 1 11 3.2 9 9 0 1 0 20.8 13Z"/></svg></button>
   </nav>
+  <div class="publicAccountActions">
   <div class="publicUtilities">
     <form method="get" action="{{ request.url.path }}" class="publicLanguage">
       {% for key,value in request.query_params.multi_items() if key != 'lang' %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
@@ -19,7 +21,7 @@
     </a>
   </div>
   <div class="publicActions">
-    <button type="button" class="publicThemeToggle" aria-label="{{ t('common.change_theme') }}"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.8 13A9 9 0 0 1 11 3.2 9 9 0 1 0 20.8 13Z"/></svg></button>
     <a class="publicSignup" href="/app/register?lang={{ locale }}">{{ t('js.public.signup') }}</a>
+  </div>
   </div>
 </header>

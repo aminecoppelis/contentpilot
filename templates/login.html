@@ -30,20 +30,6 @@
     .auth-shell { background: var(--a-bg) !important; background-image: none !important; }
     .auth-shell::before, .auth-shell::after { display: none !important; }
 
-    .authTopBar {
-      position: absolute; top: 18px; right: 18px; z-index: 10;
-      display: flex; align-items: center; gap: 8px;
-    }
-    [dir="rtl"] .authTopBar { right: auto; left: 18px; }
-
-    .authThemeToggle {
-      width: 40px; height: 40px; flex: 0 0 auto;
-      display: inline-flex; align-items: center; justify-content: center;
-      border: 1px solid var(--a-line-2); border-radius: 12px;
-      background: var(--a-surface); color: var(--a-ink-2); cursor: pointer;
-    }
-    .authThemeToggle:hover { color: var(--a-brand); border-color: var(--a-brand); }
-
     .authLangSelect {
       height: 40px; padding: 0 30px 0 12px;
       border: 1px solid var(--a-line-2); border-radius: 12px;
@@ -152,12 +138,6 @@
 <body>
 {% include "partials/public_menu.html" %}
 <div class="auth-shell">
-  <div class="authTopBar">
-<button type="button" class="authThemeToggle" id="authThemeToggle" aria-label="{{ t('common.change_theme') }}">
-      <svg id="authMoon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <svg id="authSun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="4.22" x2="19.78" y2="5.64"/></svg>
-    </button>
-  </div>
   <main class="authCard authLoginCard">
     <span class="authEyebrow">{% include 'partials/socialai_logo.html' %}</span>
     <h1>{{ t('auth.login.title') }}</h1>
@@ -278,26 +258,6 @@ try{document.getElementById('user_timezone').value=Intl.DateTimeFormat().resolve
   });
 })();
 
-/* Bascule thème clair / sombre */
-(function () {
-  var btn = document.getElementById('authThemeToggle');
-  var moon = document.getElementById('authMoon');
-  var sun = document.getElementById('authSun');
-  var root = document.documentElement;
-  if (!btn) return;
-  function paint() {
-    var dark = root.getAttribute('data-theme') === 'dark';
-    if (moon) moon.style.display = dark ? 'none' : 'block';
-    if (sun) sun.style.display = dark ? 'block' : 'none';
-  }
-  paint();
-  btn.addEventListener('click', function () {
-    var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', next);
-    try { localStorage.setItem('theme', next); } catch (e) {}
-    paint();
-  });
-})();
 </script>
 </body>
 </html>
