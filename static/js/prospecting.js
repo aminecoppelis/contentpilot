@@ -1,4 +1,8 @@
 (() => {
+  document.querySelectorAll('[data-prospecting-avatar]').forEach(image => {
+    image.addEventListener('error', () => { image.hidden = true; });
+    if (image.complete && !image.naturalWidth) image.hidden = true;
+  });
   const detail = document.querySelector('[data-prospecting-detail]');
   const dashboard = document.querySelector('[data-prospecting-dashboard]');
   const active = status => status === 'queued' || status === 'running';

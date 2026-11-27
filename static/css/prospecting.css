@@ -15,5 +15,8 @@
 .prospectingHook { width: 40%; min-width: 18rem; }
 .prospectingHook textarea { display: block; box-sizing: border-box; min-height: 7rem; resize: vertical; }
 .prospectingRowActions button { display: block; white-space: nowrap; }
+.prospectingProfile { display: flex; align-items: flex-start; gap: .65rem; }
+.prospectingAvatar { position: relative; flex: 0 0 40px; height: 40px; display: grid; place-items: center; overflow: hidden; border-radius: 50%; background: var(--brand-tint); color: var(--brand); font-weight: 700; }
+.prospectingAvatar img { position: absolute; inset: 0; object-fit: cover; border-radius: inherit; }
 .prospectingHistory { list-style: none; padding: 0; margin-block-end: 0; }
 .prospectingHistory li { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; padding-block: .65rem; border-block-start: 1px solid var(--line); }

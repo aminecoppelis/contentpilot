@@ -49,7 +49,18 @@
           {% for contact in rows %}
           <tr>
             <td><input type="checkbox" name="slugs" value="{{ contact.profile_slug }}" aria-label="{{ contact.display_name }}" {% if added and (not account or not configured or contact.status in ['pending', 'sent', 'unknown']) %}disabled{% endif %}></td>
-            <td><a href="https://www.linkedin.com/in/{{ contact.profile_slug|urlencode }}" target="_blank" rel="noopener noreferrer">{{ contact.display_name }}</a><div>{{ contact.headline }}</div><small>{{ contact.location }}</small></td>
+            <td>
+              <div class="prospectingProfile">
+                <span class="prospectingAvatar" aria-hidden="true">
+                  <span>{{ contact.display_name[:1]|upper }}</span>
+                  {% if contact.photo_url %}<img src="{{ contact.photo_url }}" alt="" width="40" height="40" loading="lazy" referrerpolicy="no-referrer" data-prospecting-avatar>{% endif %}
+                </span>
+                <div>
+                  <a href="https://www.linkedin.com/in/{{ contact.profile_slug|urlencode }}" target="_blank" rel="noopener noreferrer">{{ contact.display_name }}</a>
+                  <div>{{ contact.headline }}</div><small>{{ contact.location }}</small>
+                </div>
+              </div>
+            </td>
             <td>{% if contact.reason %}<strong>{{ contact.relevance }}/100</strong><div>{{ contact.reason }}</div>{% else %}{{ t('prospecting.unranked') }}{% endif %}</td>
             {% if added %}<td>{{ t('prospecting.status.' ~ (contact.status or 'new')) }}</td>{% endif %}
             {% set locked = contact.status in ['pending', 'sent', 'unknown'] %}

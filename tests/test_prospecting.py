@@ -19,8 +19,10 @@ from app.worker import prospecting_cron
 def test_search_keeps_linkedin_results_when_both_ai_steps_fail():
     job = {'id': uuid4(), 'target': 'Responsable IA B2B', 'goal': 'Discovery call', 'offer': 'Assessment',
            'unipile_account_id': 'acc_example', 'search_keywords': '', 'search_locale': 'fr'}
-    first = {'type': 'individual', 'public_identifier': 'contact-ia', 'display_name': 'Contact IA', 'description': 'Responsable IA'}
-    second = {**first, 'public_identifier': 'contact-b2b', 'display_name': 'Contact B2B'}
+    first = {'type': 'individual', 'public_identifier': 'contact-ia', 'display_name': 'Contact IA',
+             'description': 'Responsable IA', 'public_picture_url': 'https://media.licdn.com/dms/image/photo'}
+    second = {**first, 'public_identifier': 'contact-b2b', 'display_name': 'Contact B2B',
+              'public_picture_url': 'https://media.licdn.com.example.com/photo'}
     search = AsyncMock(side_effect=[{'data': [first], 'next_cursor': 'next'}, {'data': [first, second]}])
     state = AsyncMock(return_value=True)
     ai_error = prospecting.ai.AIGenerationError('Mock failure')
@@ -34,8 +36,10 @@ def test_search_keeps_linkedin_results_when_both_ai_steps_fail():
         asyncio.run(prospecting_cron.search_campaign(job))
     assert [call.kwargs['cursor'] for call in search.await_args_list] == [None, 'next']
     assert [call.args[1] for call in state.await_args_list] == [15, 25, 40, 50, 65, 100]
-    assert state.await_args_list[1].kwargs['profiles'][0][1] == 'contact-ia'
-    assert state.await_args_list[-2].kwargs['profiles'][0][-1] == 'Bonjour, échangeons sur votre équipe IA.'
+    first_row = state.await_args_list[1].kwargs['profiles'][0]
+    assert first_row[1] == 'contact-ia'
+    assert first_row[-1] == first['public_picture_url']
+    assert state.await_args_list[-2].kwargs['profiles'][0][-2:] == ('Bonjour, échangeons sur votre équipe IA.', '')
     assert state.await_args.kwargs == {'status': 'done', 'result': 'matches_partial_hooks'}
 
 
@@ -164,7 +168,7 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
     conn.execute.return_value = 'UPDATE 1'
     prospect = {'profile_slug': 'jean-test', 'display_name': 'Jean Test', 'headline': 'Marketing',
                 'location': 'Paris', 'reason': 'Matching role', 'relevance': 90, 'status': None,
-                'draft_message': 'A personalized opening'}
+                'draft_message': 'A personalized opening', 'photo_url': 'https://media.licdn.com/dms/image/photo'}
     conn.fetch.side_effect = [[campaign], [{**prospect, 'added_at': None},
                                          {**prospect, 'profile_slug': 'marie-test', 'display_name': 'Marie Test',
                                           'added_at': datetime.now(timezone.utc)}], [], [], [{'profile_slug': 'marie-test'}],
@@ -207,6 +211,7 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
         assert page.status_code == 200
         assert all(label in page.text for label in ('Suggested profiles', 'Campaign contacts', 'Jean Test', 'Marie Test', 'A personalized opening'))
         assert 'name="message:jean-test"' in page.text
+        assert 'src="https://media.licdn.com/dms/image/photo"' in page.text
         assert 'name="message:marie-test"' in page.text
         added = client.post(base + '/contacts', data={**form, 'slugs': 'marie-test', 'message:marie-test': 'Edited when adding'}, follow_redirects=False)
         assert 'result=contacts_added' in added.headers['location']
