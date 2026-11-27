@@ -8,6 +8,16 @@
 <section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><h2>{{ t('js.site.publish_title') }}</h2><p>{{ t('js.site.publish_desc') }}</p></div><div class="publicNetworks">{% from 'partials/network_badges.html' import network_svg %}{% for platform,label in [('linkedin','LinkedIn'),('instagram','Instagram'),('facebook','Facebook'),('youtube','YouTube')] %}<span>{{ network_svg(platform,24) }} {{ label }}</span>{% endfor %}</div><div class="publicButtons"><a class="publicButton" href="/how-it-works?lang={{ locale }}">{{ t('js.public.how') }} ↗</a></div></div></section>
 <section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><span class="publicEyebrow">{{ t('js.public.offers') }}</span><h2>{{ t('js.site.offers_title') }}</h2></div><div class="publicGrid">{{ card('create','✦') }}{{ card('media','▧') }}{{ card('publish','↗') }}</div></div></section>
 <section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><span class="publicEyebrow">{{ t('js.public.how') }}</span><h2>{{ t('js.site.workflow_title') }}</h2></div><div class="publicGrid">{% for kind in ['brand','review','workspace'] %}{{ card(kind,['◈','✓','▦'][loop.index0]) }}{% endfor %}</div></div></section>
+<section class="publicSection" aria-labelledby="public-youtube-title">
+  <div class="publicContainer">
+    <div class="publicSectionIntro">
+      <h2 id="public-youtube-title">{{ t('js.site.youtube_title') }}</h2>
+      <p>{{ t('js.site.youtube_description') }}</p>
+      <p>{{ t('js.site.youtube_ai_policy') }}</p>
+      <a class="publicButton" href="/privacy?lang={{ 'fr' if locale == 'fr' else 'en' }}">{{ t('auth.foot.privacy') }}</a>
+    </div>
+  </div>
+</section>
 
 {% elif public_section == 'offers' %}
 <section class="publicSection"><div class="publicContainer"><div class="publicGrid">
@@ -32,16 +42,4 @@
 
 <section class="publicSection"><div class="publicContainer"><div class="publicSectionIntro"><span class="publicEyebrow">FAQ</span><h2>{{ t('js.site.faq_title') }}</h2></div><div class="publicFaq">{% for n in range(1,5) %}<details><summary>{{ t('js.site.q' ~ n) }}</summary><p>{{ t('js.site.a' ~ n) }}</p></details>{% endfor %}</div></div></section>
 <section class="publicSection"><div class="publicContainer"><div class="publicCallout"><h2>{{ t('js.site.cta_title') }}</h2><p>{{ t('js.site.cta_body') }}</p><div class="publicButtons"><a class="publicButton primary" href="/app/register?lang={{ locale }}">{{ t('js.public.signup') }}</a><a class="publicButton" href="/contact?lang={{ locale }}">{{ t('js.public.contact') }}</a></div></div></div></section>
-{% if public_section == 'home' %}
-<section class="publicSection" aria-labelledby="public-youtube-title">
-  <div class="publicContainer">
-    <div class="publicSectionIntro">
-      <h2 id="public-youtube-title">{{ t('js.site.youtube_title') }}</h2>
-      <p>{{ t('js.site.youtube_description') }}</p>
-      <p>{{ t('js.site.youtube_ai_policy') }}</p>
-      <a class="publicButton" href="/privacy?lang={{ 'fr' if locale == 'fr' else 'en' }}">{{ t('auth.foot.privacy') }}</a>
-    </div>
-  </div>
-</section>
-{% endif %}
 </main>{% include 'partials/public_footer.html' %}</body></html>
