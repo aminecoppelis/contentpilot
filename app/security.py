@@ -24,7 +24,9 @@ BCRYPT_ROUNDS = 10
 
 
 def hash_password(plain: str) -> str:
-    return bcrypt.hashpw(plain.encode("utf-8"), bcrypt.gensalt(rounds=BCRYPT_ROUNDS)).decode("utf-8")
+    # The login query verifies hashes with PostgreSQL pgcrypto crypt().
+    salt = bcrypt.gensalt(rounds=BCRYPT_ROUNDS, prefix=b"2a")
+    return bcrypt.hashpw(plain.encode("utf-8"), salt).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:

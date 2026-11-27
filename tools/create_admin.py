@@ -45,9 +45,23 @@ async def create_admin(email: str, password_hash: str) -> bool:
         await close_pool()
 
 
+async def reset_admin_password(email: str, password_hash: str) -> bool:
+    pool = await init_pool()
+    try:
+        async with pool.acquire() as conn:
+            result = await conn.execute('''
+                UPDATE public.app_users SET password_hash=$2, updated_at=now()
+                WHERE lower(email)=$1 AND lower(role)='admin' AND is_active AND deleted_at IS NULL
+            ''', email, password_hash)
+        return result == 'UPDATE 1'
+    finally:
+        await close_pool()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('email', help='Adresse e-mail du nouveau compte')
+    parser.add_argument('--reset-password', action='store_true', help='Réinitialiser le mot de passe d’un administrateur actif')
     args = parser.parse_args()
     email = args.email.strip().lower()
     if not is_valid_email(email):
@@ -66,17 +80,20 @@ def main() -> int:
         parser.error('Le mot de passe doit contenir au moins 10 caractères et au plus 72 octets UTF-8.')
     try:
         os.chdir(PROJECT_ROOT)
-        created = asyncio.run(create_admin(email, hash_password(password)))
+        action = reset_admin_password if args.reset_password else create_admin
+        success = asyncio.run(action(email, hash_password(password)))
     except ValidationError:
         print('Configuration invalide. Vérifiez DATABASE_URL dans le fichier .env à la racine du projet.', file=sys.stderr)
         return 1
     except (asyncpg.PostgresError, OSError) as exc:
-        print(f'Création impossible. Vérifiez la configuration et le schéma de la base ({type(exc).__name__}).', file=sys.stderr)
+        print(f'Opération impossible. Vérifiez la configuration et le schéma de la base ({type(exc).__name__}).', file=sys.stderr)
         return 1
-    if not created:
-        print('Cette adresse est déjà associée à un compte.', file=sys.stderr)
+    if not success:
+        message = ('Aucun administrateur actif trouvé à cette adresse.' if args.reset_password
+                   else 'Cette adresse est déjà associée à un compte.')
+        print(message, file=sys.stderr)
         return 1
-    print(f'Administrateur actif créé : {email}')
+    print(f'Mot de passe réinitialisé : {email}' if args.reset_password else f'Administrateur actif créé : {email}')
     return 0
 
 
