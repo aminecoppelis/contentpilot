@@ -11,7 +11,7 @@ from app.database import get_pool
 from app.dependencies.auth import require_auth
 
 router = APIRouter(tags=["Table preferences"])
-View = Literal["posts", "publications", "strategies", "networks", "users", "members", "invitations", "publication_calendar"]
+View = Literal["posts", "publications", "strategies", "networks", "users", "members", "invitations", "publication_calendar", "prospecting_campaigns"]
 
 
 class StrictModel(BaseModel):
@@ -103,7 +103,7 @@ async def get_table_preferences(user=Depends(require_auth)):
 async def save_table_preferences(view_key: View, payload: PreferencePayload, user=Depends(require_auth)):
     if (view_key == "publication_calendar") != isinstance(payload.state, CalendarState):
         raise HTTPException(status_code=422, detail="Invalid preference type")
-    if view_key == "users" and not user.is_super_admin:
+    if view_key in ("users", "prospecting_campaigns") and not user.is_super_admin:
         raise HTTPException(status_code=403, detail="Forbidden")
     async with get_pool().acquire() as conn:
         await conn.execute(

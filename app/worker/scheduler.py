@@ -26,6 +26,7 @@ from app.worker.media_image_cron import run_image_generation_cycle
 from app.worker.publication_cron import run_publication_cycle
 from app.worker.post_generation_cron import run_post_generation_cycle
 from app.worker.strategy_generation_cron import run_strategy_generation_cycle
+from app.worker.prospecting_cron import run_prospecting_cycle
 from app.config import get_settings
 from app.services.youtube import check_authorizations
 
@@ -105,6 +106,8 @@ async def _strategy_generation_job() -> None:
 
 
 def start_scheduler() -> None:
+    scheduler.add_job(run_prospecting_cycle, 'interval', seconds=5, id='linkedin_prospecting_search',
+                      max_instances=1, coalesce=True)
     scheduler.add_job(
         _worker_job,
         CronTrigger.from_crontab("* * * * *"),

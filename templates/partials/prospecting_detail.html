@@ -1,0 +1,81 @@
+{% if campaign %}
+<section class="card prospectingCard" aria-labelledby="prospecting-selected-campaign" data-prospecting-detail data-prospecting-id="{{ campaign.id }}" data-search-status="{{ campaign.search_status }}">
+  <h2 id="prospecting-selected-campaign">{{ campaign.name }}</h2>
+  {% set stats = campaigns|first %}
+  <p role="status"><span data-stat="status">{{ t('prospecting.search_status.' ~ campaign.search_status) }}</span>
+    · <span data-stat="progress">{{ campaign.search_progress }}%</span>
+    · {{ t('prospecting.found') }} <strong data-stat="found">{{ stats.found if stats else 0 }}</strong></p>
+  <progress data-meter value="{{ campaign.search_progress }}" max="100" aria-label="{{ t('prospecting.progress') }}"></progress>
+  <p data-search-result>{% if campaign.search_result %}{{ t('prospecting.result.' ~ campaign.search_result) }}{% endif %}</p>
+  <a data-prospecting-refresh href="/app/prospecting/campaigns/{{ campaign.id }}" hidden>{{ t('prospecting.refresh') }}</a>
+  <p>{{ campaign.target }}</p>
+  {% if campaign.goal %}<p><strong>{{ t('prospecting.goal') }}</strong> {{ campaign.goal }}</p>{% endif %}
+  {% if campaign.offer %}<p><strong>{{ t('prospecting.offer') }}</strong> {{ campaign.offer }}</p>{% endif %}
+  <details>
+    <summary>{{ t('prospecting.edit_brief') }}</summary>
+    <form class="prospectingForm" method="post" action="/app/prospecting/campaigns/{{ campaign.id }}/brief">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      {% for field, label in [('target', 'campaign_target'), ('goal', 'goal'), ('offer', 'offer')] %}
+      <label for="brief-{{ field }}">{{ t('prospecting.' ~ label) }}</label>
+      <textarea id="brief-{{ field }}" name="{{ field }}" rows="2" maxlength="1200" required>{{ campaign[field]|default('') }}</textarea>
+      {% endfor %}
+      <button class="btn" type="submit">{{ t('common.save') }}</button>
+    </form>
+  </details>
+  {% if account and configured %}
+  <form method="post" class="prospectingForm" action="/app/prospecting/campaigns/{{ campaign.id }}/search" data-prospecting-search>
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label for="prospecting-keywords">{{ t('prospecting.search_keywords') }}</label>
+    <input id="prospecting-keywords" name="keywords" type="text" maxlength="220" placeholder="{{ t('prospecting.search_keywords_placeholder') }}">
+    <button class="btn btn-primary" type="submit" {% if campaign.search_status in ['queued', 'running'] %}disabled{% endif %}>{{ t('prospecting.search') }}</button>
+    <span role="status" data-prospecting-progress hidden>{{ t('prospecting.search_progress') }}</span>
+  </form>
+  {% elif configured %}<p>{{ t('prospecting.search_requires_account') }}</p>
+  {% else %}<p>{{ t('prospecting.result.configuration') }}</p>{% endif %}
+</section>
+
+{% for added in [false, true] %}
+{% set rows = contacts|selectattr('added_at', 'ne' if added else 'equalto', none)|list %}
+{% if rows %}
+<section class="card prospectingCard" aria-labelledby="prospecting-contacts-{{ loop.index }}">
+  <h2 id="prospecting-contacts-{{ loop.index }}">{{ t('prospecting.contacts' if added else 'prospecting.suggestions') }}</h2>
+  <form class="prospectingForm" method="post" action="/app/prospecting/campaigns/{{ campaign.id }}/{{ 'send' if added else 'contacts' }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    {% if added %}<input type="hidden" name="submission_id" value="{{ submission_id }}">{% endif %}
+    <div class="prospectingTableWrap">
+      <table class="prospectingTable">
+        <thead><tr><th scope="col">{{ t('prospecting.select') }}</th><th scope="col">{{ t('prospecting.contact_profile') }}</th><th scope="col">{{ t('prospecting.fit') }}</th>{% if added %}<th scope="col">{{ t('prospecting.delivery') }}</th>{% endif %}<th scope="col">{{ t('prospecting.personalized_message') }}</th>{% if not added %}<th scope="col">{{ t('common.actions') }}</th>{% endif %}</tr></thead>
+        <tbody>
+          {% for contact in rows %}
+          <tr>
+            <td><input type="checkbox" name="slugs" value="{{ contact.profile_slug }}" aria-label="{{ contact.display_name }}" {% if added and (not account or not configured or contact.status in ['pending', 'sent', 'unknown']) %}disabled{% endif %}></td>
+            <td><a href="https://www.linkedin.com/in/{{ contact.profile_slug|urlencode }}" target="_blank" rel="noopener noreferrer">{{ contact.display_name }}</a><div>{{ contact.headline }}</div><small>{{ contact.location }}</small></td>
+            <td>{% if contact.reason %}<strong>{{ contact.relevance }}/100</strong><div>{{ contact.reason }}</div>{% else %}{{ t('prospecting.unranked') }}{% endif %}</td>
+            {% if added %}
+            <td>{{ t('prospecting.status.' ~ (contact.status or 'new')) }}</td>
+            <td><textarea name="message:{{ contact.profile_slug }}" rows="5" cols="30" maxlength="3000" aria-label="{{ t('prospecting.personalized_message') }} · {{ contact.display_name }}" {% if contact.status in ['pending', 'sent', 'unknown'] %}readonly{% endif %}>{{ contact.draft_message|default('') }}</textarea></td>
+            {% else %}
+            <td class="prospectingHook">{{ contact.draft_message or t('prospecting.hook_pending') }}</td>
+            <td><button class="btn secondary tiny" type="submit" name="single" value="{{ contact.profile_slug }}">{{ t('prospecting.add_one') }}</button></td>
+            {% endif %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if added and account and configured %}
+    <p>{{ t('prospecting.campaign_message_hint', count=max_recipients) }}</p>
+    <div class="prospectingActions">
+      <button class="btn" type="submit" formaction="/app/prospecting/campaigns/{{ campaign.id }}/draft-messages">{{ t('prospecting.draft_messages') }}</button>
+      <button class="btn btn-primary" type="submit">{{ t('prospecting.send') }}</button>
+    </div>
+    {% elif not added %}
+    <button class="btn btn-primary" type="submit">{{ t('prospecting.add_contacts') }}</button>
+    <button class="btn" type="button" data-select-prospects>{{ t('prospecting.select_all') }}</button>
+    {% endif %}
+  </form>
+</section>
+{% endif %}
+{% endfor %}
+{% endif %}
+

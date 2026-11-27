@@ -7,5 +7,9 @@
 .prospectingTableWrap { overflow-x: auto; }
 .prospectingTable { border-collapse: collapse; width: 100%; text-align: start; }
 .prospectingTable th, .prospectingTable td { padding: .65rem; text-align: start; vertical-align: top; border-block-end: 1px solid var(--line); }
+.prospectingCampaigns { padding: 1.25rem; margin-block: 1rem; }
+.prospectingCampaigns .prospectingActions { align-items: center; justify-content: space-between; }
+.prospectingCampaigns [data-meter] { display: block; width: 100%; }
+.prospectingHook { min-width: 15rem; white-space: pre-wrap; }
 .prospectingHistory { list-style: none; padding: 0; margin-block-end: 0; }
 .prospectingHistory li { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; padding-block: .65rem; border-block-start: 1px solid var(--line); }

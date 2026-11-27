@@ -1,0 +1,31 @@
+<section class="card prospectingCampaigns" aria-labelledby="prospecting-campaigns" data-prospecting-dashboard>
+  <div class="prospectingActions">
+    <h2 id="prospecting-campaigns">{{ t('prospecting.campaigns') }}</h2>
+    <a class="btn btn-primary" href="/app/prospecting/campaigns/new">{{ t('prospecting.new_campaign') }}</a>
+  </div>
+  {% if campaigns %}
+  <div class="tableWrap">
+    {% include 'partials/grid_loading.html' %}
+    <table data-syncfusion="true" data-grid-view="prospecting_campaigns">
+      <thead><tr>
+        <th>{{ t('prospecting.campaign_name') }}</th><th>{{ t('common.status') }}</th>
+        <th>{{ t('prospecting.progress') }}</th><th>{{ t('prospecting.found') }}</th>
+        <th>{{ t('prospecting.added') }}</th><th>{{ t('prospecting.status.sent') }}</th>
+        <th>{{ t('prospecting.status.failed') }}</th><th>{{ t('prospecting.status.unknown') }}</th>
+        <th>{{ t('common.actions') }}</th>
+      </tr></thead>
+      <tbody id="prospectingCampaignRows">
+        {% for item in campaigns %}
+        <tr data-prospecting-id="{{ item.id }}" data-search-status="{{ item.search_status }}" data-row-url="/app/prospecting/campaigns/{{ item.id }}" tabindex="0">
+          <td><strong>{{ item.name }}</strong></td>
+          <td><span data-stat="status" class="statusPill">{{ t('prospecting.search_status.' ~ item.search_status) }}</span></td>
+          <td data-grid-value="{{ item.search_progress }}"><span data-stat="progress">{{ item.search_progress }}%</span><progress data-meter value="{{ item.search_progress }}" max="100" aria-label="{{ t('prospecting.progress') }}"></progress></td>
+          {% for key in ['found', 'added', 'sent', 'failed', 'review'] %}<td><span data-stat="{{ key }}">{{ item[key] }}</span></td>{% endfor %}
+          <td><a class="btn secondary tiny" href="/app/prospecting/campaigns/{{ item.id }}">{{ t('prospecting.open_campaign') }}</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p>{{ t('prospecting.empty_campaigns') }}</p>{% endif %}
+</section>

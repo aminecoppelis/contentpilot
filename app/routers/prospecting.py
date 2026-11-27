@@ -3,18 +3,18 @@ import asyncio
 import hmac
 import re
 from datetime import datetime, timedelta, timezone
-from urllib.parse import urlsplit
+from urllib.parse import urlencode, urlsplit
 from uuid import UUID, uuid4, uuid5
 
 import httpx
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from pydantic import BaseModel, Field
 
 from app.config import get_settings
 from app.database import get_pool
 from app.dependencies.auth import require_admin
-from app.i18n import resolve_locale
+from app.i18n import resolve_locale, translate
 from app.public_origin import resolve_public_origin
 from app.security import new_oauth_state, oauth_state_hash
 from app.services import ai, unipile
@@ -48,9 +48,8 @@ def check_form(request, user, csrf):
 
 
 def notice(status, campaign_id=None):
-    location = f'{PAGE}?result={status}'
-    if campaign_id:
-        location += f'&campaign_id={campaign_id}'
+    location = f'{PAGE}/campaigns/{campaign_id}' if campaign_id else PAGE
+    location += '?' + urlencode({'result': status})
     return RedirectResponse(location, status_code=303)
 
 
@@ -61,7 +60,8 @@ async def connected_account(conn, user):
 
 
 async def owned_campaign(conn, user, campaign_id):
-    campaign = await conn.fetchrow('''SELECT id, name, target, goal, offer FROM public.linkedin_prospecting_campaigns
+    campaign = await conn.fetchrow('''SELECT id, name, target, goal, offer, search_status, search_progress, search_result
+        FROM public.linkedin_prospecting_campaigns
         WHERE id=$1 AND user_id=$2::uuid AND workspace_id=$3::uuid''', campaign_id, user.id, user.active_workspace_id)
     if not campaign:
         raise HTTPException(404)
@@ -70,15 +70,56 @@ async def owned_campaign(conn, user, campaign_id):
 
 @router.get('/prospecting', response_class=HTMLResponse)
 async def index(request: Request, result: str = '', campaign_id: UUID | None = None, user=Depends(require_admin)):
-    return await render_page(request, user, result, campaign_id)
+    if campaign_id:
+        return notice(result, campaign_id)
+    return await render_page(request, user, result)
 
 
-async def render_page(request, user, result, campaign_id=None, brief=None):
+@router.get('/prospecting/campaigns/new', response_class=HTMLResponse)
+async def new_campaign(request: Request, user=Depends(require_admin)):
+    return await render_page(request, user, '', view='new')
+
+
+@router.get('/prospecting/campaigns/{campaign_id}', response_class=HTMLResponse)
+async def campaign_detail(request: Request, campaign_id: UUID, result: str = '', user=Depends(require_admin)):
+    return await render_page(request, user, result, campaign_id, view='detail')
+
+
+async def campaign_statistics(conn, user, campaign_id=None):
+    return await conn.fetch('''SELECT c.id, c.name, c.search_status, c.search_progress, c.search_result,
+        count(p.profile_slug)::int AS found, count(p.added_at)::int AS added,
+        count(*) FILTER (WHERE delivery.status='sent')::int AS sent,
+        count(*) FILTER (WHERE delivery.status='failed')::int AS failed,
+        count(*) FILTER (WHERE delivery.status IN ('pending','unknown'))::int AS review
+        FROM public.linkedin_prospecting_campaigns c
+        LEFT JOIN public.linkedin_prospecting_contacts p ON p.campaign_id=c.id
+        LEFT JOIN LATERAL (SELECT m.status FROM public.linkedin_prospecting_messages m
+            WHERE m.campaign_id=p.campaign_id AND m.profile_slug=p.profile_slug
+            ORDER BY m.created_at DESC LIMIT 1) delivery ON true
+        WHERE c.user_id=$1::uuid AND c.workspace_id=$2::uuid AND ($3::uuid IS NULL OR c.id=$3)
+        GROUP BY c.id ORDER BY c.created_at DESC, c.id DESC''', user.id, user.active_workspace_id, campaign_id)
+
+
+@router.get('/prospecting/progress', response_class=JSONResponse)
+async def search_progress(request: Request, campaign_id: UUID | None = None, user=Depends(require_admin)):
+    async with get_pool().acquire() as conn:
+        rows = await campaign_statistics(conn, user, campaign_id)
+    if campaign_id and not rows:
+        raise HTTPException(404)
+    response = []
+    for row in rows:
+        entry = dict(row)
+        entry['id'] = str(row['id'])
+        entry['status_label'] = translate('prospecting.search_status.' + row['search_status'], resolve_locale(request))
+        entry['result_label'] = translate('prospecting.result.' + row['search_result'], resolve_locale(request)) if row['search_result'] else ''
+        response.append(entry)
+    return JSONResponse(response, headers={'Cache-Control': 'no-store'})
+
+
+async def render_page(request, user, result, campaign_id=None, brief=None, view='list'):
     async with get_pool().acquire() as conn:
         account = await connected_account(conn, user)
-        campaigns = await conn.fetch('''SELECT id, name FROM public.linkedin_prospecting_campaigns
-            WHERE user_id=$1::uuid AND workspace_id=$2::uuid ORDER BY created_at DESC''',
-            user.id, user.active_workspace_id)
+        campaigns = await campaign_statistics(conn, user, campaign_id) if view != 'new' else []
         campaign = await owned_campaign(conn, user, campaign_id) if campaign_id else None
         contacts = await conn.fetch('''SELECT c.*, delivery.status
             FROM public.linkedin_prospecting_contacts c LEFT JOIN LATERAL (
@@ -97,6 +138,7 @@ async def render_page(request, user, result, campaign_id=None, brief=None):
         'result': result, 'max_recipients': MAX_RECIPIENTS,
         'campaigns': campaigns, 'campaign': campaign, 'contacts': contacts,
         'brief': brief or {},
+        'view': view,
     }, headers={'Cache-Control': 'no-store'})
 
 @router.post('/prospecting/campaigns/draft')
@@ -106,12 +148,12 @@ async def draft_campaign(request: Request, csrf: str = Form(), name: str = Form(
     check_form(request, user, csrf)
     brief = {'name': name.strip(), 'target': target.strip(), 'goal': goal.strip(), 'offer': offer.strip()}
     if not all(brief[key] for key in ('target', 'goal', 'offer')):
-        return await render_page(request, user, 'brief_required', brief=brief)
+        return await render_page(request, user, 'brief_required', brief=brief, view='new')
     try:
         draft = await asyncio.wait_for(ai.draft_prospecting_campaign(brief, resolve_locale(request)), timeout=45)
     except (ai.AIGenerationError, httpx.HTTPError, asyncio.TimeoutError):
-        return await render_page(request, user, 'draft_failed', brief=brief)
-    return await render_page(request, user, 'campaign_draft_ready', brief=draft)
+        return await render_page(request, user, 'draft_failed', brief=brief, view='new')
+    return await render_page(request, user, 'campaign_draft_ready', brief=draft, view='new')
 
 
 @router.post('/prospecting/campaigns')
@@ -123,9 +165,13 @@ async def create_campaign(request: Request, csrf: str = Form(), name: str = Form
         return notice('campaign_required')
     async with get_pool().acquire() as conn:
         campaign_id = await conn.fetchval('''INSERT INTO public.linkedin_prospecting_campaigns
-            (user_id, workspace_id, name, target, goal, offer) VALUES ($1::uuid,$2::uuid,$3,$4,$5,$6) RETURNING id''',
-            user.id, user.active_workspace_id, name.strip(), target.strip(), goal.strip(), offer.strip())
-    return notice('campaign_created', campaign_id)
+            (user_id, workspace_id, name, target, goal, offer, search_status, search_locale)
+            VALUES ($1::uuid,$2::uuid,$3,$4,$5,$6,
+                CASE WHEN $7::boolean AND EXISTS (SELECT 1 FROM public.linkedin_prospecting_accounts
+                    WHERE user_id=$1::uuid AND workspace_id=$2::uuid) THEN 'queued' ELSE 'idle' END,$8) RETURNING id''',
+            user.id, user.active_workspace_id, name.strip(), target.strip(), goal.strip(), offer.strip(),
+            bool(unipile.api_origin()), resolve_locale(request))
+    return notice('campaign_created')
 
 
 @router.post('/prospecting/campaigns/{campaign_id}/brief')
@@ -144,81 +190,30 @@ async def update_campaign_brief(request: Request, campaign_id: UUID, csrf: str =
     return notice('brief_saved', campaign_id)
 
 
-def real_profiles(data):
-    profiles = {}
-    items = data.get('items', data.get('data'))
-    if not isinstance(items, list):
-        return []
-    for item in items[:10]:
-        if not isinstance(item, dict) or item.get('type') not in ('PEOPLE', 'individual'):
-            continue
-        identifier = item.get('public_identifier')
-        url = item.get('public_profile_url') or item.get('profile_url')
-        if not url and isinstance(identifier, str):
-            url = 'https://www.linkedin.com/in/' + identifier
-        if not isinstance(url, str):
-            continue
-        try:
-            slug = unipile.profile_slug(url).casefold()
-        except ValueError:
-            continue
-        specifics = item.get('specifics') or {}
-        linkedin = (specifics.get('linkedin') or specifics) if isinstance(specifics, dict) else {}
-        location = item.get('location') or (linkedin.get('location') if isinstance(linkedin, dict) else '')
-        fields = {'name': str(item.get('name') or item.get('display_name') or '')[:250],
-                  'headline': str(item.get('headline') or item.get('description') or '')[:400],
-                  'location': location[:200] if isinstance(location, str) else ''}
-        profiles.setdefault(slug, fields)
-    return list(profiles.items())
-
-
 @router.post('/prospecting/campaigns/{campaign_id}/search')
-async def search_campaign(request: Request, campaign_id: UUID, csrf: str = Form(), user=Depends(require_admin)):
+async def search_campaign(request: Request, campaign_id: UUID, csrf: str = Form(),
+                          keywords: str = Form(default='', max_length=220), user=Depends(require_admin)):
     check_form(request, user, csrf)
     async with get_pool().acquire() as conn:
-        campaign = await owned_campaign(conn, user, campaign_id)
-        account = await connected_account(conn, user)
-    if not account:
-        return notice('not_connected', campaign_id)
-    try:
-        keywords = await asyncio.wait_for(ai.prospecting_keywords(campaign['target']), timeout=35)
-        profiles = real_profiles(await unipile.search_contacts(account['unipile_account_id'], keywords))
-        if not profiles:
-            return notice('no_matches', campaign_id)
-        summaries = [{'index': i, 'headline': fields['headline'], 'location': fields['location']}
-                     for i, (_, fields) in enumerate(profiles)]
-        matches = await asyncio.wait_for(ai.rank_prospecting_contacts(campaign['target'], summaries, resolve_locale(request)), timeout=40)
-    except (ai.AIGenerationError, unipile.UnipileError, httpx.HTTPError, asyncio.TimeoutError):
-        return notice('search_failed', campaign_id)
-    rows = []
-    for match in matches:
-        if not isinstance(match, dict):
-            continue
-        index, score, reason = match.get('index'), match.get('score'), match.get('reason')
-        if (type(index) is not int or not 0 <= index < len(profiles) or type(score) is not int
-                or not 0 <= score <= 100 or not isinstance(reason, str) or not reason.strip()):
-            continue
-        slug, fields = profiles[index]
-        rows.append((campaign_id, slug, fields['name'] or slug, fields['headline'], fields['location'], reason[:500], score))
-    if not rows:
-        return notice('no_matches', campaign_id)
-    async with get_pool().acquire() as conn:
-        await conn.executemany('''INSERT INTO public.linkedin_prospecting_contacts
-            (campaign_id, profile_slug, display_name, headline, location, reason, relevance)
-            VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (campaign_id, profile_slug) DO UPDATE
-            SET display_name=EXCLUDED.display_name, headline=EXCLUDED.headline, location=EXCLUDED.location,
-                reason=EXCLUDED.reason, relevance=EXCLUDED.relevance''', rows)
-    return notice('matches_ready', campaign_id)
+        await owned_campaign(conn, user, campaign_id)
+        if not await connected_account(conn, user):
+            return notice('not_connected', campaign_id)
+        await conn.execute('''UPDATE public.linkedin_prospecting_campaigns
+            SET search_status='queued', search_progress=0, search_result='', search_keywords=$2, search_locale=$3
+            WHERE id=$1 AND search_status NOT IN ('queued','running')''', campaign_id, keywords.strip(), resolve_locale(request))
+    return notice('search_queued', campaign_id)
 
 
 @router.post('/prospecting/campaigns/{campaign_id}/contacts')
 async def add_contacts(request: Request, campaign_id: UUID, csrf: str = Form(),
-                       slugs: list[str] = Form(default=[]), user=Depends(require_admin)):
+                       slugs: list[str] = Form(default=[]), single: str = Form(default='', max_length=160),
+                       user=Depends(require_admin)):
     check_form(request, user, csrf)
     async with get_pool().acquire() as conn:
         await owned_campaign(conn, user, campaign_id)
         updated = await conn.execute('''UPDATE public.linkedin_prospecting_contacts SET added_at=now()
-            WHERE campaign_id=$1 AND added_at IS NULL AND profile_slug=ANY($2::text[])''', campaign_id, slugs)
+            WHERE campaign_id=$1 AND added_at IS NULL AND profile_slug=ANY($2::text[])''',
+            campaign_id, [single] if single else slugs)
     return notice('contacts_added' if updated != 'UPDATE 0' else 'pick_contacts', campaign_id)
 
 

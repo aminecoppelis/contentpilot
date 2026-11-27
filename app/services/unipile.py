@@ -70,11 +70,12 @@ async def request(method: str, path: str, **kwargs) -> dict:
     return data
 
 
-async def search_contacts(account_id: str, keywords: str) -> dict:
+async def search_contacts(account_id: str, keywords: str, *, cursor: str | None = None) -> dict:
+    pagination = {'cursor': cursor} if cursor else {}
     if uses_v2():
         return await request('POST', f'{account_id}/linkedin/search/people',
-                             json={'keywords': keywords, 'network_distance': [1]})
-    return await request('POST', 'linkedin/search', params={'account_id': account_id, 'limit': 10},
+                             params=pagination, json={'keywords': keywords, 'network_distance': [1]})
+    return await request('POST', 'linkedin/search', params={'account_id': account_id, 'limit': 10, **pagination},
                          json={'api': 'classic', 'category': 'people', 'keywords': keywords,
                                'network_distance': [1]})
 

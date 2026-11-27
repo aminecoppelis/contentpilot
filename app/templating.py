@@ -27,7 +27,7 @@ from app.i18n import (
 def _i18n_context(request) -> dict:
     locale = resolve_locale(request)
     license_key = get_settings().syncfusion_license_key.strip()
-    grid_paths = {"/app/posts", "/app/published", "/app/strategies", "/app/networks", "/app/admin/users", "/app/workspace"}
+    grid_paths = {"/app/posts", "/app/published", "/app/strategies", "/app/networks", "/app/admin/users", "/app/workspace", "/app/prospecting"}
     use_grid = bool(license_key and request.url.path in grid_paths
                     and not (request.url.path == "/app/strategies" and request.query_params.get("strategy_id")))
     post_flow = request.url.path == "/app/posts/view"

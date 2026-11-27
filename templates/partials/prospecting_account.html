@@ -1,0 +1,30 @@
+<section class="card prospectingCard" aria-labelledby="prospecting-account">
+  <h2 id="prospecting-account">{{ t('prospecting.account') }}</h2>
+  {% if account %}<p>{{ account.display_name }}</p>{% endif %}
+  {% if configured %}
+  <div class="prospectingActions">
+    {% if unipile_v2 and not account %}
+    <form method="post" class="prospectingForm" action="/app/prospecting/attach">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <label for="unipile-account-id">{{ t('prospecting.account_id') }}</label>
+      <input id="unipile-account-id" type="text" dir="ltr" name="account_id" placeholder="acc_…" maxlength="128" required>
+      <button class="btn btn-primary" type="submit">{{ t('prospecting.attach') }}</button>
+    </form>
+    {% elif not unipile_v2 %}
+    <form method="post" action="/app/prospecting/connect">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn {{ 'btn-primary' if not account }}" type="submit">{{ t('prospecting.reconnect' if account else 'prospecting.connect') }}</button>
+    </form>
+    {% endif %}
+    {% if account %}
+    <form method="post" action="/app/prospecting/disconnect">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button class="btn" type="submit">{{ t('prospecting.disconnect') }}</button>
+    </form>
+    {% endif %}
+  </div>
+  {% else %}
+  <p>{{ t('prospecting.result.configuration') }}</p>
+  {% endif %}
+</section>
+

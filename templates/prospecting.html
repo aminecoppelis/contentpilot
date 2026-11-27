@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('prospecting.nav') }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/prospecting.css?v=2">{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/prospecting.css?v=3"><script src="/static/js/prospecting.js?v=2" defer></script>{% endblock %}
 {% block content %}
 <section class="hero">
   <div>
@@ -9,135 +9,24 @@
   </div>
 </section>
 
-{% set notices = ['configuration', 'connecting', 'connect_failed', 'disconnect_failed', 'disconnected', 'too_many_profiles', 'message_required', 'not_connected', 'already_submitted', 'batch_processed', 'campaign_required', 'campaign_created', 'no_matches', 'search_failed', 'matches_ready', 'contacts_added', 'pick_contacts', 'account_id_invalid', 'attach_failed', 'attached', 'account_already_linked', 'brief_required', 'draft_failed', 'campaign_draft_ready', 'message_drafts_ready', 'personalized_messages_required', 'brief_saved'] %}
-{% if result in notices and (result != 'connecting' or not account) %}
+{% set notices = ['configuration', 'connecting', 'connect_failed', 'disconnect_failed', 'disconnected', 'too_many_profiles', 'message_required', 'not_connected', 'already_submitted', 'batch_processed', 'campaign_required', 'campaign_created', 'search_queued', 'contacts_added', 'pick_contacts', 'account_id_invalid', 'attach_failed', 'attached', 'account_already_linked', 'brief_required', 'draft_failed', 'campaign_draft_ready', 'message_drafts_ready', 'personalized_messages_required', 'brief_saved'] %}
+{% if result in notices and (result != 'connecting' or not account) and (result != 'search_queued' or campaign.search_status in ['queued', 'running']) %}
 <p class="card prospectingCard" role="status">
   {{ t('prospecting.result.' ~ result, count=max_recipients) }}
   {% if result == 'connecting' %}<a href="/app/prospecting?result=connecting">{{ t('prospecting.refresh') }}</a>{% endif %}
 </p>
 {% endif %}
 
-<section class="card prospectingCard" aria-labelledby="prospecting-account">
-  <h2 id="prospecting-account">{{ t('prospecting.account') }}</h2>
-  {% if account %}<p>{{ account.display_name }}</p>{% endif %}
-  {% if configured %}
-  <div class="prospectingActions">
-    {% if unipile_v2 and not account %}
-    <form method="post" class="prospectingForm" action="/app/prospecting/attach">
-      <input type="hidden" name="csrf" value="{{ csrf }}">
-      <label for="unipile-account-id">{{ t('prospecting.account_id') }}</label>
-      <input id="unipile-account-id" type="text" dir="ltr" name="account_id" placeholder="acc_…" maxlength="128" required>
-      <button class="btn btn-primary" type="submit">{{ t('prospecting.attach') }}</button>
-    </form>
-    {% elif not unipile_v2 %}
-    <form method="post" action="/app/prospecting/connect">
-      <input type="hidden" name="csrf" value="{{ csrf }}">
-      <button class="btn {{ 'btn-primary' if not account }}" type="submit">{{ t('prospecting.reconnect' if account else 'prospecting.connect') }}</button>
-    </form>
-    {% endif %}
-    {% if account %}
-    <form method="post" action="/app/prospecting/disconnect">
-      <input type="hidden" name="csrf" value="{{ csrf }}">
-      <button class="btn" type="submit">{{ t('prospecting.disconnect') }}</button>
-    </form>
-    {% endif %}
-  </div>
+{% if view == 'list' %}
+  {% include 'partials/prospecting_list.html' %}
+  {% include 'partials/prospecting_account.html' %}
+{% else %}
+  <p><a href="/app/prospecting">{{ t('prospecting.back') }}</a></p>
+  {% if view == 'new' %}
+    {% include 'partials/prospecting_new.html' %}
   {% else %}
-  <p>{{ t('prospecting.result.configuration') }}</p>
+    {% include 'partials/prospecting_detail.html' %}
   {% endif %}
-</section>
-
-<section class="card prospectingCard" aria-labelledby="prospecting-campaigns">
-  <h2 id="prospecting-campaigns">{{ t('prospecting.campaigns') }}</h2>
-  {% if campaigns %}
-  <ul class="prospectingHistory">
-  {% for item in campaigns %}
-    <li><a href="/app/prospecting?campaign_id={{ item.id }}"{% if campaign and item.id == campaign.id %} aria-current="page"{% endif %}>{{ item.name }}</a></li>
-  {% endfor %}
-  </ul>
-  {% endif %}
-  <form method="post" class="prospectingForm" action="/app/prospecting/campaigns">
-    <input type="hidden" name="csrf" value="{{ csrf }}">
-    <label for="campaign-target">{{ t('prospecting.campaign_target') }}</label>
-    <textarea id="campaign-target" name="target" rows="3" maxlength="1200" placeholder="{{ t('prospecting.target_example') }}" required>{{ brief.target|default('') }}</textarea>
-    <label for="campaign-goal">{{ t('prospecting.goal') }}</label>
-    <textarea id="campaign-goal" name="goal" rows="2" maxlength="1200" required>{{ brief.goal|default('') }}</textarea>
-    <label for="campaign-offer">{{ t('prospecting.offer') }}</label>
-    <textarea id="campaign-offer" name="offer" rows="2" maxlength="1200" required>{{ brief.offer|default('') }}</textarea>
-    <label for="campaign-name">{{ t('prospecting.campaign_name') }}</label>
-    <input id="campaign-name" name="name" type="text" maxlength="120" value="{{ brief.name|default('') }}" required>
-    <div class="prospectingActions">
-      <button class="btn" type="submit" formnovalidate formaction="/app/prospecting/campaigns/draft">{{ t('prospecting.draft_campaign') }}</button>
-      <button class="btn btn-primary" type="submit">{{ t('prospecting.create') }}</button>
-    </div>
-  </form>
-</section>
-
-{% if campaign %}
-<section class="card prospectingCard" aria-labelledby="prospecting-selected-campaign">
-  <h2 id="prospecting-selected-campaign">{{ campaign.name }}</h2>
-  <p>{{ campaign.target }}</p>
-  {% if campaign.goal %}<p><strong>{{ t('prospecting.goal') }}</strong> {{ campaign.goal }}</p>{% endif %}
-  {% if campaign.offer %}<p><strong>{{ t('prospecting.offer') }}</strong> {{ campaign.offer }}</p>{% endif %}
-  <details>
-    <summary>{{ t('prospecting.edit_brief') }}</summary>
-    <form class="prospectingForm" method="post" action="/app/prospecting/campaigns/{{ campaign.id }}/brief">
-      <input type="hidden" name="csrf" value="{{ csrf }}">
-      {% for field, label in [('target', 'campaign_target'), ('goal', 'goal'), ('offer', 'offer')] %}
-      <label for="brief-{{ field }}">{{ t('prospecting.' ~ label) }}</label>
-      <textarea id="brief-{{ field }}" name="{{ field }}" rows="2" maxlength="1200" required>{{ campaign[field]|default('') }}</textarea>
-      {% endfor %}
-      <button class="btn" type="submit">{{ t('common.save') }}</button>
-    </form>
-  </details>
-  {% if account and configured %}
-  <form method="post" action="/app/prospecting/campaigns/{{ campaign.id }}/search">
-    <input type="hidden" name="csrf" value="{{ csrf }}">
-    <button class="btn btn-primary" type="submit">{{ t('prospecting.search') }}</button>
-  </form>
-  {% elif configured %}<p>{{ t('prospecting.search_requires_account') }}</p>
-  {% else %}<p>{{ t('prospecting.result.configuration') }}</p>{% endif %}
-</section>
-
-{% for added in [false, true] %}
-{% set rows = contacts|selectattr('added_at', 'ne' if added else 'equalto', none)|list %}
-{% if rows %}
-<section class="card prospectingCard" aria-labelledby="prospecting-contacts-{{ loop.index }}">
-  <h2 id="prospecting-contacts-{{ loop.index }}">{{ t('prospecting.contacts' if added else 'prospecting.suggestions') }}</h2>
-  <form class="prospectingForm" method="post" action="/app/prospecting/campaigns/{{ campaign.id }}/{{ 'send' if added else 'contacts' }}">
-    <input type="hidden" name="csrf" value="{{ csrf }}">
-    {% if added %}<input type="hidden" name="submission_id" value="{{ submission_id }}">{% endif %}
-    <div class="prospectingTableWrap">
-      <table class="prospectingTable">
-        <thead><tr><th scope="col">{{ t('prospecting.select') }}</th><th scope="col">{{ t('prospecting.contact_profile') }}</th><th scope="col">{{ t('prospecting.fit') }}</th>{% if added %}<th scope="col">{{ t('prospecting.delivery') }}</th><th scope="col">{{ t('prospecting.personalized_message') }}</th>{% endif %}</tr></thead>
-        <tbody>
-          {% for contact in rows %}
-          <tr>
-            <td><input type="checkbox" name="slugs" value="{{ contact.profile_slug }}" aria-label="{{ contact.display_name }}" {% if added and (not account or not configured or contact.status in ['pending', 'sent', 'unknown']) %}disabled{% endif %}></td>
-            <td><a href="https://www.linkedin.com/in/{{ contact.profile_slug|urlencode }}" target="_blank" rel="noopener noreferrer">{{ contact.display_name }}</a><div>{{ contact.headline }}</div><small>{{ contact.location }}</small></td>
-            <td><strong>{{ contact.relevance }}/100</strong><div>{{ contact.reason }}</div></td>
-            {% if added %}
-            <td>{{ t('prospecting.status.' ~ (contact.status or 'new')) }}</td>
-            <td><textarea name="message:{{ contact.profile_slug }}" rows="5" cols="30" maxlength="3000" aria-label="{{ t('prospecting.personalized_message') }} · {{ contact.display_name }}" {% if contact.status in ['pending', 'sent', 'unknown'] %}readonly{% endif %}>{{ contact.draft_message|default('') }}</textarea></td>
-            {% endif %}
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    {% if added and account and configured %}
-    <p>{{ t('prospecting.campaign_message_hint', count=max_recipients) }}</p>
-    <div class="prospectingActions">
-      <button class="btn" type="submit" formaction="/app/prospecting/campaigns/{{ campaign.id }}/draft-messages">{{ t('prospecting.draft_messages') }}</button>
-      <button class="btn btn-primary" type="submit">{{ t('prospecting.send') }}</button>
-    </div>
-    {% elif not added %}
-    <button class="btn btn-primary" type="submit">{{ t('prospecting.add_contacts') }}</button>
-    {% endif %}
-  </form>
-</section>
-{% endif %}
-{% endfor %}
 {% endif %}
 
 {% if history %}

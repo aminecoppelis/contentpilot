@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from types import SimpleNamespace
@@ -12,6 +13,30 @@ from app.dependencies import auth
 from app.models.auth import AuthUser
 from app.routers import prospecting
 from app.services import unipile
+from app.worker import prospecting_cron
+
+
+def test_search_keeps_linkedin_results_when_both_ai_steps_fail():
+    job = {'id': uuid4(), 'target': 'Responsable IA B2B', 'goal': 'Discovery call', 'offer': 'Assessment',
+           'unipile_account_id': 'acc_example', 'search_keywords': '', 'search_locale': 'fr'}
+    first = {'type': 'individual', 'public_identifier': 'contact-ia', 'display_name': 'Contact IA', 'description': 'Responsable IA'}
+    second = {**first, 'public_identifier': 'contact-b2b', 'display_name': 'Contact B2B'}
+    search = AsyncMock(side_effect=[{'data': [first], 'next_cursor': 'next'}, {'data': [first, second]}])
+    state = AsyncMock(return_value=True)
+    ai_error = prospecting.ai.AIGenerationError('Mock failure')
+    with patch.object(prospecting_cron, 'set_search_state', state), \
+         patch.object(unipile, 'search_contacts', search), \
+         patch.object(prospecting.ai, 'prospecting_keywords', AsyncMock(side_effect=ai_error)), \
+         patch.object(prospecting.ai, 'rank_prospecting_contacts', AsyncMock(side_effect=ai_error)), \
+         patch.object(prospecting.ai, 'draft_prospecting_messages', AsyncMock(side_effect=[
+             ai_error, [{'index': 0, 'text': 'Bonjour, échangeons sur votre équipe IA.'}],
+         ])):
+        asyncio.run(prospecting_cron.search_campaign(job))
+    assert [call.kwargs['cursor'] for call in search.await_args_list] == [None, 'next']
+    assert [call.args[1] for call in state.await_args_list] == [15, 25, 40, 50, 65, 100]
+    assert state.await_args_list[1].kwargs['profiles'][0][1] == 'contact-ia'
+    assert state.await_args_list[-2].kwargs['profiles'][0][-1] == 'Bonjour, échangeons sur votre équipe IA.'
+    assert state.await_args.kwargs == {'status': 'done', 'result': 'matches_partial_hooks'}
 
 
 def test_v2_links_an_existing_linkedin_account_with_the_server_key():
@@ -100,8 +125,17 @@ def test_send_is_scoped_to_the_active_account_and_deduplicates_the_same_submissi
         assert invalid.status_code == 403
         page = client.get('/app/prospecting?lang=fr')
         assert page.status_code == 200
-        assert 'Créer la campagne' in page.text
+        assert 'Nouvelle campagne' in page.text
         assert 'value="account_id"' not in page.text
+        campaign_id = uuid4()
+        conn.fetch.side_effect = [[{'id': campaign_id, 'name': 'IA B2B', 'search_status': 'running',
+                                    'search_progress': 50, 'search_result': '', 'found': 12,
+                                    'added': 2, 'sent': 1, 'failed': 0, 'review': 0}], []]
+        dashboard = client.get('/app/prospecting?lang=fr')
+        assert 'data-grid-view="prospecting_campaigns"' in dashboard.text
+        assert f'/app/prospecting/campaigns/{campaign_id}' in dashboard.text
+        assert 'data-stat="found">12' in dashboard.text
+        assert 'data-stat="progress">50%' in dashboard.text
         response = client.post('/app/prospecting/send', data=data, follow_redirects=False)
         replay = client.post('/app/prospecting/send', data=data, follow_redirects=False)
     assert response.headers['location'] == '/app/prospecting?result=batch_processed'
@@ -121,14 +155,16 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
                     session_id='test-session', request_token='test-token', is_super_admin=True)
     account = {'unipile_account_id': 'account_id', 'display_name': 'Sender'}
     campaign = {'id': campaign_id, 'name': 'Campaign', 'target': 'SaaS marketing leads',
-                'goal': 'Discovery call', 'offer': 'Workflow assessment'}
+                'goal': 'Discovery call', 'offer': 'Workflow assessment', 'search_status': 'done',
+                'search_progress': 100, 'search_result': 'matches_ready', 'found': 2}
     conn = AsyncMock()
     conn.fetchrow.side_effect = [campaign, account, account, campaign, campaign, campaign, campaign,
                                  campaign, account, account]
     conn.fetchval.return_value = campaign_id
     conn.execute.return_value = 'UPDATE 1'
     prospect = {'profile_slug': 'jean-test', 'display_name': 'Jean Test', 'headline': 'Marketing',
-                'location': 'Paris', 'reason': 'Matching role', 'relevance': 90, 'status': None}
+                'location': 'Paris', 'reason': 'Matching role', 'relevance': 90, 'status': None,
+                'draft_message': 'A personalized opening'}
     conn.fetch.side_effect = [[campaign], [{**prospect, 'added_at': None},
                                          {**prospect, 'profile_slug': 'marie-test', 'display_name': 'Marie Test',
                                           'added_at': datetime.now(timezone.utc)}], [], [], [{'profile_slug': 'marie-test'}],
@@ -166,10 +202,10 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
         created = client.post('/app/prospecting/campaigns', data={**form, 'name': 'Campaign', 'target': campaign['target']}, follow_redirects=False)
         assert 'result=campaign_created' in created.headers['location']
         searched = client.post(base + '/search', data=form, follow_redirects=False)
-        assert 'result=matches_ready' in searched.headers['location']
-        page = client.get(f'/app/prospecting?campaign_id={campaign_id}&lang=en')
+        assert 'result=search_queued' in searched.headers['location']
+        page = client.get(f'{base}?lang=en')
         assert page.status_code == 200
-        assert all(label in page.text for label in ('Suggested profiles', 'Campaign contacts', 'Jean Test', 'Marie Test'))
+        assert all(label in page.text for label in ('Suggested profiles', 'Campaign contacts', 'Jean Test', 'Marie Test', 'A personalized opening'))
         added = client.post(base + '/contacts', data={**form, 'slugs': 'marie-test'}, follow_redirects=False)
         assert 'result=contacts_added' in added.headers['location']
         message = {**form, 'submission_id': str(uuid4()), 'message:jean-test': 'Hello Jean', 'message:marie-test': 'Hello Marie'}
@@ -184,9 +220,8 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
         })
         assert brief.status_code == 200
         assert 'Workflow assessment' in brief.text
-    assert conn.executemany.await_args_list[0].args[1] == [(campaign_id, 'jean-test', 'Jean Test', 'Marketing', 'Paris', 'Matching role', 90)]
+    search.assert_not_awaited()
     assert conn.executemany.await_args.args[1] == [(campaign_id, 'marie-test', 'Hello Marie, I noticed your experience.')]
     assert message_drafts.await_args.args[1] == [{'index': 0, 'first_name': 'Marie', 'headline': 'B2B strategy', 'location': 'Paris'}]
-    assert ranking.await_args.args[1] == [{'index': 0, 'headline': 'Marketing', 'location': 'Paris'}]
     send.assert_awaited_once()
     assert send.await_args.args[-3:] == (['marie-test'], {'marie-test': 'Hello Marie'}, campaign_id)
