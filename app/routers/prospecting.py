@@ -209,12 +209,41 @@ async def add_contacts(request: Request, campaign_id: UUID, csrf: str = Form(),
                        slugs: list[str] = Form(default=[]), single: str = Form(default='', max_length=160),
                        user=Depends(require_admin)):
     check_form(request, user, csrf)
+    selected = [single] if single else list(dict.fromkeys(slugs))
+    form = await request.form()
+    drafts = []
+    for slug in selected:
+        message = form.get(f'message:{slug}', '')
+        if not isinstance(message, str) or len(message.strip()) > 3000:
+            return notice('personalized_messages_required', campaign_id)
+        drafts.append(message.strip() or None)
     async with get_pool().acquire() as conn:
         await owned_campaign(conn, user, campaign_id)
-        updated = await conn.execute('''UPDATE public.linkedin_prospecting_contacts SET added_at=now()
-            WHERE campaign_id=$1 AND added_at IS NULL AND profile_slug=ANY($2::text[])''',
-            campaign_id, [single] if single else slugs)
+        updated = await conn.execute('''UPDATE public.linkedin_prospecting_contacts AS contact
+            SET added_at=now(), draft_message=COALESCE(selected.draft, contact.draft_message)
+            FROM unnest($2::text[], $3::text[]) AS selected(slug, draft)
+            WHERE contact.campaign_id=$1 AND contact.added_at IS NULL AND contact.profile_slug=selected.slug''',
+            campaign_id, selected, drafts)
     return notice('contacts_added' if updated != 'UPDATE 0' else 'pick_contacts', campaign_id)
+
+
+@router.post('/prospecting/campaigns/{campaign_id}/save-message')
+async def save_message(request: Request, campaign_id: UUID, csrf: str = Form(),
+                       single: str = Form(max_length=160), user=Depends(require_admin)):
+    check_form(request, user, csrf)
+    form = await request.form()
+    message = form.get(f'message:{single}')
+    if not isinstance(message, str) or not 0 < len(message.strip()) <= 3000:
+        return notice('personalized_messages_required', campaign_id)
+    async with get_pool().acquire() as conn:
+        await owned_campaign(conn, user, campaign_id)
+        updated = await conn.execute('''UPDATE public.linkedin_prospecting_contacts AS contact SET draft_message=$3
+            WHERE campaign_id=$1 AND profile_slug=$2 AND NOT EXISTS (
+                SELECT 1 FROM public.linkedin_prospecting_messages AS delivery
+                WHERE delivery.campaign_id=contact.campaign_id AND delivery.profile_slug=contact.profile_slug
+                  AND delivery.status IN ('pending', 'sent', 'unknown')
+            )''', campaign_id, single, message.strip())
+    return notice('message_saved' if updated != 'UPDATE 0' else 'message_unavailable', campaign_id)
 
 
 @router.post('/prospecting/campaigns/{campaign_id}/draft-messages')

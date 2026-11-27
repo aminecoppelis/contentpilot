@@ -1,4 +1,7 @@
 {
+  "prospecting.save_message": "Save message",
+  "prospecting.result.message_saved": "Personalized message saved.",
+  "prospecting.result.message_unavailable": "This message can no longer be edited. Check the contact’s status.",
   "prospecting.new_campaign": "New campaign",
   "prospecting.back": "All campaigns",
   "prospecting.open_campaign": "Open",

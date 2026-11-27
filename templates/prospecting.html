@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}{{ t('prospecting.nav') }} · {{ t('app.name') }}{% endblock %}
-{% block extra_style %}<link rel="stylesheet" href="/static/css/prospecting.css?v=3"><script src="/static/js/prospecting.js?v=2" defer></script>{% endblock %}
+{% block extra_style %}<link rel="stylesheet" href="/static/css/prospecting.css?v=4"><script src="/static/js/prospecting.js?v=2" defer></script>{% endblock %}
 {% block content %}
+<div class="prospectingPage prospectingPage--{{ view }}">
 <section class="hero">
   <div>
     <h1>{{ t('prospecting.title') }}</h1>
@@ -9,7 +10,7 @@
   </div>
 </section>
 
-{% set notices = ['configuration', 'connecting', 'connect_failed', 'disconnect_failed', 'disconnected', 'too_many_profiles', 'message_required', 'not_connected', 'already_submitted', 'batch_processed', 'campaign_required', 'campaign_created', 'search_queued', 'contacts_added', 'pick_contacts', 'account_id_invalid', 'attach_failed', 'attached', 'account_already_linked', 'brief_required', 'draft_failed', 'campaign_draft_ready', 'message_drafts_ready', 'personalized_messages_required', 'brief_saved'] %}
+{% set notices = ['configuration', 'connecting', 'connect_failed', 'disconnect_failed', 'disconnected', 'too_many_profiles', 'message_required', 'not_connected', 'already_submitted', 'batch_processed', 'campaign_required', 'campaign_created', 'search_queued', 'contacts_added', 'pick_contacts', 'account_id_invalid', 'attach_failed', 'attached', 'account_already_linked', 'brief_required', 'draft_failed', 'campaign_draft_ready', 'message_drafts_ready', 'personalized_messages_required', 'brief_saved', 'message_saved', 'message_unavailable'] %}
 {% if result in notices and (result != 'connecting' or not account) and (result != 'search_queued' or campaign.search_status in ['queued', 'running']) %}
 <p class="card prospectingCard" role="status">
   {{ t('prospecting.result.' ~ result, count=max_recipients) }}
@@ -43,4 +44,5 @@
   </ul>
 </section>
 {% endif %}
+</div>
 {% endblock %}

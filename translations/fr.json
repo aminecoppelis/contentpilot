@@ -1,4 +1,7 @@
 {
+  "prospecting.save_message": "Enregistrer le message",
+  "prospecting.result.message_saved": "Message personnalisé enregistré.",
+  "prospecting.result.message_unavailable": "Ce message ne peut plus être modifié. Vérifiez le statut du contact.",
   "prospecting.new_campaign": "Nouvelle campagne",
   "prospecting.back": "Toutes les campagnes",
   "prospecting.open_campaign": "Ouvrir",

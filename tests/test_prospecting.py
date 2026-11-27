@@ -159,7 +159,7 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
                 'search_progress': 100, 'search_result': 'matches_ready', 'found': 2}
     conn = AsyncMock()
     conn.fetchrow.side_effect = [campaign, account, account, campaign, campaign, campaign, campaign,
-                                 campaign, account, account]
+                                 campaign, account, account, campaign]
     conn.fetchval.return_value = campaign_id
     conn.execute.return_value = 'UPDATE 1'
     prospect = {'profile_slug': 'jean-test', 'display_name': 'Jean Test', 'headline': 'Marketing',
@@ -206,7 +206,9 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
         page = client.get(f'{base}?lang=en')
         assert page.status_code == 200
         assert all(label in page.text for label in ('Suggested profiles', 'Campaign contacts', 'Jean Test', 'Marie Test', 'A personalized opening'))
-        added = client.post(base + '/contacts', data={**form, 'slugs': 'marie-test'}, follow_redirects=False)
+        assert 'name="message:jean-test"' in page.text
+        assert 'name="message:marie-test"' in page.text
+        added = client.post(base + '/contacts', data={**form, 'slugs': 'marie-test', 'message:marie-test': 'Edited when adding'}, follow_redirects=False)
         assert 'result=contacts_added' in added.headers['location']
         message = {**form, 'submission_id': str(uuid4()), 'message:jean-test': 'Hello Jean', 'message:marie-test': 'Hello Marie'}
         rejected = client.post(base + '/send', data={**message, 'slugs': 'jean-test'}, follow_redirects=False)
@@ -220,6 +222,11 @@ def test_campaign_suggestions_use_real_profiles_and_only_added_contacts_can_be_s
         })
         assert brief.status_code == 200
         assert 'Workflow assessment' in brief.text
+        saved = client.post(base + '/save-message', data={**form, 'single': 'jean-test', 'message:jean-test': 'Edited opening'},
+                            follow_redirects=False)
+        assert 'result=message_saved' in saved.headers['location']
+    assert any(call.args[1:] == (campaign_id, ['marie-test'], ['Edited when adding']) for call in conn.execute.await_args_list)
+    assert conn.execute.await_args.args[1:] == (campaign_id, 'jean-test', 'Edited opening')
     search.assert_not_awaited()
     assert conn.executemany.await_args.args[1] == [(campaign_id, 'marie-test', 'Hello Marie, I noticed your experience.')]
     assert message_drafts.await_args.args[1] == [{'index': 0, 'first_name': 'Marie', 'headline': 'B2B strategy', 'location': 'Paris'}]

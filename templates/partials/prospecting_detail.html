@@ -44,20 +44,20 @@
     {% if added %}<input type="hidden" name="submission_id" value="{{ submission_id }}">{% endif %}
     <div class="prospectingTableWrap">
       <table class="prospectingTable">
-        <thead><tr><th scope="col">{{ t('prospecting.select') }}</th><th scope="col">{{ t('prospecting.contact_profile') }}</th><th scope="col">{{ t('prospecting.fit') }}</th>{% if added %}<th scope="col">{{ t('prospecting.delivery') }}</th>{% endif %}<th scope="col">{{ t('prospecting.personalized_message') }}</th>{% if not added %}<th scope="col">{{ t('common.actions') }}</th>{% endif %}</tr></thead>
+        <thead><tr><th scope="col">{{ t('prospecting.select') }}</th><th scope="col">{{ t('prospecting.contact_profile') }}</th><th scope="col">{{ t('prospecting.fit') }}</th>{% if added %}<th scope="col">{{ t('prospecting.delivery') }}</th>{% endif %}<th scope="col">{{ t('prospecting.personalized_message') }}</th><th scope="col">{{ t('common.actions') }}</th></tr></thead>
         <tbody>
           {% for contact in rows %}
           <tr>
             <td><input type="checkbox" name="slugs" value="{{ contact.profile_slug }}" aria-label="{{ contact.display_name }}" {% if added and (not account or not configured or contact.status in ['pending', 'sent', 'unknown']) %}disabled{% endif %}></td>
             <td><a href="https://www.linkedin.com/in/{{ contact.profile_slug|urlencode }}" target="_blank" rel="noopener noreferrer">{{ contact.display_name }}</a><div>{{ contact.headline }}</div><small>{{ contact.location }}</small></td>
             <td>{% if contact.reason %}<strong>{{ contact.relevance }}/100</strong><div>{{ contact.reason }}</div>{% else %}{{ t('prospecting.unranked') }}{% endif %}</td>
-            {% if added %}
-            <td>{{ t('prospecting.status.' ~ (contact.status or 'new')) }}</td>
-            <td><textarea name="message:{{ contact.profile_slug }}" rows="5" cols="30" maxlength="3000" aria-label="{{ t('prospecting.personalized_message') }} · {{ contact.display_name }}" {% if contact.status in ['pending', 'sent', 'unknown'] %}readonly{% endif %}>{{ contact.draft_message|default('') }}</textarea></td>
-            {% else %}
-            <td class="prospectingHook">{{ contact.draft_message or t('prospecting.hook_pending') }}</td>
-            <td><button class="btn secondary tiny" type="submit" name="single" value="{{ contact.profile_slug }}">{{ t('prospecting.add_one') }}</button></td>
-            {% endif %}
+            {% if added %}<td>{{ t('prospecting.status.' ~ (contact.status or 'new')) }}</td>{% endif %}
+            {% set locked = contact.status in ['pending', 'sent', 'unknown'] %}
+            <td class="prospectingHook"><textarea name="message:{{ contact.profile_slug }}" rows="5" maxlength="3000" aria-label="{{ t('prospecting.personalized_message') }} · {{ contact.display_name }}" placeholder="{{ t('prospecting.hook_pending') }}" {% if locked %}readonly{% endif %}>{{ contact.draft_message|default('') }}</textarea></td>
+            <td class="prospectingRowActions">
+              {% if not locked %}<button class="btn secondary tiny" type="submit" name="single" value="{{ contact.profile_slug }}" formaction="/app/prospecting/campaigns/{{ campaign.id }}/save-message">{{ t('prospecting.save_message') }}</button>{% endif %}
+              {% if not added %}<button class="btn secondary tiny" type="submit" name="single" value="{{ contact.profile_slug }}">{{ t('prospecting.add_one') }}</button>{% endif %}
+            </td>
           </tr>
           {% endfor %}
         </tbody>
