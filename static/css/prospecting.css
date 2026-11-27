@@ -1,0 +1,11 @@
+.prospectingCard { padding: 1.25rem; margin-block: 1rem; max-width: 56rem; }
+.prospectingCard h2 { margin-block-start: 0; }
+.prospectingActions { display: flex; flex-wrap: wrap; gap: .75rem; }
+.prospectingForm { display: grid; gap: .5rem; }
+.prospectingForm input[type=text], .prospectingForm textarea { width: 100%; }
+.prospectingForm button { justify-self: start; margin-block-start: .5rem; }
+.prospectingTableWrap { overflow-x: auto; }
+.prospectingTable { border-collapse: collapse; width: 100%; text-align: start; }
+.prospectingTable th, .prospectingTable td { padding: .65rem; text-align: start; vertical-align: top; border-block-end: 1px solid var(--line); }
+.prospectingHistory { list-style: none; padding: 0; margin-block-end: 0; }
+.prospectingHistory li { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; padding-block: .65rem; border-block-start: 1px solid var(--line); }

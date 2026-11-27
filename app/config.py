@@ -96,6 +96,8 @@ class Settings(BaseSettings):
     google_client_id: str = ""
     google_client_secret: str = ""
     google_redirect_uri: str = ""
+    unipile_dsn: str = ""
+    unipile_api_key: str = ""
     youtube_chunk_bytes: int = 8 * 1024 * 1024
     media_video_upload_max_bytes: int = 2 * 1024 * 1024 * 1024
 
